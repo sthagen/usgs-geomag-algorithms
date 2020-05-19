@@ -11,6 +11,7 @@ from .MeasurementType import (
     MARK_TYPES,
 )
 from .Measurement import AverageMeasurement, Measurement, average_measurement
+from .Diagnostics import Diagnostics
 from .Reading import Reading
 
 
@@ -40,7 +41,7 @@ def calculate(reading: Reading, adjust_reference: bool = True) -> Reading:
         mean=mean,
         reference=adjust_reference and reference or None,
     )
-    absoluteD = calculate_D_absolute(
+    absoluteD, average_mark, meridian, azimuth, mark_azimuth = calculate_D_absolute(
         azimuth=reading.azimuth,
         h_baseline=absoluteH.baseline,
         measurements=reading.measurements,
@@ -55,12 +56,23 @@ def calculate(reading: Reading, adjust_reference: bool = True) -> Reading:
             inclination=inclination,
             measurements=scale_measurements,
         )
+    diagnostics = Diagnostics(
+        meridian=meridian,
+        mean_mark=average_mark,
+        magnetic_azimuth=azimuth,
+        mark_azimuth=mark_azimuth,
+        declination=absoluteD.absolute,
+        inclination=inclination,
+        h_component=absoluteH.absolute,
+        z_component=absoluteZ.absolute,
+    )
     # create new reading object
     calculated = Reading(
         absolutes=[absoluteD, absoluteH, absoluteZ],
         scale_value=scale_value,
+        diagnostics=diagnostics,
         # copy other attributes
-        **reading.dict(exclude={"absolutes", "scale_value"}),
+        **reading.dict(exclude={"absolutes", "scale_value", "diagnostics"}),
     )
     return calculated
 
@@ -111,6 +123,7 @@ def calculate_D_absolute(
             for m in declination_measurements
         ]
     )
+    mark_azimuth = azimuth
     shift = 0
     if azimuth > 180:
         shift = -180
@@ -119,13 +132,19 @@ def calculate_D_absolute(
     d_b = (meridian - average_mark) + azimuth + shift
     # calculate absolute
     d_abs = d_b + np.degrees(np.arctan(reference.e / (reference.h + h_baseline)))
-    return Absolute(
-        element="D",
-        absolute=d_abs,
-        baseline=d_b,
-        shift=shift,
-        starttime=mean.time,
-        endtime=mean.endtime,
+    return (
+        Absolute(
+            element="D",
+            absolute=d_abs,
+            baseline=d_b,
+            shift=shift,
+            starttime=mean.time,
+            endtime=mean.endtime,
+        ),
+        average_mark,
+        meridian,
+        azimuth,
+        mark_azimuth,
     )
 
 

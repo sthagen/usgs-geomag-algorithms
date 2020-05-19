@@ -9,6 +9,7 @@ from .. import TimeseriesUtility
 from ..TimeseriesFactory import TimeseriesFactory
 from .Absolute import Absolute
 from .Measurement import Measurement, average_measurement
+from .Diagnostics import Diagnostics
 from .MeasurementType import MeasurementType
 
 
@@ -33,6 +34,7 @@ class Reading(BaseModel):
     metadata: Dict = {}
     pier_correction: float = 0
     scale_value: float = None
+    diagnostics: Diagnostics = None
 
     def __getitem__(self, measurement_type: MeasurementType):
         """Provide access to measurements by type.
