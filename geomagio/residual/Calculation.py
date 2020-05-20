@@ -41,7 +41,7 @@ def calculate(reading: Reading, adjust_reference: bool = True) -> Reading:
         mean=mean,
         reference=adjust_reference and reference or None,
     )
-    absoluteD, average_mark, meridian, azimuth, mark_azimuth = calculate_D_absolute(
+    absoluteD, average_mark, meridian, azimuth, magnetic_azimuth = calculate_D_absolute(
         azimuth=reading.azimuth,
         h_baseline=absoluteH.baseline,
         measurements=reading.measurements,
@@ -59,8 +59,8 @@ def calculate(reading: Reading, adjust_reference: bool = True) -> Reading:
     diagnostics = Diagnostics(
         meridian=meridian,
         mean_mark=average_mark,
-        magnetic_azimuth=azimuth,
-        mark_azimuth=mark_azimuth,
+        magnetic_azimuth=magnetic_azimuth,
+        mark_azimuth=azimuth,
         declination=absoluteD.absolute,
         inclination=inclination,
         h_component=absoluteH.absolute,
@@ -132,6 +132,11 @@ def calculate_D_absolute(
     d_b = (meridian - average_mark) + azimuth + shift
     # calculate absolute
     d_abs = d_b + np.degrees(np.arctan(reference.e / (reference.h + h_baseline)))
+
+    # for diagnostics
+    if average_mark > 180:
+        average_mark -= 90
+
     return (
         Absolute(
             element="D",
@@ -143,8 +148,8 @@ def calculate_D_absolute(
         ),
         average_mark,
         meridian,
-        azimuth,
         mark_azimuth,
+        azimuth,
     )
 
 
