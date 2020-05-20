@@ -149,7 +149,7 @@ def calculate_D_absolute(
         average_mark,
         meridian,
         mark_azimuth,
-        azimuth,
+        (average_mark - meridian),
     )
 
 
