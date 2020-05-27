@@ -123,6 +123,22 @@ def calculate_D_absolute(
             for m in declination_measurements
         ]
     )
+    # calculate south-facing meridian for diagnostics
+    south_meridian = np.average(
+        [
+            m.angle
+            + np.degrees(
+                m.measurement_type.meridian
+                * (np.arcsin(m.residual / np.sqrt((m.h + h_baseline) ** 2 + m.e ** 2)))
+            )
+            - np.degrees(np.arctan(m.e / (m.h + h_baseline)))
+            for m in [
+                average_measurement(measurements, [t])
+                for t in [mt.SOUTH_UP, mt.SOUTH_DOWN]
+            ]
+        ]
+    )
+
     mark_azimuth = azimuth
     shift = 0
     if azimuth > 180:
@@ -147,9 +163,9 @@ def calculate_D_absolute(
             endtime=mean.endtime,
         ),
         average_mark,
-        meridian,
+        south_meridian,
         mark_azimuth,
-        (average_mark - meridian),
+        (meridian - average_mark),
     )
 
 
