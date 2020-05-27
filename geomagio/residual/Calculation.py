@@ -152,6 +152,8 @@ def calculate_D_absolute(
     # for diagnostics
     if average_mark > 180:
         average_mark -= 90
+    if meridian > 180:
+        meridian -= 90
 
     return (
         Absolute(
@@ -165,7 +167,7 @@ def calculate_D_absolute(
         average_mark,
         south_meridian,
         mark_azimuth,
-        (meridian - average_mark),
+        (average_mark - meridian),
     )
 
 
