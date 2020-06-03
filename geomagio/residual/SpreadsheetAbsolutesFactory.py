@@ -9,6 +9,8 @@ from .Absolute import Absolute
 from .Measurement import Measurement
 from .MeasurementType import MeasurementType as mt
 from .Reading import Reading
+from .Diagnostics import Diagnostics
+from .Calculation import DECLINATION_TYPES, MARK_TYPES, average_measurement
 from . import Angle
 
 
@@ -299,6 +301,7 @@ class SpreadsheetAbsolutesFactory(object):
             metadata=metadata,
             pier_correction=metadata["pier_correction"],
             scale_value=numpy.degrees(metadata["scale_value"]),
+            diagnostics=self._parse_diagnostics(measurements),
         )
 
     def _parse_absolutes(
@@ -401,6 +404,25 @@ class SpreadsheetAbsolutesFactory(object):
             "year": year,
             "precision": measurement_sheet["H8"].value,
         }
+
+    def _parse_diagnostics(self, measurements: List[Measurement],) -> Diagnostics:
+        """
+        Gather diagnostics from list of measurements
+        """
+        mean_mark = average_measurement(measurements, MARK_TYPES).angle
+
+        meridian = average_measurement(measurements, DECLINATION_TYPES).angle
+
+        magnetic_azimuth = mean_mark - meridian
+
+        if meridian > 180:
+            magnetic_azimuth = mean_mark - (meridian - 90)
+        if mean_mark > 180:
+            mean_mark -= 90
+
+        return Diagnostics(
+            meridian=meridian, mean_mark=mean_mark, magnetic_azimuth=magnetic_azimuth,
+        )
 
 
 def convert_precision(angle, precision="DMS"):

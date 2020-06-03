@@ -21,8 +21,3 @@ class Diagnostics(BaseModel):
     meridian: float = None
     mean_mark: float = None
     magnetic_azimuth: float = None
-    mark_azimuth: float = None
-    declination: float = None
-    inclination: float = None
-    h_component: float = None
-    z_component: float = None
