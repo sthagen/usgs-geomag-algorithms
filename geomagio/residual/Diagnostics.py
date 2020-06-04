@@ -1,5 +1,6 @@
 from typing import Optional
 
+from .Measurement import Measurement
 from pydantic import BaseModel
 
 
@@ -8,11 +9,11 @@ class Diagnostics(BaseModel):
 
     Attributes
     ----------
-    meridian: calculated from declination measurements
-    mean_mark: average mark angles from measurements
-    magnetic_azimuh: after adjustment
+    inclination_measurement: Average of inclination measurements
+    declination_measurement: Average of declination measurements
+    mark_measurement: Average of mark measurements
     """
 
-    meridian: float = None
-    mean_mark: float = None
-    magnetic_azimuth: float = None
+    inclination_measurement: Measurement
+    declination_measurement: Measurement
+    mark_measurement: Measurement

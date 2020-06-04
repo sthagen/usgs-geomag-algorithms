@@ -30,7 +30,7 @@ def calculate(reading: Reading, adjust_reference: bool = True) -> Reading:
     # reference measurement, used to adjust absolutes
     reference = reading[mt.WEST_DOWN][0]
     # calculate inclination
-    inclination, f, mean = calculate_I(
+    inclination, f, i_mean = calculate_I(
         hemisphere=reading.hemisphere, measurements=reading.measurements
     )
     corrected_f = f + reading.pier_correction
@@ -38,14 +38,20 @@ def calculate(reading: Reading, adjust_reference: bool = True) -> Reading:
     absoluteH, absoluteZ = calculate_HZ_absolutes(
         corrected_f=corrected_f,
         inclination=inclination,
-        mean=mean,
+        mean=i_mean,
         reference=adjust_reference and reference or None,
     )
-    absoluteD, diagnostics = calculate_D_absolute(
+    absoluteD, d_mean, m_mean = calculate_D_absolute(
         azimuth=reading.azimuth,
         h_baseline=absoluteH.baseline,
         measurements=reading.measurements,
         reference=adjust_reference and reference or None,
+    )
+    # populate diagnostics object with averaged measurements
+    diagnostics = Diagnostics(
+        inclination_measurement=i_mean,
+        declination_measurement=d_mean,
+        mark_measurement=m_mean,
     )
     # calculate scale
     scale_value = None
@@ -89,14 +95,14 @@ def calculate_D_absolute(
     mean = average_measurement(measurements, DECLINATION_TYPES)
     reference = reference or mean
     # average mark
-    average_mark = average_measurement(measurements, MARK_TYPES).angle
+    average_mark = average_measurement(measurements, MARK_TYPES)
     # adjust based on which is larger
     mark_up = average_measurement(measurements, [mt.FIRST_MARK_UP]).angle
     mark_down = average_measurement(measurements, [mt.FIRST_MARK_DOWN]).angle
     if mark_up < mark_down:
-        average_mark += 90
+        average_mark.angle += 90
     else:
-        average_mark -= 90
+        average_mark.angle -= 90
     # declination measurements
     declination_measurements = [
         average_measurement(measurements, [t]) for t in DECLINATION_TYPES
@@ -118,15 +124,9 @@ def calculate_D_absolute(
         shift = -180
     # add subtract average mark angle from average meridian angle and add
     # azimuth to get the declination baseline
-    d_b = (meridian - average_mark) + azimuth + shift
+    d_b = (meridian - average_mark.angle) + azimuth + shift
     # calculate absolute
     d_abs = d_b + np.degrees(np.arctan(reference.e / (reference.h + h_baseline)))
-    # for diagnostics
-    magnetic_azimuth = average_mark - mean.angle
-    if average_mark > 180:
-        average_mark -= 90
-    if meridian > 180:
-        meridian -= 90
 
     return (
         Absolute(
@@ -137,11 +137,8 @@ def calculate_D_absolute(
             starttime=mean.time,
             endtime=mean.endtime,
         ),
-        Diagnostics(
-            meridian=mean.angle,
-            mean_mark=average_mark,
-            magnetic_azimuth=magnetic_azimuth,
-        ),
+        mean,
+        average_mark,
     )
 
 

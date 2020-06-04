@@ -43,30 +43,3 @@ for filename in os.listdir("etc/residual"):
             err_msg="Baselines not within 4 decimals",
             verbose=True,
         )
-    # gather original and resulting diagnostics
-    o_diagnostics = original.diagnostics
-    r_diagnostics = original.diagnostics
-    # test mean mark values
-    assert_almost_equal(
-        o_diagnostics.mean_mark,
-        r_diagnostics.mean_mark,
-        decimal=2,
-        err_msg="Baselines not within 4 decimals",
-        verbose=True,
-    )
-    # test magnetic azimuth values
-    assert_almost_equal(
-        o_diagnostics.magnetic_azimuth,
-        r_diagnostics.magnetic_azimuth,
-        decimal=2,
-        err_msg="Baselines not within 4 decimals",
-        verbose=True,
-    )
-    # test meridian values
-    assert_almost_equal(
-        o_diagnostics.meridian,
-        r_diagnostics.meridian,
-        decimal=2,
-        err_msg="Baselines not within 4 decimals",
-        verbose=True,
-    )
