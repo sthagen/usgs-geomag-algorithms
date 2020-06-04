@@ -8,14 +8,9 @@ class Diagnostics(BaseModel):
 
     Attributes
     ----------
-    meridian: claculated from declination measurements
+    meridian: calculated from declination measurements
     mean_mark: average mark angles from measurements
     magnetic_azimuh: after adjustment
-    mark_azimuth: from metadata
-    declination: from declination measurements
-    inclination: from inclination measurements
-    h_component: H baseline from calculations
-    z_component: Z baseline from calculations
     """
 
     meridian: float = None

@@ -6,11 +6,11 @@ from obspy.core import UTCDateTime
 import openpyxl
 
 from .Absolute import Absolute
+from .Calculation import DECLINATION_TYPES, MARK_TYPES, average_measurement
+from .Diagnostics import Diagnostics
 from .Measurement import Measurement
 from .MeasurementType import MeasurementType as mt
 from .Reading import Reading
-from .Diagnostics import Diagnostics
-from .Calculation import DECLINATION_TYPES, MARK_TYPES, average_measurement
 from . import Angle
 
 
@@ -414,7 +414,6 @@ class SpreadsheetAbsolutesFactory(object):
         meridian = average_measurement(measurements, DECLINATION_TYPES).angle
 
         magnetic_azimuth = mean_mark - meridian
-
         if meridian > 180:
             magnetic_azimuth = mean_mark - (meridian - 90)
         if mean_mark > 180:
