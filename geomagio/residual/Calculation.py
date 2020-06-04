@@ -41,18 +41,14 @@ def calculate(reading: Reading, adjust_reference: bool = True) -> Reading:
         mean=i_mean,
         reference=adjust_reference and reference or None,
     )
-    absoluteD, d_mean, m_mean = calculate_D_absolute(
+    absoluteD, meridian = calculate_D_absolute(
         azimuth=reading.azimuth,
         h_baseline=absoluteH.baseline,
         measurements=reading.measurements,
         reference=adjust_reference and reference or None,
     )
     # populate diagnostics object with averaged measurements
-    diagnostics = Diagnostics(
-        inclination_measurement=i_mean,
-        declination_measurement=d_mean,
-        mark_measurement=m_mean,
-    )
+    diagnostics = Diagnostics(inclination=inclination, meridian=meridian,)
     # calculate scale
     scale_value = None
     scale_measurements = reading[mt.NORTH_DOWN_SCALE]
@@ -137,8 +133,7 @@ def calculate_D_absolute(
             starttime=mean.time,
             endtime=mean.endtime,
         ),
-        mean,
-        average_mark,
+        meridian,
     )
 
 

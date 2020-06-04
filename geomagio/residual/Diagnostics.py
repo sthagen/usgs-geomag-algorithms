@@ -9,11 +9,9 @@ class Diagnostics(BaseModel):
 
     Attributes
     ----------
-    inclination_measurement: Average of inclination measurements
-    declination_measurement: Average of declination measurements
-    mark_measurement: Average of mark measurements
+    inclination: Average of inclination measurements
+    meridian: Calculated meridian value
     """
 
-    inclination_measurement: Measurement
-    declination_measurement: Measurement
-    mark_measurement: Measurement
+    inclination: float
+    meridian: float

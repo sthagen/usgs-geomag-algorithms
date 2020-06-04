@@ -306,7 +306,7 @@ class SpreadsheetAbsolutesFactory(object):
             metadata=metadata,
             pier_correction=metadata["pier_correction"],
             scale_value=numpy.degrees(metadata["scale_value"]),
-            diagnostics=self._parse_diagnostics(measurements),
+            diagnostics=self._parse_diagnostics(calculation_sheet),
         )
 
     def _parse_absolutes(
@@ -410,19 +410,11 @@ class SpreadsheetAbsolutesFactory(object):
             "precision": measurement_sheet["H8"].value,
         }
 
-    def _parse_diagnostics(self, measurements: List[Measurement],) -> Diagnostics:
+    def _parse_diagnostics(self, sheet: openpyxl.worksheet,) -> Diagnostics:
         """
         Gather diagnostics from list of measurements
         """
-        return Diagnostics(
-            inclination_measurement=average_measurement(
-                measurements, INCLINATION_TYPES
-            ),
-            declination_measurement=average_measurement(
-                measurements, DECLINATION_TYPES
-            ),
-            mark_measurement=average_measurement(measurements, MARK_TYPES),
-        )
+        return Diagnostics(inclination=sheet["H40"].value, meridian=sheet["E36"].value,)
 
 
 def convert_precision(angle, precision="DMS"):
