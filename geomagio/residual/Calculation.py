@@ -48,7 +48,10 @@ def calculate(reading: Reading, adjust_reference: bool = True) -> Reading:
         reference=adjust_reference and reference or None,
     )
     # populate diagnostics object with averaged measurements
-    diagnostics = Diagnostics(inclination=inclination, meridian=meridian,)
+    diagnostics = Diagnostics(
+        inclination=inclination,
+        meridian=meridian,
+    )
     # calculate scale
     scale_value = None
     scale_measurements = reading[mt.NORTH_DOWN_SCALE]

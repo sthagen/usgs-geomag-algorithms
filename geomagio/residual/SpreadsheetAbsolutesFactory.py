@@ -410,11 +410,17 @@ class SpreadsheetAbsolutesFactory(object):
             "precision": measurement_sheet["H8"].value,
         }
 
-    def _parse_diagnostics(self, sheet: openpyxl.worksheet,) -> Diagnostics:
+    def _parse_diagnostics(
+        self,
+        sheet: openpyxl.worksheet,
+    ) -> Diagnostics:
         """
         Gather diagnostics from list of measurements
         """
-        return Diagnostics(inclination=sheet["H40"].value, meridian=sheet["E36"].value,)
+        return Diagnostics(
+            inclination=sheet["H40"].value,
+            meridian=sheet["E36"].value,
+        )
 
 
 def convert_precision(angle, precision="DMS"):
