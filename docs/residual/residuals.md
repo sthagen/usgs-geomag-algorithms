@@ -39,7 +39,7 @@ from geomagio.residual.Calculation import calculate
 output_reading = calculate(reading)
 ```
 
-NOTE: Input readings require measurements. Current measurements are made using the null method and will not include residual values. The residual method is backwards compatible with the null method, but resulting absolute values will not be identical.
+NOTE: Input readings require measurements. Current measurements are made using the null method and will not include residual values. The residual method is backwards compatible with the null method, but resulting absolute values will not be identical. Residuals enhance utilization of ordinates(magnetometer values), which account for a small change in output values.
 
 # Validation:
 Backwards compatibility allows for legacy null measurements to have their absolute values recalculated by the residual method. Although absolute cannot be replicated, results can be assesed for accuracy over long time scales. The following figure serves to display the closeness this method can acheive while operating on null measurements. Data is gathered from the Boulder magnetic observatory and includes readings from a six month time span.(01/2020 - 07/2020)
