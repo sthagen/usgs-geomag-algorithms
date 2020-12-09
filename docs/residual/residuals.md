@@ -2,7 +2,7 @@
 
 
 ## Spreadsheet Absolutes Factory:
-Tool for gathering a single reading from a formatted spreadsheet. Output includes measurements and absolutes. Format examples can be found in the etc/ folder.
+Tool for gathering a single reading from a formatted spreadsheet. Output includes measurements and absolutes. Format examples can be found at https://code.usgs.gov/ghsc/geomag/geomag-algorithms/-/tree/master/etc/residual.
 
 ### Usage:
 ```python
