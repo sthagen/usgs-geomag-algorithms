@@ -34,12 +34,17 @@ class Reading(BaseModel):
     pier_correction: float = 0
     scale_value: float = None
 
-    def __getitem__(self, measurement_type: MeasurementType):
+    def __getmeasurements__(self, measurement_type: MeasurementType):
         """Provide access to measurements by type.
 
         Example: reading[MeasurementType.WEST_DOWN]
         """
         return [m for m in self.measurements if m.measurement_type == measurement_type]
+
+    def __getabsolute__(self, element: str):
+        for absolute in self.absolutes:
+            if absolute.element == element:
+                return absolute
 
     def load_ordinates(
         self,
