@@ -1816,7 +1816,7 @@ def do_it_all(
         for M_func, memory in zip(M_funcs, memories):
 
             # Calculate time-dependent weights using h_utc
-            weights.append(time_weights_exponential(h_utc, memory, start_UTC))
+            weights.append(time_weights_exponential(h_utc, memory, start_UTC.timestamp))
 
             # set weights for future observations to zero if not acausal
             if not acausal:
