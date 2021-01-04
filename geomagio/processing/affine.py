@@ -1488,116 +1488,6 @@ def generate_affine_9(ord_hez, abs_xyz, weights=None):
     return M
 
 
-def interpolate_affine_polar(utc_target, utc_list, affine_list, fill_value=None):
-    """
-    Interpolate between affine transform matices. Interpolating linear/affine
-    transform matrices is problematic because the rotation component cannot
-    be directly interpolated in a way that maintains a valid rotation matrix
-    at intermediate points. Here we first use Polar decomposition to decompose
-    the transform into an orthogonal matrix Q and a "stretch" matrix S (M=QS).
-    The Qs are interpolated between Slerp, while the Ss are interpolated using
-    using standard linear interpolation.
-
-
-    References:
-    http://research.cs.wisc.edu/graphics/Courses/838-s2002/Papers/polar-decomp.pdf
-    https://en.wikipedia.org/wiki/Slerp
-    http://run.usc.edu/cs520-s15/assign2/p245-shoemake.pdf
-
-    Inputs:
-    utc_target    - list of UTCs at which to interpolate affine matrices
-    utc_list      - list of UTCs that correspond to a list of known affine matrices
-    affine_list   - list of known affine matrices
-
-    Options:
-    fill_value    - if None, disallow extrapolation; if not None, use this
-                    value when utc_target falls outside utc_list range; if
-                    "extrapolate", extrapolate based on first/last two in
-                    affine_list.
-                    NOTE: SciPy's Slerp cannot presently extrapolate, so
-                          this function will simply extend the first/last
-                          affine_list matrices to all times outside utc_list.
-
-    Outout:
-    affine_target - list of interpolated affine matrices
-    """
-
-    if fill_value is not None:
-        raise ValueError("fill_value extrapolation not implemented")
-
-    # decompose affine_list
-    Ts_in = []  # translations
-    Rs_in = []  # rotations
-    Ns_in = []  # +/- I (accomodates reflections)
-    Ss_in = []  # stretches
-    for M in affine_list:
-        # polar decomposition
-        Q, S = spl.polar(M[:3, :3])
-        if np.linalg.det(Q) < 0:
-            # factor out -I if det(Q) is -1
-            R = np.dot(Q, np.linalg.inv(-np.eye(3)))
-            N = -np.eye(3)
-        else:
-            R = Q
-            N = np.eye(3)
-        Ts_in.append(M[:3, 3, None])
-        Rs_in.append(R)
-        Ns_in.append(N)
-        Ss_in.append(S)
-
-    # interp1d Ts
-    Ts_out = []
-    Rs_out = []
-    Ns_out = []
-    Ss_out = []
-    for T in np.reshape(Ts_in, (-1, 3)).T:
-        int1d = interp1d(
-            np.asarray(utc_list).astype(float), T, fill_value="extrapolate"
-        )
-        Ts_out.append(int1d(np.asarray(utc_target).astype(float)))
-    Ts_out = np.array(Ts_out).T.reshape(-1, 3, 1)
-
-    # SLERP Rs
-    Rs = Rotation.from_dcm(Rs_in)
-    Rslerp = Slerp(np.asarray(utc_list).astype(float), Rs)
-    Rs_out = Rslerp(np.asarray(utc_target).astype(float))
-    Rs_out = Rs_out.as_dcm()
-    # Rs_out = [R.as_dcm() for R in Rs_out]
-
-    # interp1d Ns
-    for N in np.reshape(Ns_in, (-1, 9)).T:
-        int1d = interp1d(
-            np.asarray(utc_list).astype(float), N, fill_value="extrapolate"
-        )
-        Ns_out.append(int1d(np.asarray(utc_target).astype(float)))
-    Ns_out = np.array(Ns_out).T.reshape(-1, 3, 3)
-
-    # interp1d Ss
-    for S in np.reshape(Ss_in, (-1, 9)).T:
-        int1d = interp1d(
-            np.asarray(utc_list).astype(float), S, fill_value="extrapolate"
-        )
-        Ss_out.append(int1d(np.asarray(utc_target).astype(float)))
-    Ss_out = np.array(Ss_out).T.reshape(-1, 3, 3)
-
-    # recombine components into M_target list
-    affine_target = []
-    for t in np.arange(len(utc_target)):
-
-        affine_target.append(
-            np.vstack(
-                (
-                    np.hstack(
-                        (np.dot(Rs_out[t], np.dot(Ns_out[t], Ss_out[t])), Ts_out[t])
-                    ),
-                    [0, 0, 0, 1],
-                )
-            )
-        )
-
-    return affine_target
-
-
 def do_one(
     weights: List[float],
     Ms: List[List[float]],
@@ -1645,7 +1535,6 @@ def do_it_all(
     end_UTC,
     update_interval=None,
     acausal=False,
-    interpolate=False,
     first_UTC=None,
     last_UTC=None,
     M_funcs=[generate_affine_0],
@@ -1677,7 +1566,6 @@ def do_it_all(
                       (default = end_UTC - start_UTC)
     acausal         - use absolute/ordinate pairs from the future if True
                       (default = False)
-    interpolate     - interpolate between key transforms
                       (default = False)
     first_UTC       - earliest observation date to retrieve
                       (default = start_UTC)
@@ -1788,7 +1676,7 @@ def do_it_all(
     pcwa_list = []
 
     # process each update_interval from start_UTC to end_UTC
-    while (start_UTC < end_UTC) or (start_UTC <= end_UTC and interpolate is True):
+    while start_UTC < end_UTC:
 
         print("Generating key transform for ", start_UTC)
 
@@ -1899,7 +1787,6 @@ edge_host = edge_host or "cwbpub.cr.usgs.gov"
     end_UTC,
     update_interval=update_interval,
     acausal=False,
-    interpolate=False,
     first_UTC=first_UTC,
     last_UTC=last_UTC,
     M_funcs=M_funcs,
@@ -1914,7 +1801,6 @@ edge_host = edge_host or "cwbpub.cr.usgs.gov"
     end_UTC,
     update_interval=update_interval,
     acausal=True,
-    interpolate=True,
     first_UTC=first_UTC,
     last_UTC=last_UTC,
     M_funcs=M_funcs,
@@ -1928,7 +1814,6 @@ edge_host = edge_host or "cwbpub.cr.usgs.gov"
     end_UTC,
     update_interval=update_interval,
     acausal=True,
-    interpolate=True,
     first_UTC=first_UTC,
     last_UTC=last_UTC,
     M_funcs=M_funcs,
@@ -1943,7 +1828,6 @@ edge_host = edge_host or "cwbpub.cr.usgs.gov"
     end_UTC,
     update_interval=None,
     acausal=True,
-    interpolate=True,
     first_UTC=first_UTC,
     last_UTC=last_UTC,
     M_funcs=M_funcs,
@@ -1989,6 +1873,7 @@ with open("weekly_inf_memory_acausal.p", "rb") as fp:
 
 assert_equal(data, weekly_inf_memory_acausal)
 
+# same contents as before, but missing last data element for each key(not needed for interpolate)
 with open("all_inf_memory_acausal.p", "rb") as fp:
     data = pickle.load(fp)
 
