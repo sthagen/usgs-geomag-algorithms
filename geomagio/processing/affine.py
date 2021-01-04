@@ -14,6 +14,7 @@ from scipy.interpolate import interp1d
 import scipy.linalg as spl
 from scipy.spatial.transform import Rotation
 from scipy.spatial.transform import Slerp
+from typing import List
 import urllib
 
 from geomagio.edge import EdgeFactory
@@ -497,7 +498,19 @@ def time_weights_exponential(times, memory, epoch: int = None):
     return weights
 
 
-def filter_iqr(series, threshold=None, weights=None):
+def weighted_quartile(data, weights, quant):
+    # sort data and weights
+    ind_sorted = np.argsort(data)
+    sorted_data = data[ind_sorted]
+    sorted_weights = weights[ind_sorted]
+    # compute auxiliary arrays
+    Sn = np.cumsum(sorted_weights)
+    Pn = (Sn - 0.5 * sorted_weights) / Sn[-1]
+    # interpolate to weighted quantile
+    return np.interp(quant, Pn, sorted_data)
+
+
+def filter_iqr(series: List[float], threshold=6, weights=None):
     """
     Identify "good" elements in series by calculating potentially weighted
     25%, 50% (median), and 75% quantiles of series, the number of 25%-50%
@@ -527,47 +540,22 @@ def filter_iqr(series, threshold=None, weights=None):
 
     """
 
-    def wq(data, wgts, quant):
-        # sort data and weights
-        ind_sorted = np.argsort(data)
-        sorted_data = data[ind_sorted]
-        sorted_weights = wgts[ind_sorted]
-        # compute auxiliary arrays
-        Sn = np.cumsum(sorted_weights)
-        Pn = (Sn - 0.5 * sorted_weights) / Sn[-1]
-        # interpolate to weighted quantile
-        return np.interp(quant, Pn, sorted_data)
-
-    if series.ndim > 1:
-        raise ValueError("Invalid input series: ", series)
-
-    if threshold is None:
-        threshold = 6
-
     if weights is None:
         weights = np.ones_like(series)
-    else:
-        weights = np.asarray(weights)
 
-    # convert to NumPy arrays for convenience
-    series = np.asarray(series)
-    weights = np.asarray(weights)
-
-    # initialize good as all True for weights > 0
+    # initialize good as all True for weights greater than 0
     good = (weights > 0).astype(bool)
     if np.size(good) <= 1:
         # if a singleton is passed, assume it is "good"
         return good
 
-    # This should loop at least once
     good_old = ~good
-    while not np.all(np.equal(good_old, good)):
-        # copy for comparison
-        good_old = good.copy()
+    while not (good_old == good).all():
+        good_old = good
 
-        wq25 = wq(series[good], weights[good], 0.25)
-        wq50 = wq(series[good], weights[good], 0.50)
-        wq75 = wq(series[good], weights[good], 0.75)
+        wq25 = weighted_quartile(series[good], weights[good], 0.25)
+        wq50 = weighted_quartile(series[good], weights[good], 0.50)
+        wq75 = weighted_quartile(series[good], weights[good], 0.75)
 
         # NOTE: it is necessary to include good on the RHS here
         #       to prevent oscillation between two equally likely
