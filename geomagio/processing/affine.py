@@ -412,7 +412,7 @@ def new_retrieve_baselines_webasolutes(
         # the following is a kludge where zero-amplitude horizontal field
         # serves as a "flag" for when observatory change was significant
         # enough to discard all previous absolute measurements
-        if reading.__getabsolute__("H").absolute is 0:
+        if reading.__getabsolute__("H").absolute == 0:
             last_epoch = max(reading.__getabsolute__("H").endtime, last_epoch)
 
     # print message about modified magnetometer
@@ -1706,7 +1706,7 @@ def do_it_all(
     # make sure memory is compatible with M_funcs
     if np.isscalar(memories):
         memories = [memories for func in M_funcs]
-    elif len(memories) is 1:
+    elif len(memories) == 1:
         memories = [memories[0] for func in M_funcs]
     elif len(memories) != len(M_funcs):
         raise ValueError(
