@@ -1608,8 +1608,8 @@ def do_it_all(
     interpolate=False,
     first_UTC=None,
     last_UTC=None,
-    M_funcs=None,
-    memories=None,
+    M_funcs=[generate_affine_0],
+    memories: List[float] = [np.inf],
     path_or_url="https://geomag.usgs.gov",
     validate=False,
     edge_host="cwbpub.cr.usgs.gov",
@@ -1695,14 +1695,6 @@ def do_it_all(
         # only one interval from start_UTC to end_UTC
         update_interval = end_UTC - start_UTC
 
-    # default M_func
-    if M_funcs is None:
-        M_funcs = [generate_affine_0]
-
-    # default memory
-    if memories is None:
-        memories = [np.inf]
-
     # make sure memory is compatible with M_funcs
     if np.isscalar(memories):
         memories = [memories for func in M_funcs]
@@ -1715,7 +1707,6 @@ def do_it_all(
 
     # retrieve all absolute calibrations and baselines from start_UTC to end_UTC
     if obs_code == "DED" or obs_code == "CMO":
-
         # use residual method summary spreadsheets to retrieve baseline info
 
         # if a file: URL is passed, just trim off the front for now
