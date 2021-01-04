@@ -9,10 +9,7 @@ from numpy.testing import assert_equal
 from obspy.core import UTCDateTime
 from openpyxl import load_workbook
 import pickle
-from scipy.interpolate import interp1d
 import scipy.linalg as spl
-from scipy.spatial.transform import Rotation
-from scipy.spatial.transform import Slerp
 from typing import List
 
 from geomagio.residual import WebAbsolutesFactory
@@ -34,10 +31,11 @@ def retrieve_baselines_resid_summary_xlsm(
     path_or_url - folder in which to find .xlsm files
 
     Outout:
-    h_abs_bas_utc - array holding vectors of h_abs, h_bas, and h_utc
-    d_abs_bas_utc - array holding vectors of d_abs, d_bas, and d_utc
-    z_abs_bas_utc - array holding vectors of z_abs, z_bas, and z_utc
+    h_abs_bas - array holding vectors of h_abs and h_bas
+    d_abs_bas - array holding vectors of d_abs and d_bas
+    z_abs_bas - array holding vectors of z_abs and z_bas
     pc            - array holding pier corrections
+    h_utc         - array holding reference times from h component
     """
 
     # some default inputs
@@ -365,7 +363,7 @@ def retrieve_baselines_resid_summary_xlsm(
     )
 
 
-def new_retrieve_baselines_webasolutes(
+def retrieve_baselines_webasolutes(
     observatory: str,
     starttime: str = UTCDateTime(0),
     endtime: UTCDateTime = UTCDateTime(),
@@ -569,7 +567,7 @@ def filter_iqr(series: List[float], threshold=6, weights=None):
     return good
 
 
-def generate_affine_0(ord_hez, abs_xyz, weights=None):
+def generate_affine_0(ord_hez, abs_xyz, weights=1):
     """
     Generate affine transform matrix from ordinate to absolute coordinates,
     with least-squares and no constraints.
@@ -584,12 +582,7 @@ def generate_affine_0(ord_hez, abs_xyz, weights=None):
     Outout:
     M - a 4x4 affine transformation matrix to convert ord_hez into abs_xy
     """
-
-    if weights is None:
-        # equal weighting
-        weights = 1
-    else:
-        # Wikipedia indicates sqrt(weights) is appropriate for WLS
+    if weights.all() != 1:
         weights = np.sqrt(weights)
         # same weight applies to all three vector components
         weights = np.vstack((weights, weights, weights)).T.ravel()
@@ -657,12 +650,10 @@ def generate_affine_0(ord_hez, abs_xyz, weights=None):
     M[2, 3] = M_r[11]
     M[3, :] = [0, 0, 0, 1]
 
-    #     print(np.array_str(M, precision=3))
-
     return M
 
 
-def generate_affine_1(ord_hez, abs_xyz, weights=None):
+def generate_affine_1(ord_hez, abs_xyz, weights=1):
     """
     Generate affine transform matrix from ordinate to absolute coordinates,
     constrained to rotate about z-axis.
@@ -677,12 +668,7 @@ def generate_affine_1(ord_hez, abs_xyz, weights=None):
     Outout:
     M - a 4x4 affine transformation matrix to convert ord_hez into abs_xy
     """
-
-    if weights is None:
-        # equal weighting
-        weights = 1
-    else:
-        # Wikipedia indicates sqrt(weights) is appropriate for WLS
+    if weights.all() != 1:
         weights = np.sqrt(weights)
         # same weight applies to all three vector components
         weights = np.vstack((weights, weights, weights)).T.ravel()
@@ -742,12 +728,10 @@ def generate_affine_1(ord_hez, abs_xyz, weights=None):
     M[2, 3] = M_r[7]
     M[3, :] = [0, 0, 0, 1]
 
-    #     print(np.array_str(M, precision=3))
-
     return M
 
 
-def generate_affine_2(ord_hez, abs_xyz, weights=None):
+def generate_affine_2(ord_hez, abs_xyz, weights=1):
     """
     Generate affine transform matrix from ordinate to absolute coordinates,
     constrained to rotate about z-axis, and a uniform horizontal scaling
@@ -764,11 +748,7 @@ def generate_affine_2(ord_hez, abs_xyz, weights=None):
     M - a 4x4 affine transformation matrix to convert ord_hez into abs_xy
     """
 
-    if weights is None:
-        # equal weighting
-        weights = 1
-    else:
-        # Wikipedia indicates sqrt(weights) is appropriate for WLS
+    if weights.all() != 1:
         weights = np.sqrt(weights)
         # same weight applies to all three vector components
         weights = np.vstack((weights, weights, weights)).T.ravel()
@@ -829,12 +809,10 @@ def generate_affine_2(ord_hez, abs_xyz, weights=None):
     M[2, 3] = M_r[5]
     M[3, :] = [0, 0, 0, 1]
 
-    #     print(np.array_str(M, precision=3))
-
     return M
 
 
-def generate_affine_3(ord_hez, abs_xyz, weights=None):
+def generate_affine_3(ord_hez, abs_xyz, weights=1):
     """
     Generate affine transform matrix from ordinate to absolute coordinates,
     constrained to a rotation about the z-axis, a uniform scaling in the
@@ -853,11 +831,7 @@ def generate_affine_3(ord_hez, abs_xyz, weights=None):
     M - a 4x4 affine transformation matrix to convert ord_hez into abs_xy
     """
 
-    if weights is None:
-        # equal weighting
-        weights = 1
-    else:
-        # Wikipedia indicates sqrt(weights) is appropriate for WLS
+    if weights.all() != 1:
         weights = np.sqrt(weights)
         # same weight applies to all three vector components
         weights = np.vstack((weights, weights, weights)).T.ravel()
@@ -920,13 +894,6 @@ def generate_affine_3(ord_hez, abs_xyz, weights=None):
     #     def_x = def_h * np.cos(def_d * np.pi/180.)
     #     def_y = def_h * np.sin(def_d * np.pi/180.)
 
-    #     print(np.array_str(Rmtx, precision=3))
-    #     print(np.array_str(Smtx, precision=3))
-    #     print(np.array_str(Tmtx, precision=3))
-    #     print(np.array_str(M, precision=3))
-
-    # ...or, solve for M directly
-
     # LHS, or dependent variables
     abs_st = np.vstack([x_a, y_a, z_a])
     abs_st_r = abs_st.T.ravel()
@@ -976,8 +943,6 @@ def generate_affine_3(ord_hez, abs_xyz, weights=None):
     M[2, 2] = 1.0
     M[2, 3] = M_r[2]
     M[3, :] = [0, 0, 0, 1]
-
-    #     print(np.array_str(M, precision=3))
 
     return M
 
@@ -1065,12 +1030,10 @@ def generate_affine_4(ord_hez, abs_xyz, weights=None):
     M[:3, :3] = R
     M[:3, 3] = T
 
-    #     print(np.array_str(M, precision=3))
-
     return M
 
 
-def generate_affine_5(ord_hez, abs_xyz, weights=None):
+def generate_affine_5(ord_hez, abs_xyz, weights=1):
     """
     Generate affine transform matrix from ordinate to absolute coordinates,
     constrained to re-scale each axis.
@@ -1086,11 +1049,7 @@ def generate_affine_5(ord_hez, abs_xyz, weights=None):
     M - a 4x4 affine transformation matrix to convert ord_hez into abs_xy
     """
 
-    if weights is None:
-        # equal weighting
-        weights = 1
-    else:
-        # Wikipedia indicates sqrt(weights) is appropriate for WLS
+    if weights.all() != 1:
         weights = np.sqrt(weights)
         # same weight applies to all three vector components
         weights = np.vstack((weights, weights, weights)).T.ravel()
@@ -1148,12 +1107,10 @@ def generate_affine_5(ord_hez, abs_xyz, weights=None):
     M[2, 3] = 0.0
     M[3, :] = [0, 0, 0, 1]
 
-    #     print(np.array_str(M, precision=3))
-
     return M
 
 
-def generate_affine_6(ord_hez, abs_xyz, weights=None):
+def generate_affine_6(ord_hez, abs_xyz, weights=1):
     """
     Generate affine transform matrix from ordinate to absolute coordinates,
     constrained to translate origins.
@@ -1169,11 +1126,7 @@ def generate_affine_6(ord_hez, abs_xyz, weights=None):
     M - a 4x4 affine transformation matrix to convert ord_hez into abs_xy
     """
 
-    if weights is None:
-        # equal weighting
-        weights = 1
-    else:
-        # Wikipedia indicates sqrt(weights) is appropriate for WLS
+    if weights.all() != 1:
         weights = np.sqrt(weights)
         # same weight applies to all three vector components
         weights = np.vstack((weights, weights, weights)).T.ravel()
@@ -1236,8 +1189,6 @@ def generate_affine_6(ord_hez, abs_xyz, weights=None):
     M[2, 3] = M_r[2]
     M[3, :] = [0, 0, 0, 1]
 
-    #     print(np.array_str(M, precision=3))
-
     return M
 
 
@@ -1257,11 +1208,7 @@ def generate_affine_7(ord_hez, abs_xyz, weights=None):
     M - a 4x4 affine transformation matrix to convert ord_hez into abs_xy
     """
 
-    if weights is None:
-        # equal weighting
-        weights = 1
-    else:
-        # Wikipedia indicates sqrt(weights) is appropriate for WLS
+    if weights.all() != 1:
         weights = np.sqrt(weights)
         # same weight applies to all three vector components
         weights = np.vstack((weights, weights, weights)).T.ravel()
@@ -1319,8 +1266,6 @@ def generate_affine_7(ord_hez, abs_xyz, weights=None):
     M[2, 2] = 1.0
     M[2, 3] = 0.0
     M[3, :] = [0, 0, 0, 1]
-
-    #     print(np.array_str(M, precision=3))
 
     return M
 
@@ -1394,13 +1339,10 @@ def generate_affine_8(ord_hez, abs_xyz, weights=None):
     M[:2, 3] = T
 
     M[2, 3] = np.array(z_a_cent) - np.array(z_o_cent)
-
-    #     print(np.array_str(M, precision=3))
-
     return M
 
 
-def generate_affine_9(ord_hez, abs_xyz, weights=None):
+def generate_affine_9(ord_hez, abs_xyz, weights=1):
     """
     Generate affine transform matix from ordinate to absolute coordinates,
     constrained to rotate about z-axis, with only rotation and shear in the
@@ -1420,10 +1362,6 @@ def generate_affine_9(ord_hez, abs_xyz, weights=None):
     Outout:
     M - a 4x4 affine transformation matrix to convert ord_hez into abs_xy
     """
-
-    if weights is None:
-        # equal weighting
-        weights = 1
 
     # extract measurements
     h_o = ord_hez[0]
@@ -1482,9 +1420,6 @@ def generate_affine_9(ord_hez, abs_xyz, weights=None):
     M[:2, 3] = T
 
     M[2, 3] = np.array(z_a_cent) - np.array(z_o_cent)
-
-    #     print(np.array_str(M, precision=3))
-
     return M
 
 
@@ -1642,7 +1577,7 @@ def do_it_all(
             (z_abs, z_bas),
             pc,
             utc,
-        ) = new_retrieve_baselines_webasolutes(
+        ) = retrieve_baselines_webasolutes(
             obs_code, starttime=first_UTC, endtime=last_UTC
         )
 
@@ -1655,9 +1590,6 @@ def do_it_all(
     x_a = h_abs * np.cos(d_abs * np.pi / 180)
     y_a = h_abs * np.sin(d_abs * np.pi / 180)
     z_a = z_abs
-    #     h_o = h_ord * np.cos(d_ord * np.pi/180)
-    #     e_o = h_ord * np.sin(d_ord * np.pi/180)
-    #     z_o = z_ord
 
     # WebAbsolutes defines/generates h differently than USGS residual
     # method spreadsheets. The following should ensure that ordinate
@@ -1672,7 +1604,6 @@ def do_it_all(
     # initialize outputs
     utc_list = []
     M_composed_list = []
-    Ms_list = []
     pcwa_list = []
 
     # process each update_interval from start_UTC to end_UTC
@@ -1724,7 +1655,6 @@ def do_it_all(
 
         # append Ms, pcwa, and weights used to generate them to lists
         # of outputs for each update_interval
-        Ms_list.append(Ms)
         pcwa_list.append(pcwa)
 
         # compose affine transform matrices
