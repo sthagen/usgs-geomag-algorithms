@@ -4,7 +4,6 @@ import os
 import fnmatch
 from datetime import datetime
 from datetime import timedelta
-import json
 import numpy as np
 from numpy.testing import assert_equal
 from obspy.core import UTCDateTime
@@ -15,9 +14,7 @@ import scipy.linalg as spl
 from scipy.spatial.transform import Rotation
 from scipy.spatial.transform import Slerp
 from typing import List
-import urllib
 
-from geomagio.edge import EdgeFactory
 from geomagio.residual import WebAbsolutesFactory
 
 
@@ -357,11 +354,15 @@ def retrieve_baselines_resid_summary_xlsm(
     z_bas = z_bas[good]
     pc = pc[good]
     h_utc = h_utc[good]
-    d_utc = d_utc[good]
-    z_utc = z_utc[good]
 
     # return "good" data points
-    return ((h_abs, h_bas, h_utc), (d_abs, d_bas, d_utc), (z_abs, z_bas, z_utc), pc)
+    return (
+        (h_abs, h_bas),
+        (d_abs, d_bas),
+        (z_abs, z_bas),
+        pc,
+        h_utc,
+    )
 
 
 def new_retrieve_baselines_webasolutes(
@@ -446,11 +447,9 @@ def new_retrieve_baselines_webasolutes(
     z_bas = z_bas[good]
     pc = pc[good]
     h_utc = h_utc[good]
-    d_utc = d_utc[good]
-    z_utc = z_utc[good]
 
     # return data arrays
-    return ((h_abs, h_bas, h_utc), (d_abs, d_bas, d_utc), (z_abs, z_bas, z_utc), pc)
+    return ((h_abs, h_bas), (d_abs, d_bas), (z_abs, z_bas), pc, h_utc)
 
 
 def time_weights_exponential(times, memory, epoch: int = None):
@@ -1601,10 +1600,6 @@ def interpolate_affine_polar(utc_target, utc_list, affine_list, fill_value=None)
 
 def do_one(
     weights: List[float],
-    h_utc: UTCDateTime.timestamp,
-    memory: List[float],
-    start_UTC: UTCDateTime,
-    acausal: bool,
     Ms: List[List[float]],
     pcwa: List[float],
     h_bas: float,
@@ -1656,8 +1651,6 @@ def do_it_all(
     M_funcs=[generate_affine_0],
     memories: List[float] = [np.inf],
     path_or_url="https://geomag.usgs.gov",
-    validate=False,
-    edge_host="cwbpub.cr.usgs.gov",
 ):
     """
     This function will do the following for a specified obs_code between
@@ -1704,28 +1697,11 @@ def do_it_all(
                       (default = np.inf)
     path_or_url     - url for absolutes web service, or path to summary xlsm files
                       (default = 'https://geomag.usgs.gov/')
-    validate        - if True, pull and process raw data, then compare with QD
-                      (default = False)
-    edge_host       - edge host for raw and QD magnetometer time series
-                      (default = 'cwbpub.cr.usgs.gov')
 
     OUTPUTS:
     utc_list        - list of first UTCDateTimes for each update_interval
     M_composed_list - list of composed Adjusted Data matrices for each update_interval
     pc_list         - list of pier corrections for each update_interval
-
-    (if validate is True)
-    utc_xyzf_list   - list of UTCDateTime arrays for each observation
-    xyzf_trad_list  - list of static baseline adjusted data arrays for each update_interval
-    xyzf_adj_list   - list of Adjusted Data arrays for each update_interval
-    xyzf_def_list   - list of Definitive Data arrays for each update_interval
-    utc_bas         - UTCDateTimes for absolute measurements
-    abs_xyz         - absolute XYZ values used to train affine transforms
-    ord_hez         - ordinate HEZ values used to train affine transforms
-    Ms_list         - list of lists of Adjusted Data matrices for each M_func,
-                      for each update_interval
-    weights_list    - list of lists of weights used to estimate Adjusted Data
-                      matrices for each M_func, for each update_interval
 
     """
 
@@ -1761,10 +1737,11 @@ def do_it_all(
                 path_or_url = path_or_url[2:]
 
         (
-            (h_abs, h_bas, h_utc),
-            (d_abs, d_bas, d_utc),
-            (z_abs, z_bas, z_utc),
+            (h_abs, h_bas),
+            (d_abs, d_bas),
+            (z_abs, z_bas),
             pc,
+            utc,
         ) = retrieve_baselines_resid_summary_xlsm(
             obs_code, start_date=first_UTC, end_date=last_UTC, path_or_url=path_or_url
         )
@@ -1772,10 +1749,11 @@ def do_it_all(
 
         # use WebAbsolutes web service to retrieve baseline info
         (
-            (h_abs, h_bas, h_utc),
-            (d_abs, d_bas, d_utc),
-            (z_abs, z_bas, z_utc),
+            (h_abs, h_bas),
+            (d_abs, d_bas),
+            (z_abs, z_bas),
             pc,
+            utc,
         ) = new_retrieve_baselines_webasolutes(
             obs_code, starttime=first_UTC, endtime=last_UTC
         )
@@ -1803,22 +1781,11 @@ def do_it_all(
         h_o = h_ord
     z_o = z_ord
 
-    # use h_utc as common time stamp for vectors
-    utc_bas = h_utc
-    # stack absolute and ordinate vectors for output
-    abs_xyz = np.vstack((x_a, y_a, z_a))
-    ord_hez = np.vstack((h_o, e_o, z_o))
-
     # initialize outputs
     utc_list = []
     M_composed_list = []
     Ms_list = []
     pcwa_list = []
-    weights_list = []
-    utc_xyzf_list = []
-    xyzf_trad_list = []
-    xyzf_adj_list = []
-    xyzf_def_list = []
 
     # process each update_interval from start_UTC to end_UTC
     while (start_UTC < end_UTC) or (start_UTC <= end_UTC and interpolate is True):
@@ -1837,12 +1804,12 @@ def do_it_all(
 
         # loop over M_funcs and memories to compose affine matrix
         for M_func, memory in zip(M_funcs, memories):
-            # Calculate time-dependent weights using h_utc
-            weights.append(time_weights_exponential(h_utc, memory, start_UTC.timestamp))
+            # Calculate time-dependent weights using utc
+            weights.append(time_weights_exponential(utc, memory, start_UTC.timestamp))
 
             # set weights for future observations to zero if not acausal
             if not acausal:
-                weights[-1][h_utc > start_UTC] = 0.0
+                weights[-1][utc > start_UTC] = 0.0
 
             # return NaNs if no valid observations
             if np.sum(weights[-1]) == 0:
@@ -1852,10 +1819,6 @@ def do_it_all(
                 continue
             h_tmp, e_tmp, z_tmp, pcwa, Ms, weights = do_one(
                 weights=weights,
-                h_utc=h_utc,
-                memory=memory,
-                start_UTC=start_UTC,
-                acausal=acausal,
                 Ms=Ms,
                 pcwa=pcwa,
                 h_bas=h_bas,
@@ -1875,7 +1838,6 @@ def do_it_all(
         # of outputs for each update_interval
         Ms_list.append(Ms)
         pcwa_list.append(pcwa)
-        weights_list.append(weights)
 
         # compose affine transform matrices
         M_composed = reduce(np.dot, Ms[::-1])
@@ -1886,131 +1848,10 @@ def do_it_all(
         # append to list of outputs for each update_interval
         utc_list.append(start_UTC)
 
-        # generate/pull data for validation if requested
-        if validate:
-
-            if interpolate is True:
-                if len(utc_list) == 1:
-                    # can't interpolate with only 1 transform
-                    start_UTC = start_UTC + update_interval
-                    continue
-                else:
-                    valid_start = start_UTC - update_interval
-                    valid_end = start_UTC
-            else:
-                valid_start = start_UTC
-                valid_end = start_UTC + update_interval
-
-            print("Validating interval ", valid_start, " to ", valid_end)
-
-            # retrieve raw HEZF variometer data from Edge server
-            factory = EdgeFactory(host=edge_host)
-            hezf = factory.get_timeseries(
-                observatory=obs_code,
-                interval="minute",
-                type="variation",
-                channels=("H", "E", "Z", "F"),
-                starttime=valid_start,
-                endtime=valid_end,
-            )
-
-            # place hez traces into hez1 matrix required for regression
-            hez1_arr = np.vstack(
-                (hezf[0].data, hezf[1].data, hezf[2].data, np.ones_like(hezf[3]))
-            )
-
-            # generate list of UTCDateTimes
-            utc_arr = np.array(
-                [(hezf[0].stats.starttime + second) for second in hezf[0].times()]
-            )
-
-            if interpolate is True:
-                # interpolate transform matrices
-                M_each = interpolate_affine_polar(
-                    utc_arr, utc_list[-2:], M_composed_list[-2:]
-                )
-            else:
-                # generate list of identical matrices
-                M_each = [M_composed for each in utc_arr]
-
-            # generate adjusted data using composed affine transform matrix
-            xyz1 = np.transpose(
-                [
-                    np.dot(M_each[obs], hez1_arr[:, obs])
-                    for obs in np.arange(len(utc_arr))
-                ]
-            ).squeeze()
-            xyzf = np.vstack((xyz1[:-1], hezf[3].data + np.mean(pcwa_list[-1])))
-
-            # append xyzf to list of outputs for each update interval
-            xyzf_adj_list.append(xyzf)
-
-            # apply average traditional baseline adjustment to cylindrical
-            # ordinates, then convert to XYZ (this may not be exactly how
-            # MagProc does things, but it is how BGS documented it)
-            h_bas_avg = np.mean(h_bas[filter_iqr(h_bas, threshold=3)])
-            d_bas_avg = np.mean(d_bas[filter_iqr(d_bas, threshold=3)])
-            z_bas_avg = np.mean(z_bas[filter_iqr(z_bas, threshold=3)])
-
-            # WebAbsolutes defines/generates h differently than USGS residual
-            # method spreadsheets; here we ensure that h_trad is the total
-            # horizontal field, then use it and declination to get X and Y.
-            if obs_code == "DED" or obs_code == "CMO":
-                h_trad = h_bas_avg + np.sqrt(hez1_arr[0] ** 2 + hez1_arr[1] ** 2)
-            else:
-                h_trad = np.sqrt((h_bas_avg + hez1_arr[0]) ** 2 + hez1_arr[1] ** 2)
-
-            # d_trad = d_bas_avg * np.pi/180 + np.arcsin(hez1_arr[1] / h_trad)
-            d_trad = (
-                d_bas_avg * np.pi / 180 + hez1_arr[1] / h_trad
-            )  # small-angle approx.
-
-            x_trad = h_trad * np.cos(d_trad)
-            y_trad = h_trad * np.sin(d_trad)
-            z_trad = z_bas_avg + hez1_arr[2]
-
-            xyzf_trad_list.append(np.vstack((x_trad, y_trad, z_trad, xyzf[3])))
-
-            # retrieve (Quasi)Definitive xyzf data from Edge server
-            factory = EdgeFactory(host=edge_host)
-            xyzf = factory.get_timeseries(
-                observatory=obs_code,
-                interval="minute",
-                type="quasi-definitive",
-                channels=("X", "Y", "Z", "F"),
-                starttime=valid_start,
-                endtime=valid_end,
-            )
-
-            # place xyzf traces into xyzf matrix
-            xyzf = np.vstack((xyzf[0].data, xyzf[1].data, xyzf[2].data, xyzf[3].data))
-
-            # append xyzf to list of outputs for each update interval
-            xyzf_def_list.append(xyzf)
-
-            # finally, return array of common times for plotting, etc.
-            utc_xyzf_list.append(utc_arr)
-
         # increment start_UTC
         start_UTC += update_interval
 
-    if validate:
-        return (
-            utc_list,
-            M_composed_list,
-            pcwa_list,
-            utc_xyzf_list,
-            xyzf_trad_list,
-            xyzf_adj_list,
-            xyzf_def_list,
-            utc_bas,
-            abs_xyz,
-            ord_hez,
-            Ms_list,
-            weights_list,
-        )
-    else:
-        return utc_list, M_composed_list, pcwa_list
+    return utc_list, M_composed_list, pcwa_list
 
 
 # configuration parameters for all observatories
@@ -2064,7 +1905,6 @@ edge_host = edge_host or "cwbpub.cr.usgs.gov"
     M_funcs=M_funcs,
     memories=memories,
     path_or_url=path_or_url,
-    edge_host=edge_host,
 )
 
 
@@ -2080,7 +1920,6 @@ edge_host = edge_host or "cwbpub.cr.usgs.gov"
     M_funcs=M_funcs,
     memories=memories,
     path_or_url=path_or_url,
-    edge_host=edge_host,
 )
 
 (utc_weekly_inf_acausal, M_weekly_inf_acausal, pc_weekly_inf_acausal,) = do_it_all(
@@ -2095,7 +1934,6 @@ edge_host = edge_host or "cwbpub.cr.usgs.gov"
     M_funcs=M_funcs,
     memories=[np.inf, np.inf],
     path_or_url=path_or_url,
-    edge_host=edge_host,
 )
 
 
@@ -2111,7 +1949,6 @@ edge_host = edge_host or "cwbpub.cr.usgs.gov"
     M_funcs=M_funcs,
     memories=[np.inf, np.inf],
     path_or_url=path_or_url,
-    edge_host=edge_host,
 )
 
 
