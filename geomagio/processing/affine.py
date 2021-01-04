@@ -1599,6 +1599,51 @@ def interpolate_affine_polar(utc_target, utc_list, affine_list, fill_value=None)
     return affine_target
 
 
+def do_one(
+    weights: List[float],
+    h_utc: UTCDateTime.timestamp,
+    memory: List[float],
+    start_UTC: UTCDateTime,
+    acausal: bool,
+    Ms: List[List[float]],
+    pcwa: List[float],
+    h_bas: float,
+    d_bas: float,
+    z_bas: float,
+    M_func,
+    pc: float,
+    h_tmp: float,
+    e_tmp: float,
+    z_tmp: float,
+    x_a: float,
+    y_a: float,
+    z_a: float,
+):
+
+    # identify 'good' data indices based on baseline stats
+    good = (
+        filter_iqr(h_bas, threshold=3, weights=weights[-1])
+        & filter_iqr(d_bas, threshold=3, weights=weights[-1])
+        & filter_iqr(z_bas, threshold=3, weights=weights[-1])
+    )
+
+    # zero out any 'bad' weights
+    weights[-1] = good * weights[-1]
+
+    # generate affine transform matrix
+    Ms.append(M_func((h_tmp, e_tmp, z_tmp), (x_a, y_a, z_a), weights=weights[-1]))
+
+    # calculate weighted average of pier corrections
+    pcwa.append(np.average(pc, weights=weights[-1]))
+
+    # apply latest M matrix to inputs to get intermediate inputs
+    h_tmp, e_tmp, z_tmp = np.dot(
+        Ms[-1], np.vstack([h_tmp, e_tmp, z_tmp, np.ones_like(h_tmp)])
+    )[:3]
+
+    return h_tmp, e_tmp, z_tmp, pcwa, Ms, weights
+
+
 def do_it_all(
     obs_code,
     start_UTC,
@@ -1793,7 +1838,6 @@ def do_it_all(
 
         # loop over M_funcs and memories to compose affine matrix
         for M_func, memory in zip(M_funcs, memories):
-
             # Calculate time-dependent weights using h_utc
             weights.append(time_weights_exponential(h_utc, memory, start_UTC.timestamp))
 
@@ -1807,31 +1851,26 @@ def do_it_all(
                 pcwa.append(np.nan)
                 print("No valid observations for interval")
                 continue
-
-            # identify 'good' data indices based on baseline stats
-            good = (
-                filter_iqr(h_bas, threshold=3, weights=weights[-1])
-                & filter_iqr(d_bas, threshold=3, weights=weights[-1])
-                & filter_iqr(z_bas, threshold=3, weights=weights[-1])
+            h_tmp, e_tmp, z_tmp, pcwa, Ms, weights = do_one(
+                weights=weights,
+                h_utc=h_utc,
+                memory=memory,
+                start_UTC=start_UTC,
+                acausal=acausal,
+                Ms=Ms,
+                pcwa=pcwa,
+                h_bas=h_bas,
+                d_bas=d_bas,
+                z_bas=z_bas,
+                M_func=M_func,
+                pc=pc,
+                h_tmp=h_tmp,
+                e_tmp=e_tmp,
+                z_tmp=z_tmp,
+                x_a=x_a,
+                y_a=y_a,
+                z_a=z_a,
             )
-
-            # zero out any 'bad' weights
-            weights[-1] = good * weights[-1]
-
-            # generate affine transform matrix
-            Ms.append(
-                M_func((h_tmp, e_tmp, z_tmp), (x_a, y_a, z_a), weights=weights[-1])
-            )
-
-            # calculate weighted average of pier corrections
-            pcwa.append(np.average(pc, weights=weights[-1]))
-
-            # apply latest M matrix to inputs to get intermediate inputs
-            h_tmp, e_tmp, z_tmp = np.dot(
-                Ms[-1], np.vstack([h_tmp, e_tmp, z_tmp, np.ones_like(h_o)])
-            )[:3]
-
-            # end for M_func, memory in zip(M_funcs, memories)
 
         # append Ms, pcwa, and weights used to generate them to lists
         # of outputs for each update_interval
