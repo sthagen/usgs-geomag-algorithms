@@ -34,7 +34,7 @@ class Reading(BaseModel):
     pier_correction: float = 0
     scale_value: float = None
 
-    def __getmeasurements__(self, measurement_type: MeasurementType):
+    def __getitem__(self, measurement_type: MeasurementType):
         """Provide access to measurements by type.
 
         Example: reading[MeasurementType.WEST_DOWN]
