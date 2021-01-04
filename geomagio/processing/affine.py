@@ -1805,7 +1805,6 @@ def do_it_all(
 
     # use h_utc as common time stamp for vectors
     utc_bas = h_utc
-    print(utc_bas)
     # stack absolute and ordinate vectors for output
     abs_xyz = np.vstack((x_a, y_a, z_a))
     ord_hez = np.vstack((h_o, e_o, z_o))
