@@ -2053,20 +2053,7 @@ path_or_url = "https://geomag.usgs.gov"
 validate = True
 edge_host = edge_host or "cwbpub.cr.usgs.gov"
 
-(
-    utc_weekly_007_causal,
-    M_weekly_007_causal,
-    pc_weekly_007_causal,
-    utc_xyzf_weekly_007_causal,
-    xyzf_trad_weekly_007_causal,
-    xyzf_adj_weekly_007_causal,
-    xyzf_def_weekly_007_causal,
-    utc_bas_weekly_007_causal,
-    abs_xyz_weekly_007_causal,
-    ord_hez_weekly_007_causal,
-    Ms_weekly_007_causal,
-    weights_weekly_007_causal,
-) = do_it_all(
+(utc_weekly_007_causal, M_weekly_007_causal, pc_weekly_007_causal,) = do_it_all(
     obs_code,
     start_UTC,
     end_UTC,
@@ -2078,25 +2065,11 @@ edge_host = edge_host or "cwbpub.cr.usgs.gov"
     M_funcs=M_funcs,
     memories=memories,
     path_or_url=path_or_url,
-    validate=validate,
     edge_host=edge_host,
 )
 
 
-(
-    utc_weekly_007_acausal,
-    M_weekly_007_acausal,
-    pc_weekly_007_acausal,
-    utc_xyzf_weekly_007_acausal,
-    xyzf_trad_weekly_007_acausal,
-    xyzf_adj_weekly_007_acausal,
-    xyzf_def_weekly_007_acausal,
-    utc_bas_weekly_007_acausal,
-    abs_xyz_weekly_007_acausal,
-    ord_hez_weekly_007_acausal,
-    Ms_weekly_007_acausal,
-    weights_weekly_007_acausal,
-) = do_it_all(
+(utc_weekly_007_acausal, M_weekly_007_acausal, pc_weekly_007_acausal,) = do_it_all(
     obs_code,
     start_UTC,
     end_UTC,
@@ -2108,24 +2081,10 @@ edge_host = edge_host or "cwbpub.cr.usgs.gov"
     M_funcs=M_funcs,
     memories=memories,
     path_or_url=path_or_url,
-    validate=validate,
     edge_host=edge_host,
 )
 
-(
-    utc_weekly_inf_acausal,
-    M_weekly_inf_acausal,
-    pc_weekly_inf_acausal,
-    utc_xyzf_weekly_inf_acausal,
-    xyzf_trad_weekly_inf_acausal,
-    xyzf_adj_weekly_inf_acausal,
-    xyzf_def_weekly_inf_acausal,
-    utc_bas_weekly_inf_acausal,
-    abs_xyz_weekly_inf_acausal,
-    ord_hez_weekly_inf_acausal,
-    Ms_weekly_inf_acausal,
-    weights_weekly_inf_acausal,
-) = do_it_all(
+(utc_weekly_inf_acausal, M_weekly_inf_acausal, pc_weekly_inf_acausal,) = do_it_all(
     obs_code,
     start_UTC,
     end_UTC,
@@ -2137,25 +2096,11 @@ edge_host = edge_host or "cwbpub.cr.usgs.gov"
     M_funcs=M_funcs,
     memories=[np.inf, np.inf],
     path_or_url=path_or_url,
-    validate=validate,
     edge_host=edge_host,
 )
 
 
-(
-    utc_all_inf_acausal,
-    M_all_inf_acausal,
-    pc_all_inf_acausal,
-    utc_xyzf_all_inf_acausal,
-    xyzf_trad_all_inf_acausal,
-    xyzf_adj_all_inf_acausal,
-    xyzf_def_all_inf_acausal,
-    utc_bas_all_inf_acausal,
-    abs_xyz_all_inf_acausal,
-    ord_hez_all_inf_acausal,
-    Ms_all_inf_acausal,
-    weights_all_inf_acausal,
-) = do_it_all(
+(utc_all_inf_acausal, M_all_inf_acausal, pc_all_inf_acausal,) = do_it_all(
     obs_code,
     start_UTC,
     end_UTC,
@@ -2167,7 +2112,6 @@ edge_host = edge_host or "cwbpub.cr.usgs.gov"
     M_funcs=M_funcs,
     memories=[np.inf, np.inf],
     path_or_url=path_or_url,
-    validate=validate,
     edge_host=edge_host,
 )
 
@@ -2176,61 +2120,30 @@ short_memory_causal = {
     "utc": utc_weekly_007_causal,
     "M": M_weekly_007_causal,
     "pc": pc_weekly_007_causal,
-    "utc_xyzf": utc_xyzf_weekly_007_causal,
-    "xyzf_trad": xyzf_trad_weekly_007_causal,
-    "xyzf_adj": xyzf_adj_weekly_007_causal,
-    "xyzf_def": xyzf_def_weekly_007_causal,
-    "utc_bas": utc_bas_weekly_007_causal,
-    "abs_xyz": abs_xyz_weekly_007_causal,
-    "Ms": Ms_weekly_007_causal,
-    "weights": weights_weekly_007_causal,
 }
 short_memory_acausal = {
     "utc": utc_weekly_007_acausal,
     "M": M_weekly_007_acausal,
     "pc": pc_weekly_007_acausal,
-    "utc_xyzf": utc_xyzf_weekly_007_acausal,
-    "xyzf_trad": xyzf_trad_weekly_007_acausal,
-    "xyzf_adj": xyzf_adj_weekly_007_acausal,
-    "xyzf_def": xyzf_def_weekly_007_acausal,
-    "utc_bas": utc_bas_weekly_007_acausal,
-    "abs_xyz": abs_xyz_weekly_007_acausal,
-    "Ms": Ms_weekly_007_acausal,
-    "weights": weights_weekly_007_acausal,
 }
 weekly_inf_memory_acausal = {
     "utc": utc_weekly_inf_acausal,
     "M": M_weekly_inf_acausal,
     "pc": pc_weekly_inf_acausal,
-    "utc_xyzf": utc_xyzf_weekly_inf_acausal,
-    "xyzf_trad": xyzf_trad_weekly_inf_acausal,
-    "xyzf_adj": xyzf_adj_weekly_inf_acausal,
-    "xyzf_def": xyzf_def_weekly_inf_acausal,
-    "utc_bas": utc_bas_weekly_inf_acausal,
-    "abs_xyz": abs_xyz_weekly_inf_acausal,
-    "Ms": Ms_weekly_inf_acausal,
-    "weights": weights_weekly_inf_acausal,
 }
 all_inf_memory_acausal = {
     "utc": utc_all_inf_acausal,
     "M": M_all_inf_acausal,
     "pc": pc_all_inf_acausal,
-    "utc_xyzf": utc_xyzf_all_inf_acausal,
-    "xyzf_trad": xyzf_trad_weekly_inf_acausal,
-    "xyzf_adj": xyzf_adj_all_inf_acausal,
-    "xyzf_def": xyzf_def_all_inf_acausal,
-    "utc_bas": utc_bas_all_inf_acausal,
-    "abs_xyz": abs_xyz_all_inf_acausal,
-    "Ms": Ms_all_inf_acausal,
-    "weights": weights_all_inf_acausal,
 }
 
-with open("short_memory_causual.p", "rb") as fp:
+
+with open("short_memory_causal.p", "rb") as fp:
     data = pickle.load(fp)
 
 assert_equal(data, short_memory_causal)
 
-with open("short_memory_acausual.p", "rb") as fp:
+with open("short_memory_acausal.p", "rb") as fp:
     data = pickle.load(fp)
 
 assert_equal(data, short_memory_acausal)
