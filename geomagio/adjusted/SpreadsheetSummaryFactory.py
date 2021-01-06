@@ -9,7 +9,9 @@ from ..residual.SpreadsheetAbsolutesFactory import parse_relative_time
 
 
 class SpreadsheetSummaryFactory(object):
-    def __init__(self, base_directory="Volumes/geomag/pub/caldata"):
+    def __init__(
+        self, base_directory=r"Volumes/geomag/pub/Caldata/Checked Baseline Data"
+    ):
         self.base_directory = base_directory
 
     def get_readings(
@@ -17,11 +19,17 @@ class SpreadsheetSummaryFactory(object):
     ):
         readings = []
         for year in range(starttime.year, endtime.year + 1):
-            observatory_directory = os.path.join(
-                self.base_directory, observatory, f"{year}"
-            )
+            # TODO: Change to current year when 2020 absolutes are moved into folder
+            if year != UTCDateTime().year - 1:
+                observatory_directory = os.path.join(
+                    self.base_directory, observatory, f"{year}"
+                )
+            else:
+                observatory_directory = self.base_directory
             for (dirpath, _, filenames) in os.walk(observatory_directory):
                 for filename in filenames:
+                    if filename.split(".")[-1] != "xlsm":
+                        continue
                     year = int(filename[3:7])
                     yd = int(filename[7:10])
                     file_date = UTCDateTime(f"{year}-01-01") + (yd * 86400)
@@ -70,8 +78,12 @@ class SpreadsheetSummaryFactory(object):
                     ]
                 ),
                 baseline=sheet["H16"].value,
-                starttime=parse_relative_time(base_date, sheet["B10"].value),
-                endtime=parse_relative_time(base_date, sheet["B13"].value),
+                starttime=parse_relative_time(
+                    base_date, "{0:04d}".format(sheet["B10"].value)
+                ),
+                endtime=parse_relative_time(
+                    base_date, "{0:04d}".format(sheet["B13"].value)
+                ),
             ),
             Absolute(
                 element="H",
@@ -83,8 +95,12 @@ class SpreadsheetSummaryFactory(object):
                     ]
                 ),
                 baseline=sheet["H30"].value,
-                starttime=parse_relative_time(base_date, sheet["B24"].value),
-                endtime=parse_relative_time(base_date, sheet["B27"].value),
+                starttime=parse_relative_time(
+                    base_date, "{0:04d}".format(sheet["B24"].value)
+                ),
+                endtime=parse_relative_time(
+                    base_date, "{0:04d}".format(sheet["B27"].value)
+                ),
             ),
             Absolute(
                 element="Z",
@@ -96,7 +112,11 @@ class SpreadsheetSummaryFactory(object):
                     ]
                 ),
                 baseline=sheet["H44"].value,
-                starttime=parse_relative_time(base_date, sheet["B38"].value),
-                endtime=parse_relative_time(base_date, sheet["B41"].value),
+                starttime=parse_relative_time(
+                    base_date, "{0:04d}".format(sheet["B38"].value)
+                ),
+                endtime=parse_relative_time(
+                    base_date, "{0:04d}".format(sheet["B41"].value)
+                ),
             ),
         ]
