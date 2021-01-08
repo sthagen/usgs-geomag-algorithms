@@ -6,6 +6,7 @@ from obspy.core import UTCDateTime
 import pytest
 
 from geomagio.adjusted.SpreadsheetSummaryFactory import SpreadsheetSummaryFactory
+from geomagio.adjusted.Generator import Generator
 from geomagio.adjusted.GeneratorType import GeneratorType
 from geomagio.adjusted.Affine import Affine
 from geomagio.adjusted.Calculation import (
@@ -291,14 +292,17 @@ def format_result(result) -> dict:
     return Ms
 
 
-def test_BOU201911202001():
-
+def get_readings_BOU201911202001():
     readings = WebAbsolutesFactory().get_readings(
         observatory="BOU",
         starttime=UTCDateTime("2019-10-01T00:00:00Z"),
         endtime=UTCDateTime("2020-02-29T23:59:00Z"),
     )
+    return readings
 
+
+def test_BOU201911202001_short_causal():
+    readings = get_readings_BOU201911202001()
     affine = Affine(
         observatory="BOU",
         starttime=UTCDateTime("2019-11-01T00:00:00Z"),
@@ -311,7 +315,20 @@ def test_BOU201911202001():
 
     short_causal = format_result(result)
 
-    affine.acausal = True
+    with open("etc/adjusted/short_memory_causal.json", "r") as file:
+        expected = json.load(file)
+
+    assert_array_almost_equal(short_causal, expected["M"], decimal=3)
+
+
+def test_BOU201911202001_short_acausal():
+    readings = get_readings_BOU201911202001()
+    affine = Affine(
+        observatory="BOU",
+        starttime=UTCDateTime("2019-11-01T00:00:00Z"),
+        endtime=UTCDateTime("2020-01-31T23:59:00Z"),
+        acausal=True,
+    )
     result = calculate(
         affine=affine,
         readings=readings,
@@ -319,8 +336,23 @@ def test_BOU201911202001():
 
     short_acausal = format_result(result)
 
-    affine.generators[0].memory = np.inf
-    affine.generators[1].memory = np.inf
+    with open("etc/adjusted/short_memory_acausal.json", "r") as file:
+        expected = json.load(file)
+
+    assert_array_almost_equal(short_acausal, expected["M"], decimal=3)
+
+def test_BOU201911202001_infinite_weekly():
+    readings = get_readings_BOU201911202001()
+    affine = Affine(
+        observatory="BOU",
+        starttime=UTCDateTime("2019-11-01T00:00:00Z"),
+        endtime=UTCDateTime("2020-01-31T23:59:00Z"),
+        acausal=True,
+        generators=[
+            Generator(type=GeneratorType.ROTATION_TRANSLATION_XY, memory=np.inf),
+            Generator(type=GeneratorType.TRANSLATE_ORIGINS, memory=np.inf),
+        ],
+    )
     result = calculate(
         affine=affine,
         readings=readings,
@@ -328,28 +360,31 @@ def test_BOU201911202001():
 
     weekly_inf_acausal = format_result(result)
 
-    affine.update_interval = None
+    with open("etc/adjusted/weekly_inf_memory_acausal.json", "r") as file:
+        expected = json.load(file)
+
+    assert_array_almost_equal(weekly_inf_acausal, expected["M"], decimal=3)
+
+
+def test_BOU201911202001_infinite_one_interval():
+    readings = get_readings_BOU201911202001()
+    affine = Affine(
+        observatory="BOU",
+        starttime=UTCDateTime("2019-11-01T00:00:00Z"),
+        endtime=UTCDateTime("2020-01-31T23:59:00Z"),
+        acausal=True,
+        generators=[
+            Generator(type=GeneratorType.ROTATION_TRANSLATION_XY, memory=np.inf),
+            Generator(type=GeneratorType.TRANSLATE_ORIGINS, memory=np.inf),
+        ],
+        update_interval=None,
+    )
     result = calculate(
         affine=affine,
         readings=readings,
     )
 
     all_inf_acausal = format_result(result)
-
-    with open("etc/adjusted/short_memory_causal.json", "r") as file:
-        expected = json.load(file)
-
-    assert_array_almost_equal(short_causal, expected["M"], decimal=3)
-
-    with open("etc/adjusted/short_memory_acausal.json", "r") as file:
-        expected = json.load(file)
-
-    assert_array_almost_equal(short_acausal, expected["M"], decimal=3)
-
-    with open("etc/adjusted/weekly_inf_memory_acausal.json", "r") as file:
-        expected = json.load(file)
-
-    assert_array_almost_equal(weekly_inf_acausal, expected["M"], decimal=3)
 
     with open("etc/adjusted/all_inf_memory_acausal.json", "r") as file:
         expected = json.load(file)
