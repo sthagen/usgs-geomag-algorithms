@@ -1,3 +1,4 @@
+from geomagio.residual.WebAbsolutesFactory import WebAbsolutesFactory
 import json
 import numpy as np
 from numpy.testing import assert_equal, assert_array_almost_equal
@@ -5,7 +6,12 @@ from obspy.core import UTCDateTime
 import pytest
 
 from geomagio.adjusted.SpreadsheetSummaryFactory import SpreadsheetSummaryFactory
-from geomagio.adjusted.AffineType import AffineType
+from geomagio.adjusted.GeneratorType import GeneratorType
+from geomagio.adjusted.Affine import Affine
+from geomagio.adjusted.Calculation import (
+    calculate,
+)
+from geomagio.adjusted.GeneratorType import generate_affine_8, generate_affine_6
 
 H_ORD = np.array(
     [
@@ -206,7 +212,7 @@ def test_Caldata_summaries():
     assert_equal(len(readings), 10)
 
 
-def get_affine_result(type, weights=1):
+def get_affine_result(type, weights=None):
     matrix = type.calculate_matrix(
         ord_hez=(H_ORD, E_ORD, Z_ORD),
         abs_xyz=(X_ABS, Y_ABS, Z_ABS),
@@ -221,52 +227,138 @@ def test_Affine_result():
         expected = json.load(file)
     # numbers in keys pertain to method numbers from original documentation(generate_affine_...)
     assert_array_almost_equal(
-        get_affine_result(AffineType.NO_CONSTRAINTS),
+        get_affine_result(GeneratorType.NO_CONSTRAINTS),
         np.array(expected["zero"]),
         decimal=6,
     )
     assert_array_almost_equal(
-        get_affine_result(AffineType.Z_ROTATION),
+        get_affine_result(GeneratorType.Z_ROTATION),
         np.array(expected["one"]),
         decimal=6,
     )
     assert_array_almost_equal(
-        get_affine_result(AffineType.Z_ROTATION_HSCALE),
+        get_affine_result(GeneratorType.Z_ROTATION_HSCALE),
         np.array(expected["two"]),
         decimal=6,
     )
     assert_array_almost_equal(
-        list(get_affine_result(AffineType.Z_ROTATION_HSCALE_ZBASELINE)),
+        list(get_affine_result(GeneratorType.Z_ROTATION_HSCALE_ZBASELINE)),
         np.array(expected["three"]),
         decimal=6,
     )
     assert_array_almost_equal(
-        list(get_affine_result(AffineType.ROTATION_TRANSLATION_3D)),
+        list(get_affine_result(GeneratorType.ROTATION_TRANSLATION_3D)),
         expected["four"],
         decimal=6,
     )
     assert_array_almost_equal(
-        list(get_affine_result(AffineType.RESCALE_3D)),
+        list(get_affine_result(GeneratorType.RESCALE_3D)),
         expected["five"],
         decimal=6,
     )
     assert_array_almost_equal(
-        list(get_affine_result(AffineType.TRANSLATE_ORIGINS)),
+        list(get_affine_result(GeneratorType.TRANSLATE_ORIGINS)),
         expected["six"],
         decimal=6,
     )
     assert_array_almost_equal(
-        list(get_affine_result(AffineType.SHEAR_YZ)),
+        list(get_affine_result(GeneratorType.SHEAR_YZ)),
         expected["seven"],
         decimal=6,
     )
     assert_array_almost_equal(
-        list(get_affine_result(AffineType.ROTATION_TRANSLATION_XY)),
+        list(get_affine_result(GeneratorType.ROTATION_TRANSLATION_XY)),
         expected["eight"],
         decimal=6,
     )
     assert_array_almost_equal(
-        list(get_affine_result(AffineType.QR_FACTORIZATION)),
+        list(get_affine_result(GeneratorType.QR_FACTORIZATION)),
         expected["nine"],
         decimal=6,
     )
+
+
+def format_result(result) -> dict:
+    if len(result[1]) != 1:
+        Ms = []
+        for M in result[1]:
+            m = []
+            for row in M:
+                m.append(list(row))
+            Ms.append(m)
+    else:
+        Ms = [list(row) for row in result[1][0]]
+    result_dict = {
+        "utc": [time.timestamp for time in result[0]],
+        "M": Ms,
+        "pc": result[2],
+    }
+    return result_dict
+
+
+def test_BOU201911202001():
+
+    obs_code = "BOU"
+
+    readings = WebAbsolutesFactory().get_readings(
+        observatory=obs_code,
+        starttime=UTCDateTime("2019-10-01T00:00:00Z"),
+        endtime=UTCDateTime("2020-02-29T23:59:00Z"),
+    )
+
+    affine = Affine(
+        observatory="BOU",
+        starttime=UTCDateTime("2019-11-01T00:00:00Z"),
+        endtime=UTCDateTime("2020-01-31T23:59:00Z"),
+    )
+    result = calculate(
+        affine=affine,
+        readings=readings,
+    )
+
+    short_causal = format_result(result)
+
+    affine.acausal = True
+    result = calculate(
+        affine=affine,
+        readings=readings,
+    )
+
+    short_acausal = format_result(result)
+
+    affine.generators[0].memory = np.inf
+    affine.generators[1].memory = np.inf
+    result = calculate(
+        affine=affine,
+        readings=readings,
+    )
+
+    weekly_inf_acausal = format_result(result)
+
+    affine.update_interval = None
+    result = calculate(
+        affine=affine,
+        readings=readings,
+    )
+
+    all_inf_acausal = format_result(result)
+
+    with open("etc/adjusted/short_memory_causal.json", "r") as file:
+        expected = json.load(file)
+
+    assert_equal(short_causal, expected)
+
+    with open("etc/adjusted/short_memory_acausal.json", "r") as file:
+        expected = json.load(file)
+
+    assert_equal(short_acausal, expected)
+
+    with open("etc/adjusted/weekly_inf_memory_acausal.json", "r") as file:
+        expected = json.load(file)
+
+    assert_equal(weekly_inf_acausal, expected)
+
+    with open("etc/adjusted/all_inf_memory_acausal.json", "r") as file:
+        expected = json.load(file)
+
+    assert_equal(all_inf_acausal, expected)
