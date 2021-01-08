@@ -41,11 +41,6 @@ class Reading(BaseModel):
         """
         return [m for m in self.measurements if m.measurement_type == measurement_type]
 
-    def __getabsolute__(self, element: str):
-        for absolute in self.absolutes:
-            if absolute.element == element:
-                return absolute
-
     def load_ordinates(
         self,
         observatory: str,

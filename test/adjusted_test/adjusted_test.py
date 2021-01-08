@@ -11,7 +11,7 @@ from geomagio.adjusted.Affine import Affine
 from geomagio.adjusted.Calculation import (
     calculate,
 )
-from geomagio.adjusted.GeneratorType import generate_affine_8, generate_affine_6
+
 
 H_ORD = np.array(
     [
@@ -279,29 +279,22 @@ def test_Affine_result():
 
 
 def format_result(result) -> dict:
-    if len(result[1]) != 1:
+    if len(result) != 1:
         Ms = []
-        for M in result[1]:
+        for M in result:
             m = []
             for row in M:
                 m.append(list(row))
             Ms.append(m)
     else:
-        Ms = [list(row) for row in result[1][0]]
-    result_dict = {
-        "utc": [time.timestamp for time in result[0]],
-        "M": Ms,
-        "pc": result[2],
-    }
-    return result_dict
+        Ms = [list(row) for row in result[0]]
+    return Ms
 
 
 def test_BOU201911202001():
 
-    obs_code = "BOU"
-
     readings = WebAbsolutesFactory().get_readings(
-        observatory=obs_code,
+        observatory="BOU",
         starttime=UTCDateTime("2019-10-01T00:00:00Z"),
         endtime=UTCDateTime("2020-02-29T23:59:00Z"),
     )
@@ -346,19 +339,19 @@ def test_BOU201911202001():
     with open("etc/adjusted/short_memory_causal.json", "r") as file:
         expected = json.load(file)
 
-    assert_array_almost_equal(short_causal["M"], expected["M"], decimal=3)
+    assert_array_almost_equal(short_causal, expected["M"], decimal=3)
 
     with open("etc/adjusted/short_memory_acausal.json", "r") as file:
         expected = json.load(file)
 
-    assert_array_almost_equal(short_acausal["M"], expected["M"], decimal=3)
+    assert_array_almost_equal(short_acausal, expected["M"], decimal=3)
 
     with open("etc/adjusted/weekly_inf_memory_acausal.json", "r") as file:
         expected = json.load(file)
 
-    assert_array_almost_equal(weekly_inf_acausal["M"], expected["M"], decimal=3)
+    assert_array_almost_equal(weekly_inf_acausal, expected["M"], decimal=3)
 
     with open("etc/adjusted/all_inf_memory_acausal.json", "r") as file:
         expected = json.load(file)
 
-    assert_array_almost_equal(all_inf_acausal["M"], expected["M"], decimal=3)
+    assert_array_almost_equal(all_inf_acausal, expected["M"], decimal=3)

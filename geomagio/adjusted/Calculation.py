@@ -1,108 +1,35 @@
-from datetime import datetime
 from functools import reduce
 import numpy as np
-from obspy.core import UTCDateTime
-import scipy.linalg as spl
-from typing import List
+from typing import List, Tuple
 
-from ..residual import WebAbsolutesFactory, Reading, MeasurementType
+from ..residual import Reading, MeasurementType
 from .Affine import Affine
-from .GeneratorType import generate_affine_0
 
 
-def calculate(
-    affine: Affine,
+def get_good_readings(
     readings: List[Reading],
-):
-    utc_list, M_composed_list, pcwa_list = do_it_all(
-        affine=affine,
-        readings=readings,
-    )
-
-    return (utc_list, M_composed_list, pcwa_list)
-
-
-def retrieve_baselines_webasolutes(
-    readings: List[Reading],
-):
+) -> List[Reading]:
     starttime = readings[0][MeasurementType.WEST_DOWN][0].time
     last_epoch = starttime.timestamp
-
-    # initialize observation lists
-    h_abs = []
-    d_abs = []
-    z_abs = []
-    h_bas = []
-    d_bas = []
-    z_bas = []
-    h_t = []
-    d_t = []
-    z_t = []
-    pc = []
+    filtered_readings = []
     for reading in readings:
         # extract only complete and validated baseline sets; also,
         # filter on reading 'end' times to partially address issues
         # with database time stamps
         if (
-            reading.__getabsolute__("H").valid == True
-            and reading.__getabsolute__("D").valid == True
-            and reading.__getabsolute__("Z").valid == True
+            reading.absolutes[1].valid == True
+            and reading.absolutes[0].valid == True
+            and reading.absolutes[2].valid
+            and (reading.absolutes[0].endtime > last_epoch)
+            and (reading.absolutes[1].endtime > last_epoch)
+            and (reading.absolutes[2].endtime > last_epoch)
         ):
-
-            h_abs.append(reading.__getabsolute__("H").absolute)
-            d_abs.append(reading.__getabsolute__("D").absolute)
-            z_abs.append(reading.__getabsolute__("Z").absolute)
-
-            h_bas.append(reading.__getabsolute__("H").baseline)
-            d_bas.append(reading.__getabsolute__("D").baseline)
-            z_bas.append(reading.__getabsolute__("Z").baseline)
-
-            h_t.append(reading.__getabsolute__("H").endtime)
-            d_t.append(reading.__getabsolute__("D").endtime)
-            z_t.append(reading.__getabsolute__("Z").endtime)
-
-            pc.append(reading.metadata["pier_correction"])
-
-        # the following is a kludge where zero-amplitude horizontal field
-        # serves as a "flag" for when observatory change was significant
-        # enough to discard all previous absolute measurements
-        if reading.__getabsolute__("H").absolute == 0:
-            last_epoch = max(reading.__getabsolute__("H").endtime, last_epoch)
-
-    # print message about modified magnetometer
-    if last_epoch != starttime.timestamp:
-        print(
-            "Magnetometer altered, discarding measurements prior to %s"
-            % datetime.utcfromtimestamp(last_epoch)
-        )
-
-    # convert lists to NumPy arrays
-    h_abs = np.array(h_abs)
-    d_abs = np.array(d_abs)
-    z_abs = np.array(z_abs)
-    h_bas = np.array(h_bas)
-    d_bas = np.array(d_bas)
-    z_bas = np.array(z_bas)
-    pc = np.array(pc)
-
-    # convert epochs to UTCDateTimes
-    h_utc = np.array([UTCDateTime(t) for t in h_t])
-    d_utc = np.array([UTCDateTime(t) for t in d_t])
-    z_utc = np.array([UTCDateTime(t) for t in z_t])
-
-    # only return data more recent than last_epoch
-    good = (h_utc > last_epoch) & (d_utc > last_epoch) & (z_utc > last_epoch)
-    h_abs = h_abs[good]
-    d_abs = d_abs[good]
-    z_abs = z_abs[good]
-    h_bas = h_bas[good]
-    d_bas = d_bas[good]
-    z_bas = z_bas[good]
-    pc = pc[good]
-    h_utc = h_utc[good]
+            if reading.absolutes[1].absolute == 0:
+                last_epoch = max(reading.absolutes[1].endtime, last_epoch)
+            filtered_readings.append(reading)
 
     # return data arrays
-    return ((h_abs, h_bas), (d_abs, d_bas), (z_abs, z_bas), pc, h_utc)
+    return filtered_readings
 
 
 def time_weights_exponential(times, memory, epoch: int = None):
@@ -222,50 +149,9 @@ def filter_iqr(series: List[float], threshold=6, weights=None):
     return good
 
 
-def do_one(
-    weights: List[float],
-    Ms: List[List[float]],
-    pcwa: List[float],
-    h_bas: float,
-    d_bas: float,
-    z_bas: float,
-    M_func,
-    pc: float,
-    h_tmp: float,
-    e_tmp: float,
-    z_tmp: float,
-    x_a: float,
-    y_a: float,
-    z_a: float,
-):
-
-    # identify 'good' data indices based on baseline stats
-    good = (
-        filter_iqr(h_bas, threshold=3, weights=weights[-1])
-        & filter_iqr(d_bas, threshold=3, weights=weights[-1])
-        & filter_iqr(z_bas, threshold=3, weights=weights[-1])
-    )
-
-    # zero out any 'bad' weights
-    weights[-1] = good * weights[-1]
-
-    # generate affine transform matrix
-    Ms.append(M_func((h_tmp, e_tmp, z_tmp), (x_a, y_a, z_a), weights=weights[-1]))
-
-    # calculate weighted average of pier corrections
-    pcwa.append(np.average(pc, weights=weights[-1]))
-
-    # apply latest M matrix to inputs to get intermediate inputs
-    h_tmp, e_tmp, z_tmp = np.dot(
-        Ms[-1], np.vstack([h_tmp, e_tmp, z_tmp, np.ones_like(h_tmp)])
-    )[:3]
-
-    return h_tmp, e_tmp, z_tmp, pcwa, Ms, weights
-
-
-def do_it_all(
-    affine,
-    readings,
+def calculate(
+    affine: Affine,
+    readings: List[Reading],
 ):
     """
     This function will do the following for a specified obs_code between
@@ -324,24 +210,17 @@ def do_it_all(
         # only one interval from start_UTC to end_UTC
         affine.update_interval = affine.endtime - affine.starttime
 
-    # use WebAbsolutes web service to retrieve baseline info
-    (
-        (h_abs, h_bas),
-        (d_abs, d_bas),
-        (z_abs, z_bas),
-        pc,
-        utc,
-    ) = retrieve_baselines_webasolutes(readings=readings)
+    readings = get_good_readings(readings)
+    # convert lists to NumPy arrays
+    d_abs, d_bas = get_absolutes(readings, "D")
+    h_abs, h_bas = get_absolutes(readings, "H")
+    z_abs, z_bas = get_absolutes(readings, "Z")
+    utc = np.array([reading.absolutes[1].endtime for reading in readings])
 
     # recreate ordinate variometer measurements from absolutes and baselines
     h_ord = h_abs - h_bas
     d_ord = d_abs - d_bas
     z_ord = z_abs - z_bas
-
-    # convert from cylindrical to Cartesian coordinates
-    x_a = h_abs * np.cos(d_abs * np.pi / 180)
-    y_a = h_abs * np.sin(d_abs * np.pi / 180)
-    z_a = z_abs
 
     # WebAbsolutes defines/generates h differently than USGS residual
     # method spreadsheets. The following should ensure that ordinate
@@ -353,10 +232,12 @@ def do_it_all(
         h_o = h_ord
     z_o = z_ord
 
-    # initialize outputs
-    utc_list = []
+    # convert from cylindrical to Cartesian coordinates
+    x_a = h_abs * np.cos(d_abs * np.pi / 180)
+    y_a = h_abs * np.sin(d_abs * np.pi / 180)
+    z_a = z_abs
+
     M_composed_list = []
-    pcwa_list = []
 
     start_UTC = affine.starttime
 
@@ -367,60 +248,75 @@ def do_it_all(
         h_tmp = h_o
         e_tmp = e_o
         z_tmp = z_o
-
-        # reinitialize weights, Ms and pcwa lists
-        weights = []
         Ms = []
-        pcwa = []
 
         # loop over M_funcs and memories to compose affine matrix
         for generator in affine.generators:
             # Calculate time-dependent weights using utc
-            weights.append(
-                time_weights_exponential(utc, generator.memory, start_UTC.timestamp)
+            weights = time_weights_exponential(
+                utc, generator.memory, start_UTC.timestamp
             )
 
             # set weights for future observations to zero if not acausal
             if not affine.acausal:
-                weights[-1][utc > start_UTC] = 0.0
+                weights[utc > start_UTC] = 0.0
 
             # return NaNs if no valid observations
-            if np.sum(weights[-1]) == 0:
+            if np.sum(weights) == 0:
                 Ms.append(np.nan * np.zeros((4, 4)))
-                pcwa.append(np.nan)
                 print("No valid observations for interval")
                 continue
-            h_tmp, e_tmp, z_tmp, pcwa, Ms, weights = do_one(
-                weights=weights,
-                Ms=Ms,
-                pcwa=pcwa,
-                h_bas=h_bas,
-                d_bas=d_bas,
-                z_bas=z_bas,
-                M_func=generator.type.calculate_matrix,
-                pc=pc,
-                h_tmp=h_tmp,
-                e_tmp=e_tmp,
-                z_tmp=z_tmp,
-                x_a=x_a,
-                y_a=y_a,
-                z_a=z_a,
+            # identify 'good' data indices based on baseline stats
+            good = (
+                filter_iqr(h_bas, threshold=3, weights=weights)
+                & filter_iqr(d_bas, threshold=3, weights=weights)
+                & filter_iqr(z_bas, threshold=3, weights=weights)
             )
 
-        # append Ms, pcwa, and weights used to generate them to lists
-        # of outputs for each update_interval
-        pcwa_list.append(pcwa)
+            # zero out any 'bad' weights
+            weights = good * weights
 
-        # compose affine transform matrices
-        M_composed = reduce(np.dot, Ms[::-1])
+            M = generator.type.calculate_matrix(
+                (h_tmp, e_tmp, z_tmp), (x_a, y_a, z_a), weights=weights
+            )
+
+            # apply latest M matrix to inputs to get intermediate inputs
+            h_tmp, e_tmp, z_tmp, __ = np.dot(
+                M, np.vstack([h_tmp, e_tmp, z_tmp, np.ones_like(h_tmp)])
+            )
+
+            # generate affine transform matrix
+            Ms.append(M)
+
+        affine.pier_correction = np.average(
+            [reading.pier_correction for reading in readings], weights=weights
+        )
+
+        # compose affine transform matrices using reverse ordered matrices
+        M_composed = reduce(np.dot, np.flipud(Ms))
 
         # append to list of outputs for each update_interval
         M_composed_list.append(M_composed)
 
-        # append to list of outputs for each update_interval
-        utc_list.append(start_UTC)
-
         # increment start_UTC
         start_UTC += affine.update_interval
 
-    return utc_list, M_composed_list, pcwa_list
+    return M_composed_list
+
+
+def get_absolutes(
+    readings: List[Reading],
+    element: str,
+) -> Tuple[List[float], List[float]]:
+    if element == "D":
+        i = 0
+    elif element == "H":
+        i = 1
+    elif element == "Z":
+        i = 2
+    else:
+        raise ValueError("Invalid element request")
+    return (
+        np.array([reading.absolutes[i].absolute for reading in readings]),
+        np.array([reading.absolutes[i].baseline for reading in readings]),
+    )
