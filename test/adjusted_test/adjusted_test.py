@@ -346,19 +346,19 @@ def test_BOU201911202001():
     with open("etc/adjusted/short_memory_causal.json", "r") as file:
         expected = json.load(file)
 
-    assert_equal(short_causal, expected)
+    assert_array_almost_equal(short_causal["M"], expected["M"], decimal=3)
 
     with open("etc/adjusted/short_memory_acausal.json", "r") as file:
         expected = json.load(file)
 
-    assert_equal(short_acausal, expected)
+    assert_array_almost_equal(short_acausal["M"], expected["M"], decimal=3)
 
     with open("etc/adjusted/weekly_inf_memory_acausal.json", "r") as file:
         expected = json.load(file)
 
-    assert_equal(weekly_inf_acausal, expected)
+    assert_array_almost_equal(weekly_inf_acausal["M"], expected["M"], decimal=3)
 
     with open("etc/adjusted/all_inf_memory_acausal.json", "r") as file:
         expected = json.load(file)
 
-    assert_equal(all_inf_acausal, expected)
+    assert_array_almost_equal(all_inf_acausal["M"], expected["M"], decimal=3)
