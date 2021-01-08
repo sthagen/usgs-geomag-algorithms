@@ -308,12 +308,12 @@ def test_BOU201911202001_short_causal():
         starttime=UTCDateTime("2019-11-01T00:00:00Z"),
         endtime=UTCDateTime("2020-01-31T23:59:00Z"),
     )
-    result = calculate(
+    calculate(
         affine=affine,
         readings=readings,
     )
 
-    short_causal = format_result(result)
+    short_causal = format_result(affine.matrices)
 
     with open("etc/adjusted/short_memory_causal.json", "r") as file:
         expected = json.load(file)
@@ -329,12 +329,12 @@ def test_BOU201911202001_short_acausal():
         endtime=UTCDateTime("2020-01-31T23:59:00Z"),
         acausal=True,
     )
-    result = calculate(
+    calculate(
         affine=affine,
         readings=readings,
     )
 
-    short_acausal = format_result(result)
+    short_acausal = format_result(affine.matrices)
 
     with open("etc/adjusted/short_memory_acausal.json", "r") as file:
         expected = json.load(file)
@@ -354,12 +354,12 @@ def test_BOU201911202001_infinite_weekly():
             Generator(type=GeneratorType.TRANSLATE_ORIGINS, memory=np.inf),
         ],
     )
-    result = calculate(
+    calculate(
         affine=affine,
         readings=readings,
     )
 
-    weekly_inf_acausal = format_result(result)
+    weekly_inf_acausal = format_result(affine.matrices)
 
     with open("etc/adjusted/weekly_inf_memory_acausal.json", "r") as file:
         expected = json.load(file)
@@ -380,12 +380,12 @@ def test_BOU201911202001_infinite_one_interval():
         ],
         update_interval=None,
     )
-    result = calculate(
+    calculate(
         affine=affine,
         readings=readings,
     )
 
-    all_inf_acausal = format_result(result)
+    all_inf_acausal = format_result(affine.matrices)
 
     with open("etc/adjusted/all_inf_memory_acausal.json", "r") as file:
         expected = json.load(file)

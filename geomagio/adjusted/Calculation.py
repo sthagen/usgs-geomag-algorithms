@@ -3,7 +3,7 @@ import numpy as np
 from typing import List, Tuple
 
 from ..residual import Reading, MeasurementType
-from .Affine import Affine
+from .Affine import Affine, create_states
 
 
 def get_good_readings(
@@ -301,7 +301,8 @@ def calculate(
         # increment start_UTC
         start_UTC += affine.update_interval
 
-    return M_composed_list
+    affine.matrices = M_composed_list
+    affine.states = create_states(affine.matrices, affine.pier_correction)
 
 
 def get_absolutes(
