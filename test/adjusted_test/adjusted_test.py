@@ -341,6 +341,7 @@ def test_BOU201911202001_short_acausal():
 
     assert_array_almost_equal(short_acausal, expected["M"], decimal=3)
 
+
 def test_BOU201911202001_infinite_weekly():
     readings = get_readings_BOU201911202001()
     affine = Affine(
