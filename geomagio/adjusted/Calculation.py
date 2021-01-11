@@ -19,15 +19,15 @@ def get_good_readings(
         # filter on reading 'end' times to partially address issues
         # with database time stamps
         if (
-            reading.absolutes[1].valid == True
+            reading.get_absolute("D").valid == True
             and reading.get_absolute("H").valid == True
-            and reading.absolutes[2].valid
-            and (reading.absolutes[0].endtime > last_epoch)
-            and (reading.absolutes[1].endtime > last_epoch)
-            and (reading.absolutes[2].endtime > last_epoch)
+            and reading.get_absolute("Z").valid == True
+            and (reading.get_absolute("D").endtime > last_epoch)
+            and (reading.get_absolute("H").endtime > last_epoch)
+            and (reading.get_absolute("Z").endtime > last_epoch)
         ):
-            if reading.absolutes[1].absolute == 0:
-                last_epoch = max(reading.absolutes[1].endtime, last_epoch)
+            if reading.get_absolute("H").absolute == 0:
+                last_epoch = max(reading.get_absolute("H").endtime, last_epoch)
             filtered_readings.append(reading)
 
     # return data arrays
@@ -218,10 +218,14 @@ def calculate(
 
     readings = get_good_readings(readings)
     # convert lists to NumPy arrays
-    d_abs, d_bas = get_absolutes(readings, "D")
-    h_abs, h_bas = get_absolutes(readings, "H")
-    z_abs, z_bas = get_absolutes(readings, "Z")
-    utc = np.array([reading.absolutes[1].endtime for reading in readings])
+
+    d_abs = np.array([reading.get_absolute("D").absolute for reading in readings])
+    d_bas = np.array([reading.get_absolute("D").baseline for reading in readings])
+    h_abs = np.array([reading.get_absolute("H").absolute for reading in readings])
+    h_bas = np.array([reading.get_absolute("H").baseline for reading in readings])
+    z_abs = np.array([reading.get_absolute("Z").absolute for reading in readings])
+    z_bas = np.array([reading.get_absolute("Z").baseline for reading in readings])
+    utc = np.array([reading.get_absolute("H").endtime for reading in readings])
 
     # recreate ordinate variometer measurements from absolutes and baselines
     h_ord = h_abs - h_bas

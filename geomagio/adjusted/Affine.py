@@ -7,7 +7,7 @@ from .Generator import Generator
 from .GeneratorType import GeneratorType
 
 
-def create_states(matrices: List[Any], pier_correction: float)-> List[dict]:
+def create_states(matrices: List[Any], pier_correction: float) -> List[dict]:
     if matrices is None:
         return []
     states = []
