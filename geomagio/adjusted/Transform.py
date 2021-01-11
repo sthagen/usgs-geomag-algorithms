@@ -474,10 +474,12 @@ class QRFactorization(SingularValueDecomposition):
         if weights is None:
             return values
         weights = np.sqrt(weights)
-        return np.array([
-            values[0] * weights,
-            values[1] * weights,
-        ])
+        return np.array(
+            [
+                values[0] * weights,
+                values[1] * weights,
+            ]
+        )
 
     def calculate(
         self,
