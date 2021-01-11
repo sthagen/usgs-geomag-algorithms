@@ -2,6 +2,8 @@ from functools import reduce
 import numpy as np
 from typing import List, Tuple
 
+from obspy.core.utcdatetime import UTCDateTime
+
 from ..residual import Reading, MeasurementType
 from .Affine import Affine, create_states
 
@@ -18,7 +20,7 @@ def get_good_readings(
         # with database time stamps
         if (
             reading.absolutes[1].valid == True
-            and reading.absolutes[0].valid == True
+            and reading.get_absolute("H").valid == True
             and reading.absolutes[2].valid
             and (reading.absolutes[0].endtime > last_epoch)
             and (reading.absolutes[1].endtime > last_epoch)
@@ -32,7 +34,9 @@ def get_good_readings(
     return filtered_readings
 
 
-def time_weights_exponential(times, memory, epoch: int = None):
+def time_weights_exponential(
+    times: UTCDateTime, memory: float, epoch: int = None
+) -> List[float]:
     """
     Calculate time-dependent weights according to exponential decay.
 
@@ -48,7 +52,7 @@ def time_weights_exponential(times, memory, epoch: int = None):
                 (default = max(times))
 
     Outout:
-    dist - an M element array of vector distances/metrics
+    weights - an M element array of vector distances/metrics
 
     NOTE:  ObsPy UTCDateTime objects can be passed in times, but
            memory must then be specified in seconds
@@ -77,7 +81,7 @@ def time_weights_exponential(times, memory, epoch: int = None):
     return weights
 
 
-def weighted_quartile(data, weights, quant):
+def weighted_quartile(data: List[float], weights: List[float], quant: float) -> float:
     # sort data and weights
     ind_sorted = np.argsort(data)
     sorted_data = data[ind_sorted]
@@ -89,7 +93,9 @@ def weighted_quartile(data, weights, quant):
     return np.interp(quant, Pn, sorted_data)
 
 
-def filter_iqr(series: List[float], threshold=6, weights=None):
+def filter_iqr(
+    series: List[float], threshold: int = 6, weights: List[int] = None
+) -> List[int]:
     """
     Identify "good" elements in series by calculating potentially weighted
     25%, 50% (median), and 75% quantiles of series, the number of 25%-50%
@@ -303,21 +309,3 @@ def calculate(
 
     affine.matrices = M_composed_list
     affine.states = create_states(affine.matrices, affine.pier_correction)
-
-
-def get_absolutes(
-    readings: List[Reading],
-    element: str,
-) -> Tuple[List[float], List[float]]:
-    if element == "D":
-        i = 0
-    elif element == "H":
-        i = 1
-    elif element == "Z":
-        i = 2
-    else:
-        raise ValueError("Invalid element request")
-    return (
-        np.array([reading.absolutes[i].absolute for reading in readings]),
-        np.array([reading.absolutes[i].baseline for reading in readings]),
-    )

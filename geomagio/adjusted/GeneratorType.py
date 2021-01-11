@@ -1,6 +1,7 @@
 import enum
 import numpy as np
 import scipy.linalg as spl
+from typing import List, Tuple, Any
 
 
 class GeneratorType(str, enum.Enum):
@@ -15,7 +16,12 @@ class GeneratorType(str, enum.Enum):
     ROTATION_TRANSLATION_XY = "rotation translation xy"
     QR_FACTORIZATION = "QR factorization"
 
-    def calculate_matrix(self, ord_hez, abs_xyz, weights):
+    def calculate_matrix(
+        self,
+        ord_hez: Tuple[List[float], List[float], List[float]],
+        abs_xyz: Tuple[List[float], List[float], List[float]],
+        weights: List[float],
+    ) -> List[Any]:
 
         # extract measurements
         h_o = ord_hez[0]
