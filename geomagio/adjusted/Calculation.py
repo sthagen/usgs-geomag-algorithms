@@ -218,14 +218,13 @@ def calculate(
 
     readings = get_good_readings(readings)
     # convert lists to NumPy arrays
-
     d_abs = np.array([reading.get_absolute("D").absolute for reading in readings])
     d_bas = np.array([reading.get_absolute("D").baseline for reading in readings])
     h_abs = np.array([reading.get_absolute("H").absolute for reading in readings])
     h_bas = np.array([reading.get_absolute("H").baseline for reading in readings])
     z_abs = np.array([reading.get_absolute("Z").absolute for reading in readings])
     z_bas = np.array([reading.get_absolute("Z").baseline for reading in readings])
-    utc = np.array([reading.get_absolute("H").endtime for reading in readings])
+    utc = np.array([reading.absolutes[1].endtime for reading in readings])
 
     # recreate ordinate variometer measurements from absolutes and baselines
     h_ord = h_abs - h_bas
