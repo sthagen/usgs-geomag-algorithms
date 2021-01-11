@@ -9,6 +9,18 @@ from geomagio.adjusted.SpreadsheetSummaryFactory import SpreadsheetSummaryFactor
 from geomagio.adjusted.Generator import Generator
 from geomagio.adjusted.GeneratorType import GeneratorType
 from geomagio.adjusted.Affine import Affine
+from geomagio.adjusted.Transform import (
+    NoConstraints,
+    ZRotation,
+    ZRotationHscale,
+    ZRotationHscaleZbaseline,
+    RotationTranslation3D,
+    Rescale3D,
+    TranslateOrigins,
+    ShearYZ,
+    RotationTranslationXY,
+    QRFactorization,
+)
 from geomagio.adjusted.Calculation import (
     calculate,
 )
@@ -228,52 +240,92 @@ def test_Affine_result():
         expected = json.load(file)
     # numbers in keys pertain to method numbers from original documentation(generate_affine_...)
     assert_array_almost_equal(
-        get_affine_result(GeneratorType.NO_CONSTRAINTS),
+        NoConstraints().calculate(
+            ordinates=(H_ORD, E_ORD, Z_ORD),
+            absolutes=(X_ABS, Y_ABS, Z_ABS),
+            weights=None,
+        ),
         np.array(expected["zero"]),
         decimal=6,
     )
     assert_array_almost_equal(
-        get_affine_result(GeneratorType.Z_ROTATION),
+        ZRotation().calculate(
+            ordinates=(H_ORD, E_ORD, Z_ORD),
+            absolutes=(X_ABS, Y_ABS, Z_ABS),
+            weights=None,
+        ),
         np.array(expected["one"]),
         decimal=6,
     )
     assert_array_almost_equal(
-        get_affine_result(GeneratorType.Z_ROTATION_HSCALE),
+        ZRotationHscale().calculate(
+            ordinates=(H_ORD, E_ORD, Z_ORD),
+            absolutes=(X_ABS, Y_ABS, Z_ABS),
+            weights=None,
+        ),
         np.array(expected["two"]),
         decimal=6,
     )
     assert_array_almost_equal(
-        list(get_affine_result(GeneratorType.Z_ROTATION_HSCALE_ZBASELINE)),
+        ZRotationHscaleZbaseline().calculate(
+            ordinates=(H_ORD, E_ORD, Z_ORD),
+            absolutes=(X_ABS, Y_ABS, Z_ABS),
+            weights=None,
+        ),
         np.array(expected["three"]),
         decimal=6,
     )
     assert_array_almost_equal(
-        list(get_affine_result(GeneratorType.ROTATION_TRANSLATION_3D)),
+        RotationTranslation3D().calculate(
+            ordinates=(H_ORD, E_ORD, Z_ORD),
+            absolutes=(X_ABS, Y_ABS, Z_ABS),
+            weights=None,
+        ),
         expected["four"],
         decimal=6,
     )
     assert_array_almost_equal(
-        list(get_affine_result(GeneratorType.RESCALE_3D)),
+        Rescale3D().calculate(
+            ordinates=(H_ORD, E_ORD, Z_ORD),
+            absolutes=(X_ABS, Y_ABS, Z_ABS),
+            weights=None,
+        ),
         expected["five"],
         decimal=6,
     )
     assert_array_almost_equal(
-        list(get_affine_result(GeneratorType.TRANSLATE_ORIGINS)),
+        TranslateOrigins().calculate(
+            ordinates=(H_ORD, E_ORD, Z_ORD),
+            absolutes=(X_ABS, Y_ABS, Z_ABS),
+            weights=None,
+        ),
         expected["six"],
         decimal=6,
     )
     assert_array_almost_equal(
-        list(get_affine_result(GeneratorType.SHEAR_YZ)),
+        ShearYZ().calculate(
+            ordinates=(H_ORD, E_ORD, Z_ORD),
+            absolutes=(X_ABS, Y_ABS, Z_ABS),
+            weights=None,
+        ),
         expected["seven"],
         decimal=6,
     )
     assert_array_almost_equal(
-        list(get_affine_result(GeneratorType.ROTATION_TRANSLATION_XY)),
+        RotationTranslationXY().calculate(
+            ordinates=(H_ORD, E_ORD, Z_ORD),
+            absolutes=(X_ABS, Y_ABS, Z_ABS),
+            weights=None,
+        ),
         expected["eight"],
         decimal=6,
     )
     assert_array_almost_equal(
-        list(get_affine_result(GeneratorType.QR_FACTORIZATION)),
+        QRFactorization().calculate(
+            ordinates=(H_ORD, E_ORD, Z_ORD),
+            absolutes=(X_ABS, Y_ABS, Z_ABS),
+            weights=None,
+        ),
         expected["nine"],
         decimal=6,
     )
