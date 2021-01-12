@@ -5,6 +5,7 @@ from typing import List, Any, Optional
 
 from .Generator import Generator
 from .GeneratorType import GeneratorType
+from .Transform import Transform, TranslateOrigins, RotationTranslationXY
 
 
 def create_states(matrices: List[Any], pier_correction: float) -> List[dict]:
@@ -29,8 +30,8 @@ class Affine(BaseModel):
     acausal: bool = False
     update_interval: Optional[int] = 86400 * 7
     generators: List[Generator] = [
-        Generator(type=GeneratorType.ROTATION_TRANSLATION_XY, memory=(86400 * 100)),
-        Generator(type=GeneratorType.TRANSLATE_ORIGINS, memory=(86400 * 10)),
+        Generator(type=RotationTranslationXY, memory=(86400 * 100)),
+        Generator(type=TranslateOrigins, memory=(86400 * 10)),
     ]
     pier_correction: float = None
     # TODO: specify array type with fixed shape

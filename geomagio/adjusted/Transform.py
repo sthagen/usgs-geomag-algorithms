@@ -2,6 +2,8 @@ import numpy as np
 from typing import List, Tuple, Optional
 import scipy.linalg as spl
 
+from .GeneratorType import GeneratorType
+
 
 class Transform(object):
     def calculate(
@@ -326,31 +328,38 @@ class Rescale3D(LeastSq):
 
 
 class TranslateOrigins(LeastSq):
+    def get_weighted_values(
+        self,
+        values: Tuple[List[float], List[float], List[float]],
+        weights: Optional[List[float]],
+    ):
+        if weights is not None:
+            weights = np.sqrt(weights)
+            weights = np.vstack((weights, weights, weights)).T.ravel()
+        else:
+            weights = 1
+        return values * weights
+
     def calculate(
         self,
         ordinates: Tuple[List[float], List[float], List[float]],
         absolutes: Tuple[List[float], List[float], List[float]],
         weights: List[float],
     ) -> np.array:
-        # RHS, or independent variables
-        # (reduces degrees of freedom by 10:
-        #  - 2 for making x independent of y,z;
-        #  - 2 for making y,z independent of x;
-        #  - 1 for making y independent of z;
-        #  - 1 for making z independent of y;
-        #  - 3 for not scaling each axis
-        #  - 4 for the last row of zeros and a one)
+
+        abs_stacked = self.get_stacked_absolutes(absolutes)
         ord_stacked = np.zeros((3, len(ordinates[0]) * 3))
+
         ord_stacked[0, 0::3] = 1.0
         ord_stacked[1, 1::3] = 1.0
         ord_stacked[2, 2::3] = 1.0
 
         # subtract ords from abs to force simple translation
-        abs_stacked = self.get_stacked_absolutes(absolutes=absolutes)
         abs_stacked[0::3] = absolutes[0] - ordinates[0]
         abs_stacked[1::3] = absolutes[1] - ordinates[1]
         abs_stacked[2::3] = absolutes[2] - ordinates[2]
 
+        # apply weights
         ord_stacked = self.get_weighted_values(values=ord_stacked, weights=weights)
         abs_stacked = self.get_weighted_values(values=abs_stacked, weights=weights)
 
@@ -367,6 +376,43 @@ class TranslateOrigins(LeastSq):
             [0.0, 0.0, 1.0, M_r[2]],
             [0.0, 0.0, 0.0, 1.0],
         ]
+        # return GeneratorType.TRANSLATE_ORIGINS.calculate_matrix(
+        #     ordinates, absolutes, weights
+        # )
+        # ordinates = self.get_weighted_values(values=ordinates, weights=weights)
+        # absolutes = self.get_weighted_values(values=absolutes, weights=weights)
+        # # RHS, or independent variables
+        # # (reduces degrees of freedom by 10:
+        # #  - 2 for making x independent of y,z;
+        # #  - 2 for making y,z independent of x;
+        # #  - 1 for making y independent of z;
+        # #  - 1 for making z independent of y;
+        # #  - 3 for not scaling each axis
+        # #  - 4 for the last row of zeros and a one)
+        # ord_stacked = np.zeros((3, len(ordinates[0]) * 3))
+        # ord_stacked[0, 0::3] = 1.0
+        # ord_stacked[1, 1::3] = 1.0
+        # ord_stacked[2, 2::3] = 1.0
+
+        # # subtract ords from abs to force simple translation
+        # abs_stacked = self.get_stacked_absolutes(absolutes=absolutes)
+        # abs_stacked[0::3] = absolutes[0] - ordinates[0]
+        # abs_stacked[1::3] = absolutes[1] - ordinates[1]
+        # abs_stacked[2::3] = absolutes[2] - ordinates[2]
+
+        # # regression matrix M that minimizes L2 norm
+        # M_r, res, rank, sigma = spl.lstsq(ord_stacked.T, abs_stacked.T)
+
+        # if rank < 3:
+        #     print("Poorly conditioned or singular matrix, returning NaNs")
+        #     return np.nan * np.ones((4, 4))
+
+        # return [
+        #     [1.0, 0.0, 0.0, M_r[0]],
+        #     [0.0, 1.0, 0.0, M_r[1]],
+        #     [0.0, 0.0, 1.0, M_r[2]],
+        #     [0.0, 0.0, 0.0, 1.0],
+        # ]
 
 
 class ShearYZ(LeastSq):

@@ -285,7 +285,7 @@ def calculate(
             # zero out any 'bad' weights
             weights = good * weights
 
-            M = generator.type.calculate_matrix(
+            M = generator.type().calculate(
                 (h_tmp, e_tmp, z_tmp), (x_a, y_a, z_a), weights=weights
             )
 

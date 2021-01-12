@@ -402,8 +402,8 @@ def test_BOU201911202001_infinite_weekly():
         endtime=UTCDateTime("2020-01-31T23:59:00Z"),
         acausal=True,
         generators=[
-            Generator(type=GeneratorType.ROTATION_TRANSLATION_XY, memory=np.inf),
-            Generator(type=GeneratorType.TRANSLATE_ORIGINS, memory=np.inf),
+            Generator(type=RotationTranslationXY, memory=np.inf),
+            Generator(type=TranslateOrigins, memory=np.inf),
         ],
     )
     calculate(
@@ -427,8 +427,8 @@ def test_BOU201911202001_infinite_one_interval():
         endtime=UTCDateTime("2020-01-31T23:59:00Z"),
         acausal=True,
         generators=[
-            Generator(type=GeneratorType.ROTATION_TRANSLATION_XY, memory=np.inf),
-            Generator(type=GeneratorType.TRANSLATE_ORIGINS, memory=np.inf),
+            Generator(type=RotationTranslationXY, memory=np.inf),
+            Generator(type=TranslateOrigins, memory=np.inf),
         ],
         update_interval=None,
     )
