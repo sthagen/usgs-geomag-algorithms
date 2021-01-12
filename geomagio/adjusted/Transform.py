@@ -1,11 +1,57 @@
 import numpy as np
 from typing import List, Tuple, Optional
 import scipy.linalg as spl
-
-from .GeneratorType import GeneratorType
+from obspy.core import UTCDateTime
 
 
 class Transform(object):
+    def __init__(self, memory=np.inf):
+        self.memory = memory
+
+    def get_weights(self, times: UTCDateTime, time: int = None) -> List[float]:
+        """
+        Calculate time-dependent weights according to exponential decay.
+
+        Inputs:
+        times     - 1D array of times, or any time-like index whose
+                    relative values represent spacing between events
+        memory    - exp(-1) time scale; weights will be ~37% of max
+                    weight when time difference equals memory, and ~5%
+                    of max weight when time difference is 3X memory
+
+        Options:
+        epoch     - time at which weights maximize
+                    (default = max(times))
+
+        Outout:
+        weights - an M element array of vector distances/metrics
+
+        NOTE:  ObsPy UTCDateTime objects can be passed in times, but
+            memory must then be specified in seconds
+        FIXME: Python datetime objects not supported yet
+
+        """
+
+        # convert to array of floats
+        # (allows UTCDateTimes, but not datetime.datetimes)
+        times = np.asarray(times).astype(float)
+
+        if time is None:
+            time = float(max(times))
+
+        # if memory is actually infinite, return equal weights
+        if np.isinf(self.memory):
+            return np.ones(times.shape)
+
+        # initialize weights
+        weights = np.zeros(times.shape)
+
+        # calculate exponential decay time-dependent weights
+        weights[times <= time] = np.exp((times[times <= time] - time) / self.memory)
+        weights[times >= time] = np.exp((time - times[times >= time]) / self.memory)
+
+        return weights
+
     def calculate(
         self,
         ordinates: Tuple[List[float], List[float], List[float]],
@@ -105,7 +151,7 @@ class NoConstraints(LeastSq):
         )
 
 
-class ZRotation(LeastSq):
+class ZRotationShear(LeastSq):
     def calculate(
         self,
         ordinates: Tuple[List[float], List[float], List[float]],
@@ -376,43 +422,6 @@ class TranslateOrigins(LeastSq):
             [0.0, 0.0, 1.0, M_r[2]],
             [0.0, 0.0, 0.0, 1.0],
         ]
-        # return GeneratorType.TRANSLATE_ORIGINS.calculate_matrix(
-        #     ordinates, absolutes, weights
-        # )
-        # ordinates = self.get_weighted_values(values=ordinates, weights=weights)
-        # absolutes = self.get_weighted_values(values=absolutes, weights=weights)
-        # # RHS, or independent variables
-        # # (reduces degrees of freedom by 10:
-        # #  - 2 for making x independent of y,z;
-        # #  - 2 for making y,z independent of x;
-        # #  - 1 for making y independent of z;
-        # #  - 1 for making z independent of y;
-        # #  - 3 for not scaling each axis
-        # #  - 4 for the last row of zeros and a one)
-        # ord_stacked = np.zeros((3, len(ordinates[0]) * 3))
-        # ord_stacked[0, 0::3] = 1.0
-        # ord_stacked[1, 1::3] = 1.0
-        # ord_stacked[2, 2::3] = 1.0
-
-        # # subtract ords from abs to force simple translation
-        # abs_stacked = self.get_stacked_absolutes(absolutes=absolutes)
-        # abs_stacked[0::3] = absolutes[0] - ordinates[0]
-        # abs_stacked[1::3] = absolutes[1] - ordinates[1]
-        # abs_stacked[2::3] = absolutes[2] - ordinates[2]
-
-        # # regression matrix M that minimizes L2 norm
-        # M_r, res, rank, sigma = spl.lstsq(ord_stacked.T, abs_stacked.T)
-
-        # if rank < 3:
-        #     print("Poorly conditioned or singular matrix, returning NaNs")
-        #     return np.nan * np.ones((4, 4))
-
-        # return [
-        #     [1.0, 0.0, 0.0, M_r[0]],
-        #     [0.0, 1.0, 0.0, M_r[1]],
-        #     [0.0, 0.0, 1.0, M_r[2]],
-        #     [0.0, 0.0, 0.0, 1.0],
-        # ]
 
 
 class ShearYZ(LeastSq):
