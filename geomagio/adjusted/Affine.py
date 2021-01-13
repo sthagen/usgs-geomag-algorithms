@@ -225,16 +225,8 @@ class Affine(BaseModel):
             # return NaNs if no valid observations
             if np.sum(weights) == 0:
                 raise ValueError(f"No valid observations for {time}")
-            # identify 'good' data indices based on baseline stats
-            # TODO: return good from filter_iqr, which accepts a list
-            good = (
-                filter_iqr(baselines[0], threshold=3, weights=weights)
-                & filter_iqr(baselines[1], threshold=3, weights=weights)
-                & filter_iqr(baselines[2], threshold=3, weights=weights)
-            )
-
-            # zero out any 'bad' weights
-            weights = good * weights
+            # zero out statistically 'bad' baselines
+            weights = self.weight_baselines(baselines=baselines, weights=weights)
 
             M = transform.calculate(
                 ordinates=inputs, absolutes=absolutes, weights=weights
@@ -267,3 +259,16 @@ class Affine(BaseModel):
         if not self.acausal:
             weights[times > time.timestamp] = 0.0
         return weights
+
+    def weight_baselines(
+        self,
+        baselines: List[float],
+        weights: List[float],
+        threshold=3,
+    ) -> List[float]:
+        good = (
+            filter_iqr(baselines[0], threshold=threshold, weights=weights)
+            & filter_iqr(baselines[1], threshold=threshold, weights=weights)
+            & filter_iqr(baselines[2], threshold=threshold, weights=weights)
+        )
+        return weights * good
