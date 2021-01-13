@@ -105,10 +105,13 @@ class Affine(BaseModel):
     endtime: UTCDateTime = UTCDateTime()
     acausal: bool = False
     update_interval: Optional[int] = 86400 * 7
-    transforms: List[Type[Transform]] = [
+    transforms: List[Transform] = [
         RotationTranslationXY(memory=(86400 * 100)),
         TranslateOrigins(memory=(86400 * 10)),
     ]
+
+    class Config:
+        arbitrary_types_allowed = True
 
     def calculate(self, readings: List[Reading]) -> List[AdjustedMatrix]:
         update_interval = self.update_interval or (self.endtime - self.starttime)
@@ -204,7 +207,7 @@ class Affine(BaseModel):
     def calculate_matrix(
         self, time: UTCDateTime, readings: List[Reading]
     ) -> AdjustedMatrix:
-        absolutes = self.get_absolutes(readings)
+        absolutes = self.get_absolutes_xyz(readings)
         baselines = self.get_baselines(readings)
         ordinates = self.get_ordinates(readings)
         times = self.get_times(readings)

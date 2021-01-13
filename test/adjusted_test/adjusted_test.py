@@ -347,85 +347,89 @@ def get_readings_BOU201911202001():
     return readings
 
 
-def test_BOU201911202001_short_causal():
+# def test_BOU201911202001_short_causal():
+#     readings = get_readings_BOU201911202001()
+#     short_causal = Affine(
+#         observatory="BOU",
+#         starttime=UTCDateTime("2019-11-01T00:00:00Z"),
+#         endtime=UTCDateTime("2020-01-31T23:59:00Z"),
+#     ).calculate(readings=readings)
+
+#     result = format_result([adjusted_matrix.matrix for adjusted_matrix in short_causal])
+
+#     with open("etc/adjusted/short_memory_causal.json", "r") as file:
+#         expected = json.load(file)
+
+#     assert_array_almost_equal(result, expected["M"], decimal=3)
+
+
+def test_BOU201911202001_short_acausal():
     readings = get_readings_BOU201911202001()
-    short_causal = Affine(
+    short_acausal = Affine(
         observatory="BOU",
         starttime=UTCDateTime("2019-11-01T00:00:00Z"),
         endtime=UTCDateTime("2020-01-31T23:59:00Z"),
-    ).calculate(readings=readings)
+        acausal=True,
+    ).calculate(
+        readings=readings,
+    )
 
-    result = format_result([adjusted_matrix.matrix for adjusted_matrix in short_causal])
+    result = format_result(
+        [adjusted_matrix.matrix for adjusted_matrix in short_acausal]
+    )
 
-    with open("etc/adjusted/short_memory_causal.json", "r") as file:
+    with open("etc/adjusted/short_memory_acausal.json", "r") as file:
         expected = json.load(file)
 
     assert_array_almost_equal(result, expected["M"], decimal=3)
 
 
-# def test_BOU201911202001_short_acausal():
-#     readings = get_readings_BOU201911202001()
-#     affine = Affine(
-#         observatory="BOU",
-#         starttime=UTCDateTime("2019-11-01T00:00:00Z"),
-#         endtime=UTCDateTime("2020-01-31T23:59:00Z"),
-#         acausal=True,
-#     ).calculate_matrix(
-#         readings=readings,
-#     )
+def test_BOU201911202001_infinite_weekly():
+    readings = get_readings_BOU201911202001()
+    infinite_weekly = Affine(
+        observatory="BOU",
+        starttime=UTCDateTime("2019-11-01T00:00:00Z"),
+        endtime=UTCDateTime("2020-01-31T23:59:00Z"),
+        acausal=True,
+        transforms=[
+            RotationTranslationXY(memory=np.inf),
+            TranslateOrigins(memory=np.inf),
+        ],
+    ).calculate(
+        readings=readings,
+    )
 
-#     short_acausal = format_result(affine.matrices)
+    result = format_result(
+        [adjusted_matrix.matrix for adjusted_matrix in infinite_weekly]
+    )
 
-#     with open("etc/adjusted/short_memory_acausal.json", "r") as file:
-#         expected = json.load(file)
+    with open("etc/adjusted/weekly_inf_memory_acausal.json", "r") as file:
+        expected = json.load(file)
 
-#     assert_array_almost_equal(short_acausal, expected["M"], decimal=3)
-
-
-# def test_BOU201911202001_infinite_weekly():
-#     readings = get_readings_BOU201911202001()
-#     affine = Affine(
-#         observatory="BOU",
-#         starttime=UTCDateTime("2019-11-01T00:00:00Z"),
-#         endtime=UTCDateTime("2020-01-31T23:59:00Z"),
-#         acausal=True,
-#         generators=[
-#             RotationTranslationXY(memory=np.inf),
-#             TranslateOrigins(memory=np.inf),
-#         ],
-#     ).calculate_matrix(
-#         readings=readings,
-#     )
-
-#     weekly_inf_acausal = format_result(affine.matrices)
-
-#     with open("etc/adjusted/weekly_inf_memory_acausal.json", "r") as file:
-#         expected = json.load(file)
-
-#     assert_array_almost_equal(weekly_inf_acausal, expected["M"], decimal=3)
+    assert_array_almost_equal(result, expected["M"], decimal=3)
 
 
-# def test_BOU201911202001_infinite_one_interval():
-#     readings = get_readings_BOU201911202001()
-#     affine = Affine(
-#         observatory="BOU",
-#         starttime=UTCDateTime("2019-11-01T00:00:00Z"),
-#         endtime=UTCDateTime("2020-01-31T23:59:00Z"),
-#         acausal=True,
-#         generators=[
-#             RotationTranslationXY(memory=np.inf),
-#             TranslateOrigins(memory=np.inf),
-#         ],
-#         update_interval=None,
-#     )
-#     calculate(
-#         affine=affine,
-#         readings=readings,
-#     )
+def test_BOU201911202001_infinite_one_interval():
+    readings = get_readings_BOU201911202001()
+    infinite_one_interval = Affine(
+        observatory="BOU",
+        starttime=UTCDateTime("2019-11-01T00:00:00Z"),
+        endtime=UTCDateTime("2020-01-31T23:59:00Z"),
+        acausal=True,
+        transforms=[
+            RotationTranslationXY(memory=np.inf),
+            TranslateOrigins(memory=np.inf),
+        ],
+        update_interval=None,
+    ).calculate(
+        readings=readings,
+    )
 
-#     all_inf_acausal = format_result(affine.matrices)
+    result = format_result(
+        [adjusted_matrix.matrix for adjusted_matrix in infinite_one_interval]
+    )
 
-#     with open("etc/adjusted/all_inf_memory_acausal.json", "r") as file:
-#         expected = json.load(file)
+    with open("etc/adjusted/all_inf_memory_acausal.json", "r") as file:
+        expected = json.load(file)
 
-#     assert_array_almost_equal(all_inf_acausal, expected["M"], decimal=3)
+    assert_array_almost_equal(result, expected["M"], decimal=3)
