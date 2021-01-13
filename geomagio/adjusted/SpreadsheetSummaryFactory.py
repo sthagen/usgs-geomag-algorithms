@@ -1,6 +1,6 @@
 import os
 
-from obspy.core import UTCDateTime
+from obspy import UTCDateTime
 import openpyxl
 import numpy as np
 

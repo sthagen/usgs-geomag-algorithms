@@ -1,6 +1,6 @@
 import numpy as np
 from functools import reduce
-from obspy.core import UTCDateTime
+from obspy import UTCDateTime
 from pydantic import BaseModel
 from .. import pydantic_utcdatetime
 from typing import List, Any, Optional, Type
@@ -241,7 +241,6 @@ class Affine(BaseModel):
 
         # compose affine transform matrices using reverse ordered matrices
         M_composed = reduce(np.dot, np.flipud(Ms))
-        # TODO: how should pier corrections be averaged?
         pier_correction = np.average(
             [reading.pier_correction for reading in readings], weights=weights
         )

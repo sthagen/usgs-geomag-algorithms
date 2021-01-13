@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 from typing import List, Optional, Any
-from obspy.core import UTCDateTime
+from obspy import UTCDateTime
 
 
 class AdjustedMatrix(BaseModel):

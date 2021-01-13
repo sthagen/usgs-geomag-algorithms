@@ -1,7 +1,7 @@
 import numpy as np
 from typing import List, Tuple, Optional
 import scipy.linalg as spl
-from obspy.core import UTCDateTime
+from obspy import UTCDateTime
 
 
 class Transform(object):
