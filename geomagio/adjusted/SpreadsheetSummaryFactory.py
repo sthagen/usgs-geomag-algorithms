@@ -19,14 +19,7 @@ class SpreadsheetSummaryFactory(object):
     ):
         readings = []
         for year in range(starttime.year, endtime.year + 1):
-            # TODO: Change to current year when 2020 absolutes are moved into folder
-            if year != UTCDateTime().year - 1:
-                observatory_directory = os.path.join(
-                    self.base_directory, observatory, f"{year}"
-                )
-            else:
-                observatory_directory = self.base_directory
-            for (dirpath, _, filenames) in os.walk(observatory_directory):
+            for (dirpath, _, filenames) in os.walk(self.base_directory):
                 for filename in filenames:
                     if filename.split(".")[-1] != "xlsm":
                         continue
