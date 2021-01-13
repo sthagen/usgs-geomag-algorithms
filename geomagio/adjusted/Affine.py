@@ -262,9 +262,8 @@ class Affine(BaseModel):
         times: List[UTCDateTime],
         transform: Transform,
     ):
-        times = [t.timestamp for t in times]
         weights = transform.get_weights(time=time.timestamp, times=times)
         # set weights for future observations to zero if not acausal
         if not self.acausal:
-            weights[times > time] = 0.0
+            weights[times > time.timestamp] = 0.0
         return weights
