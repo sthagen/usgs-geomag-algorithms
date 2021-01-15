@@ -1,11 +1,19 @@
 import numpy as np
-from typing import List, Tuple, Optional
-import scipy.linalg as spl
 from obspy import UTCDateTime
+import scipy.linalg as spl
+from typing import List, Tuple, Optional
 
 
 class Transform(object):
-    def __init__(self, memory=np.inf):
+    """Method for generating an affine matrix.
+
+    Attributes
+    ----------
+    memory: Controls impacts of measurements from the past.
+    Defaults to infinite(equal weighting)
+    """
+
+    def __init__(self, memory: float = np.inf):
         self.memory = memory
 
     def get_weights(self, times: UTCDateTime, time: int = None) -> List[float]:
@@ -13,23 +21,9 @@ class Transform(object):
         Calculate time-dependent weights according to exponential decay.
 
         Inputs:
-        times     - 1D array of times, or any time-like index whose
-                    relative values represent spacing between events
-        memory    - exp(-1) time scale; weights will be ~37% of max
-                    weight when time difference equals memory, and ~5%
-                    of max weight when time difference is 3X memory
-
-        Options:
-        epoch     - time at which weights maximize
-                    (default = max(times))
-
-        Outout:
-        weights - an M element array of vector distances/metrics
-
-        NOTE:  ObsPy UTCDateTime objects can be passed in times, but
-            memory must then be specified in seconds
-        FIXME: Python datetime objects not supported yet
-
+        times: array of times, or any time-like index whose relative values represent spacing between events
+        Output:
+        weights: array of vector distances/metrics
         """
 
         # convert to array of floats
@@ -58,18 +52,49 @@ class Transform(object):
         absolutes: Tuple[List[float], List[float], List[float]],
         weights: List[float],
     ) -> np.array:
+        """Type skeleton inherited by any instance of Transform
+
+        Attributes
+        ----------
+        ordinates: H, E and Z ordinates
+        absolutes: X, Y and Z absolutes(NOTE: absolutes must be rotated from original H, E and Z values)
+        weights: time weights to apply during calculations of matrices
+        """
         return
 
 
 class LeastSq(Transform):
+    """Intance of Transform. Applies least squares to generate matrices"""
+
     def get_stacked_absolutes(self, absolutes):
+        """Formats absolutes for least squares method
+
+        Attributes
+        ----------
+        absolutes: Rotated X, Y, and Z absolutes
+
+        Output
+        ------
+        X, Y and Z absolutes place end to end and transposed
+        """
         return np.vstack([absolutes[0], absolutes[1], absolutes[2]]).T.ravel()
 
     def get_weighted_values(
         self,
         values: Tuple[List[float], List[float], List[float]],
         weights: Optional[List[float]],
-    ):
+    ) -> Tuple[List[float], List[float], List[float]]:
+        """Application of weights for least squares methods, which calls for square rooting of weights
+
+        Attributes
+        ----------
+        values: absolutes or ordinates
+
+        Outputs
+        -------
+        tuple of weights applied to each element of values
+
+        """
         if weights is None:
             return values
         weights = np.sqrt(weights)
@@ -80,15 +105,30 @@ class LeastSq(Transform):
         )
 
 
-class SingularValueDecomposition(Transform):
-    def get_stacked_values(self, values, weighted_values, ndims=3):
+class SVD(Transform):
+    """Instance of Transform. Applies singular value decomposition to generate matrices"""
+
+    def get_stacked_values(self, values, weighted_values, ndims=3) -> np.array:
+        """Supports intermediate mathematical steps by differencing and shaping values for SVD
+
+        Attributes
+        ----------
+        values: absolutes or ordinates
+        weighted_values: absolutes or ordinates with weights applied
+        ndims: number of rows desired in return array(case specific). Default set to 3 dimensions(XYZ/HEZ)
+
+        Outputs
+        -------
+        Stacked and differenced values from their weighted counterparts
+        """
         return np.vstack([[values[i] - weighted_values[i]] for i in range(ndims)])
 
     def get_weighted_values(
         self,
         values: Tuple[List[float], List[float], List[float]],
         weights: Optional[List[float]],
-    ):
+    ) -> Tuple[List[float], List[float], List[float]]:
+        """Application of weights for SVD methods, which call for weighted averages"""
         if weights is None:
             weights = np.ones_like(values[0])
         return (
@@ -105,6 +145,7 @@ class NoConstraints(LeastSq):
         absolutes: Tuple[List[float], List[float], List[float]],
         weights: List[float],
     ) -> np.array:
+        """Calculates affine with no constraints using least squares."""
         ordinates = self.get_weighted_values(ordinates, weights)
         absolutes = self.get_weighted_values(absolutes, weights)
         # LHS, or dependent variables
@@ -158,6 +199,7 @@ class ZRotationShear(LeastSq):
         absolutes: Tuple[List[float], List[float], List[float]],
         weights: List[float],
     ) -> np.array:
+        """Calculates affine using least squares, constrained to rotate about the Z axis."""
         ordinates = self.get_weighted_values(ordinates, weights)
         absolutes = self.get_weighted_values(absolutes, weights)
         # LHS, or dependent variables
@@ -195,6 +237,9 @@ class ZRotationShear(LeastSq):
 
 
 class ZRotationHscale(LeastSq):
+    """Calculates affine using least squares, constrained to rotate about the Z axis
+    and apply uniform horizontal scaling."""
+
     def calculate(
         self,
         ordinates: Tuple[List[float], List[float], List[float]],
@@ -238,12 +283,8 @@ class ZRotationHscale(LeastSq):
 
 
 class ZRotationHscaleZbaseline(LeastSq):
-    def rotate_values(self, values):
-        return (
-            np.sqrt(values[0] ** 2 + values[1] ** 2),
-            np.arctan2(values[1], values[0]),
-            values[2],
-        )
+    """Calculates affine using least squares, constrained to rotate about the Z axis,
+    apply a uniform horizontal scaling, and apply a baseline shift for the Z axis."""
 
     def calculate(
         self,
@@ -288,7 +329,10 @@ class ZRotationHscaleZbaseline(LeastSq):
         ]
 
 
-class RotationTranslation3D(SingularValueDecomposition):
+class RotationTranslation3D(SVD):
+    """Calculates affine using using singular value decomposition,
+    constrained to 3D scaled rotation and translation(no shear)"""
+
     def calculate(
         self,
         ordinates: Tuple[List[float], List[float], List[float]],
@@ -336,6 +380,8 @@ class RotationTranslation3D(SingularValueDecomposition):
 
 
 class Rescale3D(LeastSq):
+    """Calculates affine using using least squares, constrained to re-scale each axis"""
+
     def calculate(
         self,
         ordinates: Tuple[List[float], List[float], List[float]],
@@ -374,11 +420,15 @@ class Rescale3D(LeastSq):
 
 
 class TranslateOrigins(LeastSq):
+    """Calculates affine using using least squares, constrained to tanslate origins"""
+
     def get_weighted_values(
         self,
         values: Tuple[List[float], List[float], List[float]],
         weights: Optional[List[float]],
     ):
+        """Weights are applied after matrix creation steps,
+        requiring weights to be stacked similar to ordinates and absolutes"""
         if weights is not None:
             weights = np.sqrt(weights)
             weights = np.vstack((weights, weights, weights)).T.ravel()
@@ -425,6 +475,8 @@ class TranslateOrigins(LeastSq):
 
 
 class ShearYZ(LeastSq):
+    """Calculates affine using least squares, constrained to shear y and z, but not x."""
+
     def calculate(
         self,
         ordinates: Tuple[List[float], List[float], List[float]],
@@ -463,7 +515,11 @@ class ShearYZ(LeastSq):
         ]
 
 
-class RotationTranslationXY(SingularValueDecomposition):
+class RotationTranslationXY(SVD):
+    """Calculates affine using singular value decomposition,
+    constrained to rotation and translation in XY(no scale or shear),
+    and only translation in Z"""
+
     def calculate(
         self,
         ordinates: Tuple[List[float], List[float], List[float]],
@@ -520,12 +576,15 @@ class RotationTranslationXY(SingularValueDecomposition):
         ]
 
 
-class QRFactorization(SingularValueDecomposition):
+class QRFactorization(SVD):
+    """Calculates affine using singular value decomposition with QR factorization"""
+
     def get_weighted_values_lstsq(
         self,
         values: Tuple[List[float], List[float], List[float]],
         weights: Optional[List[float]],
     ):
+        """ Applies least squares weights in two dimensions(X and Y)"""
         if weights is None:
             return values
         weights = np.sqrt(weights)

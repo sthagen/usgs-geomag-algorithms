@@ -1,16 +1,23 @@
-import numpy as np
 from functools import reduce
+import numpy as np
 from obspy import UTCDateTime
 from pydantic import BaseModel
-from .. import pydantic_utcdatetime
-from typing import List, Any, Optional, Type
+from typing import List, Optional, Tuple
 
-from .Transform import Transform, TranslateOrigins, RotationTranslationXY
 from .AdjustedMatrix import AdjustedMatrix
 from ..residual import Reading
+from .Transform import Transform, TranslateOrigins, RotationTranslationXY
 
 
 def weighted_quartile(data: List[float], weights: List[float], quant: float) -> float:
+    """Get weighted quartile to determine statistically good/bad data
+
+    Attributes
+    ----------
+    data: filtered array of observations
+    weights: array of vector distances/metrics
+    quant: statistical percentile of input data
+    """
     # sort data and weights
     ind_sorted = np.argsort(data)
     sorted_data = data[ind_sorted]
@@ -39,18 +46,17 @@ def filter_iqr(
           should use it instead.
 
     Inputs:
-    series      - 1D NumPy array of observations to filter
+    series: array of observations to filter
 
     Options:
-    threshold   - threshold in fractional number of 25%-50% (50%-75%)
-                  quantile ranges below (above) the median each element of
-                  series may fall and still be considered "good"
-                  (default = 6)
-    weights     - weights to assign to each element of series
-                  (default = 1)
+    threshold: threshold in fractional number of 25%-50% (50%-75%)
+                quantile ranges below (above) the median each element of
+                series may fall and still be considered "good"
+                Default set to 6.
+    weights: weights to assign to each element of series. Default set to 1.
 
     Output:
-    good        - Boolean array where True values correspond to "good" data
+    good: Boolean array where True values correspond to "good" data
 
     """
 
@@ -85,6 +91,18 @@ def filter_iqr(
 
 
 class Affine(BaseModel):
+    """Creates AdjustedMatrix objects from readings
+
+    Attributes
+    ----------
+    observatory: 3-letter observatory code
+    starttime: beginning time for matrix creation
+    endtime: end time for matrix creation
+    acausal: when True, utilizes readings from after set endtime
+    update_interval: window of time a matrix is representative of
+    transforms: list of methods for matrix calculation
+    """
+
     observatory: str = None
     starttime: UTCDateTime = UTCDateTime() - (86400 * 7)
     endtime: UTCDateTime = UTCDateTime()
@@ -99,6 +117,16 @@ class Affine(BaseModel):
         arbitrary_types_allowed = True
 
     def calculate(self, readings: List[Reading]) -> List[AdjustedMatrix]:
+        """Calculates affine matrices for a range of times
+
+        Attributes
+        ----------
+        readings: list of readings containing absolutes
+
+        Outputs
+        -------
+        Ms: list of AdjustedMatrix objects created from calculations
+        """
         update_interval = self.update_interval or (self.endtime - self.starttime)
         all_readings = [r for r in readings if r.valid]
         Ms = []
@@ -133,7 +161,7 @@ class Affine(BaseModel):
         epoch_end: float,
         epochs: List[float],
         time: UTCDateTime,
-    ):
+    ) -> Tuple[float, float]:
         for e in epochs:
             if e > time:
                 if epoch_end is None or e < epoch_end:
@@ -146,7 +174,10 @@ class Affine(BaseModel):
     def get_times(self, readings: List[UTCDateTime]):
         return np.array([reading.get_absolute("H").endtime for reading in readings])
 
-    def get_ordinates(self, readings: List[Reading]):
+    def get_ordinates(
+        self, readings: List[Reading]
+    ) -> Tuple[List[float], List[float], List[float]]:
+        """Calculates ordinates from absolutes and baselines"""
         h_abs, d_abs, z_abs = self.get_absolutes(readings)
         h_bas, d_bas, z_bas = self.get_baselines(readings)
 
@@ -167,20 +198,29 @@ class Affine(BaseModel):
         z_o = z_ord
         return (h_o, e_o, z_o)
 
-    def get_baselines(self, readings: List[Reading]):
+    def get_baselines(
+        self, readings: List[Reading]
+    ) -> Tuple[List[float], List[float], List[float]]:
+        """Get H, D and Z baselines"""
         h_bas = np.array([reading.get_absolute("H").baseline for reading in readings])
         d_bas = np.array([reading.get_absolute("D").baseline for reading in readings])
         z_bas = np.array([reading.get_absolute("Z").baseline for reading in readings])
         return (h_bas, d_bas, z_bas)
 
-    def get_absolutes(self, readings: List[Reading]):
+    def get_absolutes(
+        self, readings: List[Reading]
+    ) -> Tuple[List[float], List[float], List[float]]:
+        """Get H, D and Z absolutes"""
         h_abs = np.array([reading.get_absolute("H").absolute for reading in readings])
         d_abs = np.array([reading.get_absolute("D").absolute for reading in readings])
         z_abs = np.array([reading.get_absolute("Z").absolute for reading in readings])
 
         return (h_abs, d_abs, z_abs)
 
-    def get_absolutes_xyz(self, readings: List[Reading]):
+    def get_absolutes_xyz(
+        self, readings: List[Reading]
+    ) -> Tuple[List[float], List[float], List[float]]:
+        """Get X, Y and Z absolutes from H, D and Z baselines"""
         h_abs, d_abs, z_abs = self.get_absolutes(readings)
 
         # convert from cylindrical to Cartesian coordinates
@@ -192,6 +232,12 @@ class Affine(BaseModel):
     def calculate_matrix(
         self, time: UTCDateTime, readings: List[Reading]
     ) -> AdjustedMatrix:
+        """Calculates affine matrix for a given time
+
+        Outputs
+        -------
+        AdjustedMatrix object containing result
+        """
         absolutes = self.get_absolutes_xyz(readings)
         baselines = self.get_baselines(readings)
         ordinates = self.get_ordinates(readings)
@@ -237,7 +283,7 @@ class Affine(BaseModel):
         time: UTCDateTime,
         times: List[UTCDateTime],
         transform: Transform,
-    ):
+    ) -> np.array:
         weights = transform.get_weights(time=time.timestamp, times=times)
         # set weights for future observations to zero if not acausal
         if not self.acausal:

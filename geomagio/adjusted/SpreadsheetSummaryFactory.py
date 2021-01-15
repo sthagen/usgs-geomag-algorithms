@@ -1,23 +1,32 @@
 import os
-from typing import List
 
 from obspy import UTCDateTime
 import openpyxl
-import numpy as np
+from typing import List
 
 from ..residual import Absolute, Angle, Reading
 from ..residual.SpreadsheetAbsolutesFactory import parse_relative_time
 
 
 class SpreadsheetSummaryFactory(object):
+    """Read absolutes from summary spreadsheets"""
+
     def __init__(
-        self, base_directory=r"Volumes/geomag/pub/Caldata/Checked Baseline Data"
+        self, base_directory: str = r"Volumes/geomag/pub/Caldata/Checked Baseline Data"
     ):
         self.base_directory = base_directory
 
     def get_readings(
         self, observatory: str, starttime: UTCDateTime, endtime: UTCDateTime
-    ):
+    ) -> List[Reading]:
+        """Gathers readings from factory's base directory
+
+        Attributes
+        ----------
+        observatory: 3-letter observatory code
+        starttime: beginning date of readings
+        endtime: end date of readings
+        """
         readings = []
         for year in range(starttime.year, endtime.year + 1):
             for (dirpath, _, filenames) in os.walk(self.base_directory):
@@ -43,7 +52,14 @@ class SpreadsheetSummaryFactory(object):
         readings = self._parse_readings(sheet, path)
         return readings
 
-    def _parse_metadata(self, sheet, observatory) -> dict:
+    def _parse_metadata(self, sheet: openpyxl.worksheet, observatory: str) -> dict:
+        """gather metadata from spreadsheet
+
+        Attributes
+        ----------
+        sheet: excel sheet containing residual summary values
+        observatory: 3-letter observatory code
+        """
         date = sheet["I1"].value
         date = f"{date.year}{date.month:02}{date.day:02}"
         return {
@@ -54,7 +70,19 @@ class SpreadsheetSummaryFactory(object):
             "observer": sheet["I10"].value,
         }
 
-    def _parse_readings(self, sheet, path):
+    def _parse_readings(self, sheet: openpyxl.worksheet, path: str) -> List[Reading]:
+        """get list of readings from spreadsheet
+
+        Attributes
+        ----------
+        sheet: excel sheet containing residual summary values
+        path: spreadsheet's filepath
+
+        Outputs
+        -------
+        List of valid readings from spreadsheet.
+        If all readings are valid, 4 readings are returned
+        """
         metadata = self._parse_metadata(sheet, path.split("/")[-1][0:3])
         date = sheet["I1"].value
         base_date = f"{date.year}{date.month:02}{date.day:02}"
