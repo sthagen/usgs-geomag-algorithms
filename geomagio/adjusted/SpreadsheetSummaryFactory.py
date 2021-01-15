@@ -1,4 +1,5 @@
 import os
+from typing import List
 
 from obspy import UTCDateTime
 import openpyxl
@@ -27,21 +28,17 @@ class SpreadsheetSummaryFactory(object):
                     yd = int(filename[7:10])
                     file_date = UTCDateTime(f"{year}-01-01") + (yd * 86400)
                     if starttime <= file_date < endtime:
-                        readings.append(
-                            self.parse_spreadsheet(
-                                os.path.join(dirpath, filename),
-                            )
+                        rs = self.parse_spreadsheet(
+                            os.path.join(dirpath, filename),
                         )
+                        for r in rs:
+                            readings.append(r)
         return readings
 
-    def parse_spreadsheet(self, path: str) -> Reading:
+    def parse_spreadsheet(self, path: str) -> List[Reading]:
         sheet = openpyxl.load_workbook(path, data_only=True)["Sheet1"]
-        metadata = self._parse_metadata(sheet, path.split("/")[-1][0:3])
-        return Reading(
-            metadata=metadata,
-            absolutes=self._parse_absolutes(sheet),
-            pier_correction=metadata["pier_correction"],
-        )
+        readings = self._parse_readings(sheet, path)
+        return readings
 
     def _parse_metadata(self, sheet, observatory) -> dict:
         date = sheet["I1"].value
@@ -54,62 +51,62 @@ class SpreadsheetSummaryFactory(object):
             "observer": sheet["I10"].value,
         }
 
-    def _parse_absolutes(self, sheet):
+    def _parse_readings(self, sheet, path):
+        metadata = self._parse_metadata(sheet, path.split("/")[-1][0:3])
         date = sheet["I1"].value
         base_date = f"{date.year}{date.month:02}{date.day:02}"
-
-        return [
-            Absolute(
-                element="D",
-                absolute=np.average(
-                    [
-                        Angle.from_dms(
-                            degrees=sheet[f"C{n}"].value, minutes=sheet[f"D{n}"].value
-                        )
-                        for n in range(10, 14)
-                        if sheet[f"J{n}"].value != "Rejected"
-                    ]
+        readings = []
+        for d_n in range(10, 14):
+            h_n = d_n + 14
+            v_n = d_n + 28
+            absolutes = [
+                Absolute(
+                    element="D",
+                    absolute=Angle.from_dms(
+                        degrees=sheet[f"C{d_n}"].value, minutes=sheet[f"D{d_n}"].value
+                    ),
+                    baseline=sheet[f"H{d_n}"].value / 60,
+                    starttime=parse_relative_time(
+                        base_date, "{0:04d}".format(sheet[f"B{v_n}"].value)
+                    ),
+                    endtime=parse_relative_time(
+                        base_date, "{0:04d}".format(sheet[f"B{d_n}"].value)
+                    ),
                 ),
-                baseline=sheet["H16"].value,
-                starttime=parse_relative_time(
-                    base_date, "{0:04d}".format(sheet["B10"].value)
+                Absolute(
+                    element="H",
+                    absolute=sheet[f"D{h_n}"].value,
+                    baseline=sheet[f"H{h_n}"].value,
+                    starttime=parse_relative_time(
+                        base_date, "{0:04d}".format(sheet[f"B{v_n}"].value)
+                    ),
+                    endtime=parse_relative_time(
+                        base_date, "{0:04d}".format(sheet[f"B{h_n}"].value)
+                    ),
                 ),
-                endtime=parse_relative_time(
-                    base_date, "{0:04d}".format(sheet["B13"].value)
+                Absolute(
+                    element="Z",
+                    absolute=sheet[f"D{v_n}"].value,
+                    baseline=sheet[f"H{v_n}"].value,
+                    starttime=parse_relative_time(
+                        base_date, "{0:04d}".format(sheet[f"B{v_n}"].value)
+                    ),
+                    endtime=parse_relative_time(
+                        base_date, "{0:04d}".format(sheet[f"B{v_n}"].value)
+                    ),
                 ),
-            ),
-            Absolute(
-                element="H",
-                absolute=np.average(
-                    [
-                        sheet[f"D{n}"].value
-                        for n in range(24, 28)
-                        if sheet[f"J{n}"].value != "Rejected"
-                    ]
-                ),
-                baseline=sheet["H30"].value,
-                starttime=parse_relative_time(
-                    base_date, "{0:04d}".format(sheet["B24"].value)
-                ),
-                endtime=parse_relative_time(
-                    base_date, "{0:04d}".format(sheet["B27"].value)
-                ),
-            ),
-            Absolute(
-                element="Z",
-                absolute=np.average(
-                    [
-                        sheet[f"D{n}"].value
-                        for n in range(38, 42)
-                        if sheet[f"J{n}"].value != "Rejected"
-                    ]
-                ),
-                baseline=sheet["H44"].value,
-                starttime=parse_relative_time(
-                    base_date, "{0:04d}".format(sheet["B38"].value)
-                ),
-                endtime=parse_relative_time(
-                    base_date, "{0:04d}".format(sheet["B41"].value)
-                ),
-            ),
-        ]
+            ]
+            valid = [
+                sheet[f"J{d_n}"].value,
+                sheet[f"J{h_n}"].value,
+                sheet[f"J{d_n}"].value,
+            ]
+            if valid == [None, None, None]:
+                readings.append(
+                    Reading(
+                        metadata=metadata,
+                        absolutes=absolutes,
+                        pier_correction=metadata["pier_correction"],
+                    ),
+                )
+        return readings
