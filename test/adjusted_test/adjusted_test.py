@@ -29,154 +29,203 @@ def get_spreadsheet_directory_readings(path, observatory, starttime, endtime):
     return readings
 
 
-def get_spreadsheet_readings(path):
-    ssf = SpreadsheetSummaryFactory()
-    readings = ssf.parse_spreadsheet(path=path)
-    return readings
-
-
-def test_DED20202200248_summary():
-    readings = get_spreadsheet_readings(path="etc/adjusted/Caldata/DED20202200248.xlsm")
-    for reading in readings:
-        assert_equal(reading.metadata["instrument"], 300611)
-        assert_equal(reading.pier_correction, -0.5)
-        assert_equal(reading.metadata["observatory"], "DED")
-
-
 def test_DED_summaries():
+    starttime = UTCDateTime("2020-04-01")
+    endtime = UTCDateTime("2020-08-15")
     readings = get_spreadsheet_directory_readings(
         path="etc/adjusted/Caldata",
         observatory="DED",
-        starttime=UTCDateTime("2020-01-01"),
-        endtime=UTCDateTime("2020-12-31"),
+        starttime=starttime,
+        endtime=endtime,
     )
     for reading in readings:
         assert_equal(reading.metadata["observatory"], "DED")
         assert_equal(reading.metadata["instrument"], 300611)
         assert_equal(reading.pier_correction, -0.5)
-    # assert that the number of readings equals the number of file within directory
-    assert_equal(len(readings), 33)
+    assert_equal(len(readings), 7)
+
+    assert readings[0].time > starttime
+    assert readings[-1].time < endtime
+
+
+def test_CMO_summaries():
+    starttime = UTCDateTime("2015-04-01")
+    endtime = UTCDateTime("2015-06-15")
+    readings = get_spreadsheet_directory_readings(
+        path="etc/adjusted/Caldata",
+        observatory="CMO",
+        starttime=starttime,
+        endtime=endtime,
+    )
+    for reading in readings:
+        assert_equal(reading.metadata["observatory"], "CMO")
+        assert_equal(reading.metadata["instrument"], 200803)
+        assert_equal(reading.pier_correction, 10.5)
+    assert_equal(len(readings), 26)
+
+    assert readings[0].time > starttime
+    assert readings[-1].time < endtime
 
 
 def get_sythetic_variables():
-    with open("etc/adjusted/synthetic_variables.json") as file:
-        variables = json.load(file)
+    with open("etc/adjusted/synthetic.json") as file:
+        data = json.load(file)
+    variables = data["variables"]
     ordinates = np.array([variables["h_ord"], variables["e_ord"], variables["z_ord"]])
     absolutes = np.array([variables["x_abs"], variables["y_abs"], variables["z_abs"]])
     return ordinates, absolutes
 
 
-def test_Affine_result():
-    # load results
-    with open("etc/adjusted/synthetic_results.json") as file:
+def get_expected_synthetic_result(key):
+    with open("etc/adjusted/synthetic.json") as file:
         expected = json.load(file)
+    return expected["results"][key]
 
+
+def test_NoConstraints_synthetic():
     ordinates, absolutes = get_sythetic_variables()
-
-    # numbers in keys pertain to method numbers from original documentation(generate_affine_...)
     assert_array_almost_equal(
         NoConstraints().calculate(
             ordinates=ordinates,
             absolutes=absolutes,
             weights=None,
         ),
-        np.array(expected["zero"]),
+        get_expected_synthetic_result("NoConstraints"),
         decimal=6,
     )
+
+
+def test_ZRotationShear_synthetic():
+    ordinates, absolutes = get_sythetic_variables()
     assert_array_almost_equal(
         ZRotationShear().calculate(
             ordinates=ordinates,
             absolutes=absolutes,
             weights=None,
         ),
-        np.array(expected["one"]),
+        get_expected_synthetic_result("ZRotationShear"),
         decimal=6,
     )
+
+
+def test_ZRotationHscale_synthetic():
+    ordinates, absolutes = get_sythetic_variables()
     assert_array_almost_equal(
         ZRotationHscale().calculate(
             ordinates=ordinates,
             absolutes=absolutes,
             weights=None,
         ),
-        np.array(expected["two"]),
+        get_expected_synthetic_result("ZRotationHscale"),
         decimal=6,
     )
+
+
+def test_ZRotationHscaleZbaseline_synthetic():
+    ordinates, absolutes = get_sythetic_variables()
     assert_array_almost_equal(
         ZRotationHscaleZbaseline().calculate(
             ordinates=ordinates,
             absolutes=absolutes,
             weights=None,
         ),
-        np.array(expected["three"]),
+        get_expected_synthetic_result("ZRotationHscaleZbaseline"),
         decimal=6,
     )
+
+
+def test_RotationTranslation3D_synthetic():
+    ordinates, absolutes = get_sythetic_variables()
     assert_array_almost_equal(
         RotationTranslation3D().calculate(
             ordinates=ordinates,
             absolutes=absolutes,
             weights=None,
         ),
-        expected["four"],
+        get_expected_synthetic_result("RotationTranslation3D"),
         decimal=6,
     )
+
+
+def test_Rescale3D_synthetic():
+    ordinates, absolutes = get_sythetic_variables()
     assert_array_almost_equal(
         Rescale3D().calculate(
             ordinates=ordinates,
             absolutes=absolutes,
             weights=None,
         ),
-        expected["five"],
+        get_expected_synthetic_result("Rescale3D"),
         decimal=6,
     )
+
+
+def test_TranslateOrigins_synthetic():
+    ordinates, absolutes = get_sythetic_variables()
     assert_array_almost_equal(
         TranslateOrigins().calculate(
             ordinates=ordinates,
             absolutes=absolutes,
             weights=None,
         ),
-        expected["six"],
+        get_expected_synthetic_result("TranslateOrigins"),
         decimal=6,
     )
+
+
+def test_ShearYZ_synthetic():
+    ordinates, absolutes = get_sythetic_variables()
     assert_array_almost_equal(
         ShearYZ().calculate(
             ordinates=ordinates,
             absolutes=absolutes,
             weights=None,
         ),
-        expected["seven"],
+        get_expected_synthetic_result("ShearYZ"),
         decimal=6,
     )
+
+
+def test_RotationTranslationXY_synthetic():
+    ordinates, absolutes = get_sythetic_variables()
     assert_array_almost_equal(
         RotationTranslationXY().calculate(
             ordinates=ordinates,
             absolutes=absolutes,
             weights=None,
         ),
-        expected["eight"],
+        get_expected_synthetic_result("RotationTranslationXY"),
         decimal=6,
     )
+
+
+def test_QRFactorization_synthetic():
+    ordinates, absolutes = get_sythetic_variables()
     assert_array_almost_equal(
         QRFactorization().calculate(
             ordinates=ordinates,
             absolutes=absolutes,
             weights=None,
         ),
-        expected["nine"],
+        get_expected_synthetic_result("QRFactorization"),
         decimal=6,
     )
 
 
 def format_result(result) -> dict:
-    if len(result) != 1:
-        Ms = []
-        for M in result:
-            m = []
-            for row in M:
-                m.append(list(row))
-            Ms.append(m)
-    else:
-        Ms = [list(row) for row in result[0]]
+    Ms = []
+    for M in result:
+        m = []
+        for row in M:
+            m.append(list(row))
+        Ms.append(m)
     return Ms
+
+
+def get_excpected_matrices(observatory, key):
+    with open(f"etc/adjusted/{observatory}_expected.json", "r") as file:
+        expected = json.load(file)
+    return expected[key]
 
 
 def get_readings_BOU201911202001():
@@ -190,47 +239,68 @@ def get_readings_BOU201911202001():
 
 def test_BOU201911202001_short_causal():
     readings = get_readings_BOU201911202001()
-    short_causal = Affine(
+
+    starttime = UTCDateTime("2019-11-01T00:00:00Z")
+    endtime = UTCDateTime("2020-01-31T23:59:00Z")
+
+    update_interval = 86400 * 7
+
+    result = Affine(
         observatory="BOU",
-        starttime=UTCDateTime("2019-11-01T00:00:00Z"),
-        endtime=UTCDateTime("2020-01-31T23:59:00Z"),
+        starttime=starttime,
+        endtime=endtime,
+        update_interval=update_interval,
     ).calculate(readings=readings)
 
-    result = format_result([adjusted_matrix.matrix for adjusted_matrix in short_causal])
+    matrices = format_result([adjusted_matrix.matrix for adjusted_matrix in result])
 
-    with open("etc/adjusted/short_memory_causal.json", "r") as file:
-        expected = json.load(file)
+    assert_array_almost_equal(
+        matrices, get_excpected_matrices("BOU", "short_causal"), decimal=3
+    )
 
-    assert_array_almost_equal(result, expected["M"], decimal=3)
+    assert_equal(len(matrices), ((endtime - starttime) // update_interval) + 1)
 
 
 def test_BOU201911202001_short_acausal():
     readings = get_readings_BOU201911202001()
-    short_acausal = Affine(
+
+    starttime = UTCDateTime("2019-11-01T00:00:00Z")
+    endtime = UTCDateTime("2020-01-31T23:59:00Z")
+
+    update_interval = 86400 * 7
+
+    result = Affine(
         observatory="BOU",
-        starttime=UTCDateTime("2019-11-01T00:00:00Z"),
-        endtime=UTCDateTime("2020-01-31T23:59:00Z"),
+        starttime=starttime,
+        endtime=endtime,
+        update_interval=update_interval,
         acausal=True,
     ).calculate(
         readings=readings,
     )
 
-    result = format_result(
-        [adjusted_matrix.matrix for adjusted_matrix in short_acausal]
+    matrices = format_result([adjusted_matrix.matrix for adjusted_matrix in result])
+
+    assert_array_almost_equal(
+        matrices, get_excpected_matrices("BOU", "short_acausal"), decimal=3
     )
 
-    with open("etc/adjusted/short_memory_acausal.json", "r") as file:
-        expected = json.load(file)
-
-    assert_array_almost_equal(result, expected["M"], decimal=3)
+    assert_equal(len(matrices), ((endtime - starttime) // update_interval) + 1)
 
 
 def test_BOU201911202001_infinite_weekly():
     readings = get_readings_BOU201911202001()
-    infinite_weekly = Affine(
+
+    starttime = UTCDateTime("2019-11-01T00:00:00Z")
+    endtime = UTCDateTime("2020-01-31T23:59:00Z")
+
+    update_interval = 86400 * 7
+
+    result = Affine(
         observatory="BOU",
-        starttime=UTCDateTime("2019-11-01T00:00:00Z"),
-        endtime=UTCDateTime("2020-01-31T23:59:00Z"),
+        starttime=starttime,
+        endtime=endtime,
+        update_interval=update_interval,
         acausal=True,
         transforms=[
             RotationTranslationXY(memory=np.inf),
@@ -240,19 +310,18 @@ def test_BOU201911202001_infinite_weekly():
         readings=readings,
     )
 
-    result = format_result(
-        [adjusted_matrix.matrix for adjusted_matrix in infinite_weekly]
+    matrices = format_result([adjusted_matrix.matrix for adjusted_matrix in result])
+
+    assert_array_almost_equal(
+        matrices, get_excpected_matrices("BOU", "inf_weekly"), decimal=3
     )
 
-    with open("etc/adjusted/weekly_inf_memory_acausal.json", "r") as file:
-        expected = json.load(file)
-
-    assert_array_almost_equal(result, expected["M"], decimal=3)
+    assert_equal(len(matrices), ((endtime - starttime) // update_interval) + 1)
 
 
 def test_BOU201911202001_infinite_one_interval():
     readings = get_readings_BOU201911202001()
-    infinite_one_interval = Affine(
+    result = Affine(
         observatory="BOU",
         starttime=UTCDateTime("2019-11-01T00:00:00Z"),
         endtime=UTCDateTime("2020-01-31T23:59:00Z"),
@@ -266,14 +335,13 @@ def test_BOU201911202001_infinite_one_interval():
         readings=readings,
     )
 
-    result = format_result(
-        [adjusted_matrix.matrix for adjusted_matrix in infinite_one_interval]
+    matrix = format_result([adjusted_matrix.matrix for adjusted_matrix in result])
+
+    assert_array_almost_equal(
+        matrix, get_excpected_matrices("BOU", "inf_one_interval"), decimal=3
     )
 
-    with open("etc/adjusted/all_inf_memory_acausal.json", "r") as file:
-        expected = json.load(file)
-
-    assert_array_almost_equal(result, expected["M"], decimal=3)
+    assert_equal(len(matrix), 1)
 
 
 def test_CMO2015_causal():
@@ -284,21 +352,28 @@ def test_CMO2015_causal():
         path="etc/adjusted/Caldata/",
     )
 
-    causal = Affine(
+    starttime = UTCDateTime("2015-02-01T00:00:00Z")
+    endtime = UTCDateTime("2015-11-27T23:59:00Z")
+
+    update_interval = 86400 * 7
+
+    result = Affine(
         observatory="CMO",
-        starttime=UTCDateTime("2015-02-01T00:00:00Z"),
-        endtime=UTCDateTime("2015-11-27T23:59:00Z"),
+        starttime=starttime,
+        endtime=endtime,
+        update_interval=update_interval,
         acausal=False,
     ).calculate(
         readings=readings,
     )
 
-    result = format_result([adjusted_matrix.matrix for adjusted_matrix in causal])
+    matrices = format_result([adjusted_matrix.matrix for adjusted_matrix in result])
 
-    with open("etc/adjusted/causal.json", "r") as file:
-        expected = json.load(file)
+    assert_array_almost_equal(
+        matrices, get_excpected_matrices("CMO", "short_causal"), decimal=3
+    )
 
-    assert_array_almost_equal(result, expected["M"], decimal=3)
+    assert_equal(len(matrices), ((endtime - starttime) // update_interval) + 1)
 
 
 def test_CMO2015_acausal():
@@ -309,21 +384,28 @@ def test_CMO2015_acausal():
         path="etc/adjusted/Caldata/",
     )
 
-    causal = Affine(
+    starttime = UTCDateTime("2015-02-01T00:00:00Z")
+    endtime = UTCDateTime("2015-11-27T23:59:00Z")
+
+    update_interval = 86400 * 7
+
+    result = Affine(
         observatory="CMO",
         starttime=UTCDateTime("2015-02-01T00:00:00Z"),
         endtime=UTCDateTime("2015-11-27T23:59:00Z"),
+        update_interval=update_interval,
         acausal=True,
     ).calculate(
         readings=readings,
     )
 
-    result = format_result([adjusted_matrix.matrix for adjusted_matrix in causal])
+    matrices = format_result([adjusted_matrix.matrix for adjusted_matrix in result])
 
-    with open("etc/adjusted/acausal.json", "r") as file:
-        expected = json.load(file)
+    assert_array_almost_equal(
+        matrices, get_excpected_matrices("CMO", "short_acausal"), decimal=3
+    )
 
-    assert_array_almost_equal(result, expected["M"], decimal=3)
+    assert_equal(len(matrices), ((endtime - starttime) // update_interval) + 1)
 
 
 def test_CMO2015_infinite_weekly():
@@ -334,25 +416,32 @@ def test_CMO2015_infinite_weekly():
         path="etc/adjusted/Caldata/",
     )
 
-    causal = Affine(
+    starttime = UTCDateTime("2015-02-01T00:00:00Z")
+    endtime = UTCDateTime("2015-11-27T23:59:00Z")
+
+    update_interval = 86400 * 7
+
+    result = Affine(
         observatory="CMO",
-        starttime=UTCDateTime("2015-02-01T00:00:00Z"),
-        endtime=UTCDateTime("2015-11-27T23:59:00Z"),
+        starttime=starttime,
+        endtime=endtime,
         transforms=[
             RotationTranslationXY(memory=np.inf),
             TranslateOrigins(memory=np.inf),
         ],
+        update_interval=update_interval,
         acausal=True,
     ).calculate(
         readings=readings,
     )
 
-    result = format_result([adjusted_matrix.matrix for adjusted_matrix in causal])
+    matrices = format_result([adjusted_matrix.matrix for adjusted_matrix in result])
 
-    with open("etc/adjusted/weekly_inf.json", "r") as file:
-        expected = json.load(file)
+    assert_array_almost_equal(
+        matrices, get_excpected_matrices("CMO", "inf_weekly"), decimal=3
+    )
 
-    assert_array_almost_equal(result, expected["M"], decimal=3)
+    assert_equal(len(matrices), ((endtime - starttime) // update_interval) + 1)
 
 
 def test_CMO2015_infinite_one_interval():
@@ -363,7 +452,7 @@ def test_CMO2015_infinite_one_interval():
         path="etc/adjusted/Caldata/",
     )
 
-    causal = Affine(
+    result = Affine(
         observatory="CMO",
         starttime=UTCDateTime("2015-02-01T00:00:00Z"),
         endtime=UTCDateTime("2015-11-27T23:59:00Z"),
@@ -377,9 +466,10 @@ def test_CMO2015_infinite_one_interval():
         readings=readings,
     )
 
-    result = format_result([adjusted_matrix.matrix for adjusted_matrix in causal])
+    matrix = format_result([adjusted_matrix.matrix for adjusted_matrix in result])
 
-    with open("etc/adjusted/inf_one_interval.json", "r") as file:
-        expected = json.load(file)
+    assert_array_almost_equal(
+        matrix, get_excpected_matrices("CMO", "inf_one_interval"), decimal=3
+    )
 
-    assert_array_almost_equal(result, expected["M"][0], decimal=3)
+    assert_equal(len(matrix), 1)
