@@ -22,7 +22,10 @@ class SpreadsheetSummaryFactory(object):
         for year in range(starttime.year, endtime.year + 1):
             for (dirpath, _, filenames) in os.walk(self.base_directory):
                 for filename in filenames:
-                    if filename.split(".")[-1] != "xlsm":
+                    if (
+                        filename.split(".")[-1] != "xlsm"
+                        or filename[0:3] != observatory
+                    ):
                         continue
                     year = int(filename[3:7])
                     yd = int(filename[7:10])
