@@ -84,21 +84,6 @@ def filter_iqr(
     return good
 
 
-def create_states(matrices: List[Any], pier_correction: float) -> List[dict]:
-    if matrices is None:
-        return []
-    states = []
-    for matrix in matrices:
-        data = {"PC": pier_correction}
-        length = len(matrix[0, :])
-        for i in range(0, length):
-            for j in range(0, length):
-                key = "M" + str(i + 1) + str(j + 1)
-                data[key] = matrix[i, j]
-        states.append(data)
-    return states
-
-
 class Affine(BaseModel):
     observatory: str = None
     starttime: UTCDateTime = UTCDateTime() - (86400 * 7)
