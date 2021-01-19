@@ -91,7 +91,7 @@ def test_NoConstraints_synthetic():
             weights=None,
         ),
         get_expected_synthetic_result("NoConstraints"),
-        decimal=2,
+        decimal=3,
     )
 
 
@@ -104,7 +104,7 @@ def test_ZRotationShear_synthetic():
             weights=None,
         ),
         get_expected_synthetic_result("ZRotationShear"),
-        decimal=2,
+        decimal=3,
     )
 
 
@@ -117,7 +117,7 @@ def test_ZRotationHscale_synthetic():
             weights=None,
         ),
         get_expected_synthetic_result("ZRotationHscale"),
-        decimal=2,
+        decimal=3,
     )
 
 
@@ -130,7 +130,7 @@ def test_ZRotationHscaleZbaseline_synthetic():
             weights=None,
         ),
         get_expected_synthetic_result("ZRotationHscaleZbaseline"),
-        decimal=2,
+        decimal=3,
     )
 
 
@@ -143,7 +143,7 @@ def test_RotationTranslation3D_synthetic():
             weights=None,
         ),
         get_expected_synthetic_result("RotationTranslation3D"),
-        decimal=2,
+        decimal=3,
     )
 
 
@@ -156,7 +156,7 @@ def test_Rescale3D_synthetic():
             weights=None,
         ),
         get_expected_synthetic_result("Rescale3D"),
-        decimal=2,
+        decimal=3,
     )
 
 
@@ -169,7 +169,7 @@ def test_TranslateOrigins_synthetic():
             weights=None,
         ),
         get_expected_synthetic_result("TranslateOrigins"),
-        decimal=2,
+        decimal=3,
     )
 
 
@@ -182,7 +182,7 @@ def test_ShearYZ_synthetic():
             weights=None,
         ),
         get_expected_synthetic_result("ShearYZ"),
-        decimal=2,
+        decimal=3,
     )
 
 
@@ -195,7 +195,7 @@ def test_RotationTranslationXY_synthetic():
             weights=None,
         ),
         get_expected_synthetic_result("RotationTranslationXY"),
-        decimal=2,
+        decimal=3,
     )
 
 
@@ -208,7 +208,7 @@ def test_QRFactorization_synthetic():
             weights=None,
         ),
         get_expected_synthetic_result("QRFactorization"),
-        decimal=2,
+        decimal=3,
     )
 
 
@@ -255,7 +255,7 @@ def test_BOU201911202001_short_causal():
     matrices = format_result([adjusted_matrix.matrix for adjusted_matrix in result])
 
     assert_array_almost_equal(
-        matrices, get_excpected_matrices("BOU", "short_causal"), decimal=2
+        matrices, get_excpected_matrices("BOU", "short_causal"), decimal=3
     )
 
     assert_equal(len(matrices), ((endtime - starttime) // update_interval) + 1)
@@ -282,7 +282,7 @@ def test_BOU201911202001_short_acausal():
     matrices = format_result([adjusted_matrix.matrix for adjusted_matrix in result])
 
     assert_array_almost_equal(
-        matrices, get_excpected_matrices("BOU", "short_acausal"), decimal=2
+        matrices, get_excpected_matrices("BOU", "short_acausal"), decimal=3
     )
 
     assert_equal(len(matrices), ((endtime - starttime) // update_interval) + 1)
@@ -313,7 +313,7 @@ def test_BOU201911202001_infinite_weekly():
     matrices = format_result([adjusted_matrix.matrix for adjusted_matrix in result])
 
     assert_array_almost_equal(
-        matrices, get_excpected_matrices("BOU", "inf_weekly"), decimal=2
+        matrices, get_excpected_matrices("BOU", "inf_weekly"), decimal=3
     )
 
     assert_equal(len(matrices), ((endtime - starttime) // update_interval) + 1)
@@ -338,7 +338,7 @@ def test_BOU201911202001_infinite_one_interval():
     matrix = format_result([adjusted_matrix.matrix for adjusted_matrix in result])
 
     assert_array_almost_equal(
-        matrix, get_excpected_matrices("BOU", "inf_one_interval"), decimal=2
+        matrix, get_excpected_matrices("BOU", "inf_one_interval"), decimal=3
     )
 
     assert_equal(len(matrix), 1)
@@ -369,7 +369,7 @@ def test_CMO2015_causal():
     matrices = format_result([adjusted_matrix.matrix for adjusted_matrix in result])
 
     assert_array_almost_equal(
-        matrices, get_excpected_matrices("CMO", "short_causal"), decimal=2
+        matrices, get_excpected_matrices("CMO", "short_causal"), decimal=3
     )
 
     assert_equal(len(matrices), ((endtime - starttime) // update_interval) + 1)
@@ -401,7 +401,7 @@ def test_CMO2015_acausal():
     matrices = format_result([adjusted_matrix.matrix for adjusted_matrix in result])
 
     assert_array_almost_equal(
-        matrices, get_excpected_matrices("CMO", "short_acausal"), decimal=2
+        matrices, get_excpected_matrices("CMO", "short_acausal"), decimal=3
     )
 
     assert_equal(len(matrices), ((endtime - starttime) // update_interval) + 1)
@@ -437,7 +437,7 @@ def test_CMO2015_infinite_weekly():
     matrices = format_result([adjusted_matrix.matrix for adjusted_matrix in result])
 
     assert_array_almost_equal(
-        matrices, get_excpected_matrices("CMO", "inf_weekly"), decimal=2
+        matrices, get_excpected_matrices("CMO", "inf_weekly"), decimal=3
     )
 
     assert_equal(len(matrices), ((endtime - starttime) // update_interval) + 1)
@@ -468,7 +468,7 @@ def test_CMO2015_infinite_one_interval():
     matrix = format_result([adjusted_matrix.matrix for adjusted_matrix in result])
 
     assert_array_almost_equal(
-        matrix, get_excpected_matrices("CMO", "inf_one_interval"), decimal=2
+        matrix, get_excpected_matrices("CMO", "inf_one_interval"), decimal=3
     )
 
     assert_equal(len(matrix), 1)
