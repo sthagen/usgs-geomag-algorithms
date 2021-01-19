@@ -2,6 +2,8 @@ from obspy import UTCDateTime
 from pydantic import BaseModel
 from typing import Optional, Any
 
+from .. import pydantic_utcdatetime
+
 
 class AdjustedMatrix(BaseModel):
     """Attributes pertaining to adjusted(affine) matrices, applied by the AdjustedAlgorithm

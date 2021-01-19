@@ -362,7 +362,6 @@ def test_CMO2015_causal():
         starttime=starttime,
         endtime=endtime,
         update_interval=update_interval,
-        acausal=False,
     ).calculate(
         readings=readings,
     )
@@ -391,8 +390,8 @@ def test_CMO2015_acausal():
 
     result = Affine(
         observatory="CMO",
-        starttime=UTCDateTime("2015-02-01T00:00:00Z"),
-        endtime=UTCDateTime("2015-11-27T23:59:00Z"),
+        starttime=starttime,
+        endtime=endtime,
         update_interval=update_interval,
         acausal=True,
     ).calculate(
