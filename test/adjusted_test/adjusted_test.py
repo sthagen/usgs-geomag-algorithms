@@ -29,25 +29,6 @@ def get_spreadsheet_directory_readings(path, observatory, starttime, endtime):
     return readings
 
 
-def test_DED_summaries():
-    starttime = UTCDateTime("2020-04-01")
-    endtime = UTCDateTime("2020-08-15")
-    readings = get_spreadsheet_directory_readings(
-        path="etc/adjusted/Caldata",
-        observatory="DED",
-        starttime=starttime,
-        endtime=endtime,
-    )
-    for reading in readings:
-        assert_equal(reading.metadata["observatory"], "DED")
-        assert_equal(reading.metadata["instrument"], 300611)
-        assert_equal(reading.pier_correction, -0.5)
-    assert_equal(len(readings), 7)
-
-    assert readings[0].time > starttime
-    assert readings[-1].time < endtime
-
-
 def test_CMO_summaries():
     starttime = UTCDateTime("2015-04-01")
     endtime = UTCDateTime("2015-06-15")
@@ -253,11 +234,14 @@ def test_BOU201911202001_short_causal():
     ).calculate(readings=readings)
 
     matrices = format_result([adjusted_matrix.matrix for adjusted_matrix in result])
-
-    assert_array_almost_equal(
-        matrices, get_excpected_matrices("BOU", "short_causal"), decimal=3
-    )
-
+    expected_matrices = get_excpected_matrices("BOU", "short_causal")
+    for i in range(len(matrices)):
+        assert_array_almost_equal(
+            matrices[i],
+            expected_matrices[i],
+            decimal=3,
+            err_msg=f"Matrix {i} not equal",
+        )
     assert_equal(len(matrices), ((endtime - starttime) // update_interval) + 1)
 
 
@@ -280,11 +264,14 @@ def test_BOU201911202001_short_acausal():
     )
 
     matrices = format_result([adjusted_matrix.matrix for adjusted_matrix in result])
-
-    assert_array_almost_equal(
-        matrices, get_excpected_matrices("BOU", "short_acausal"), decimal=3
-    )
-
+    expected_matrices = get_excpected_matrices("BOU", "short_acausal")
+    for i in range(len(matrices)):
+        assert_array_almost_equal(
+            matrices[i],
+            expected_matrices[i],
+            decimal=3,
+            err_msg=f"Matrix {i} not equal",
+        )
     assert_equal(len(matrices), ((endtime - starttime) // update_interval) + 1)
 
 
@@ -311,11 +298,14 @@ def test_BOU201911202001_infinite_weekly():
     )
 
     matrices = format_result([adjusted_matrix.matrix for adjusted_matrix in result])
-
-    assert_array_almost_equal(
-        matrices, get_excpected_matrices("BOU", "inf_weekly"), decimal=3
-    )
-
+    expected_matrices = get_excpected_matrices("BOU", "inf_weekly")
+    for i in range(len(matrices)):
+        assert_array_almost_equal(
+            matrices[i],
+            expected_matrices[i],
+            decimal=3,
+            err_msg=f"Matrix {i} not equal",
+        )
     assert_equal(len(matrices), ((endtime - starttime) // update_interval) + 1)
 
 
@@ -335,13 +325,16 @@ def test_BOU201911202001_infinite_one_interval():
         readings=readings,
     )
 
-    matrix = format_result([adjusted_matrix.matrix for adjusted_matrix in result])
-
-    assert_array_almost_equal(
-        matrix, get_excpected_matrices("BOU", "inf_one_interval"), decimal=3
-    )
-
-    assert_equal(len(matrix), 1)
+    matrices = format_result([adjusted_matrix.matrix for adjusted_matrix in result])
+    expected_matrices = get_excpected_matrices("BOU", "inf_one_interval")
+    for i in range(len(matrices)):
+        assert_array_almost_equal(
+            matrices[i],
+            expected_matrices[i],
+            decimal=3,
+            err_msg=f"Matrix {i} not equal",
+        )
+    assert_equal(len(matrices), 1)
 
 
 def test_CMO2015_causal():
@@ -351,6 +344,7 @@ def test_CMO2015_causal():
         endtime=UTCDateTime("2015-12-31T23:59:00Z"),
         path="etc/adjusted/Caldata/",
     )
+    assert len(readings) == 146
 
     starttime = UTCDateTime("2015-02-01T00:00:00Z")
     endtime = UTCDateTime("2015-11-27T23:59:00Z")
@@ -367,11 +361,14 @@ def test_CMO2015_causal():
     )
 
     matrices = format_result([adjusted_matrix.matrix for adjusted_matrix in result])
-
-    assert_array_almost_equal(
-        matrices, get_excpected_matrices("CMO", "short_causal"), decimal=3
-    )
-
+    expected_matrices = get_excpected_matrices("CMO", "short_causal")
+    for i in range(len(matrices)):
+        assert_array_almost_equal(
+            matrices[i],
+            expected_matrices[i],
+            decimal=3,
+            err_msg=f"Matrix {i} not equal",
+        )
     assert_equal(len(matrices), ((endtime - starttime) // update_interval) + 1)
 
 
@@ -382,6 +379,7 @@ def test_CMO2015_acausal():
         endtime=UTCDateTime("2015-12-31T23:59:00Z"),
         path="etc/adjusted/Caldata/",
     )
+    assert len(readings) == 146
 
     starttime = UTCDateTime("2015-02-01T00:00:00Z")
     endtime = UTCDateTime("2015-11-27T23:59:00Z")
@@ -399,11 +397,14 @@ def test_CMO2015_acausal():
     )
 
     matrices = format_result([adjusted_matrix.matrix for adjusted_matrix in result])
-
-    assert_array_almost_equal(
-        matrices, get_excpected_matrices("CMO", "short_acausal"), decimal=3
-    )
-
+    expected_matrices = get_excpected_matrices("CMO", "short_acausal")
+    for i in range(len(matrices)):
+        assert_array_almost_equal(
+            matrices[i],
+            expected_matrices[i],
+            decimal=3,
+            err_msg=f"Matrix {i} not equal",
+        )
     assert_equal(len(matrices), ((endtime - starttime) // update_interval) + 1)
 
 
@@ -414,6 +415,7 @@ def test_CMO2015_infinite_weekly():
         endtime=UTCDateTime("2015-12-31T23:59:00Z"),
         path="etc/adjusted/Caldata/",
     )
+    assert len(readings) == 146
 
     starttime = UTCDateTime("2015-02-01T00:00:00Z")
     endtime = UTCDateTime("2015-11-27T23:59:00Z")
@@ -435,11 +437,14 @@ def test_CMO2015_infinite_weekly():
     )
 
     matrices = format_result([adjusted_matrix.matrix for adjusted_matrix in result])
-
-    assert_array_almost_equal(
-        matrices, get_excpected_matrices("CMO", "inf_weekly"), decimal=3
-    )
-
+    expected_matrices = get_excpected_matrices("CMO", "inf_weekly")
+    for i in range(len(matrices)):
+        assert_array_almost_equal(
+            matrices[i],
+            expected_matrices[i],
+            decimal=3,
+            err_msg=f"Matrix {i} not equal",
+        )
     assert_equal(len(matrices), ((endtime - starttime) // update_interval) + 1)
 
 
@@ -450,6 +455,8 @@ def test_CMO2015_infinite_one_interval():
         endtime=UTCDateTime("2015-12-31T23:59:00Z"),
         path="etc/adjusted/Caldata/",
     )
+
+    assert len(readings) == 146
 
     result = Affine(
         observatory="CMO",
@@ -465,10 +472,13 @@ def test_CMO2015_infinite_one_interval():
         readings=readings,
     )
 
-    matrix = format_result([adjusted_matrix.matrix for adjusted_matrix in result])
-
-    assert_array_almost_equal(
-        matrix, get_excpected_matrices("CMO", "inf_one_interval"), decimal=3
-    )
-
-    assert_equal(len(matrix), 1)
+    matrices = format_result([adjusted_matrix.matrix for adjusted_matrix in result])
+    expected_matrices = get_excpected_matrices("CMO", "inf_one_interval")
+    for i in range(len(matrices)):
+        assert_array_almost_equal(
+            matrices[i],
+            expected_matrices[i],
+            decimal=3,
+            err_msg=f"Matrix {i} not equal",
+        )
+    assert_equal(len(matrices), 1)
