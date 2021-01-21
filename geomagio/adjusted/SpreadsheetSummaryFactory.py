@@ -30,6 +30,7 @@ class SpreadsheetSummaryFactory(object):
         readings = []
         for year in range(starttime.year, endtime.year + 1):
             for (dirpath, _, filenames) in os.walk(self.base_directory):
+                filenames.sort()
                 for filename in filenames:
                     if (
                         filename.split(".")[-1] != "xlsm"
