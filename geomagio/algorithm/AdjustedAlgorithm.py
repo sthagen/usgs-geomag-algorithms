@@ -1,23 +1,22 @@
-"""Algorithm that converts from one geomagnetic coordinate system to a
-    related geographic coordinate system, by using transformations generated
-    from absolute, baseline measurements.
-"""
-from __future__ import absolute_import
+import sys
 
-from .Algorithm import Algorithm
 import json
 import numpy as np
 from obspy.core import Stream, Stats
-import sys
+
+from ..adjusted.AdjustedMatrix import AdjustedMatrix
+from .Algorithm import Algorithm
 
 
 class AdjustedAlgorithm(Algorithm):
-    """Adjusted Data Algorithm"""
+    """Algorithm that converts from one geomagnetic coordinate system to a
+    related geographic coordinate system, by using transformations generated
+    from absolute, baseline measurements.
+    """
 
     def __init__(
         self,
-        matrix=None,
-        pier_correction=None,
+        matrix: AdjustedMatrix = None,
         statefile=None,
         data_type=None,
         location=None,
@@ -33,7 +32,6 @@ class AdjustedAlgorithm(Algorithm):
         )
         # state variables
         self.matrix = matrix
-        self.pier_correction = pier_correction
         self.statefile = statefile
         self.data_type = data_type
         self.location = location
@@ -45,12 +43,12 @@ class AdjustedAlgorithm(Algorithm):
         """Load algorithm state from a file.
         File name is self.statefile.
         """
-        # Adjusted matrix defaults to identity matrix
-        matrix_size = len([c for c in self.get_input_channels() if c != "F"]) + 1
-        self.matrix = np.eye(matrix_size)
-        self.pier_correction = 0
+        pier_correction = 0
         if self.statefile is None:
             return
+        # Adjusted matrix defaults to identity matrix
+        matrix_size = len([c for c in self.get_input_channels() if c != "F"]) + 1
+        matrix = np.eye(matrix_size)
         data = None
         try:
             with open(self.statefile, "r") as f:
@@ -62,8 +60,9 @@ class AdjustedAlgorithm(Algorithm):
             return
         for row in range(matrix_size):
             for col in range(matrix_size):
-                self.matrix[row, col] = np.float64(data[f"M{row+1}{col+1}"])
-        self.pier_correction = np.float64(data["PC"])
+                matrix[row, col] = np.float64(data[f"M{row+1}{col+1}"])
+        pier_correction = np.float64(data["PC"])
+        self.matrix = AdjustedMatrix(matrix=matrix, pier_correction=pier_correction)
 
     def save_state(self):
         """Save algorithm state to a file.
@@ -71,12 +70,12 @@ class AdjustedAlgorithm(Algorithm):
         """
         if self.statefile is None:
             return
-        data = {"PC": self.pier_correction}
-        length = len(self.matrix[0, :])
+        data = {"PC": self.matrix.pier_correction}
+        length = len(self.matrix.matrix[0, :])
         for i in range(0, length):
             for j in range(0, length):
                 key = "M" + str(i + 1) + str(j + 1)
-                data[key] = self.matrix[i, j]
+                data[key] = self.matrix.matrix[i, j]
         with open(self.statefile, "w") as f:
             f.write(json.dumps(data))
 
@@ -134,7 +133,7 @@ class AdjustedAlgorithm(Algorithm):
             ]
             + [np.ones_like(stream[0].data)]
         )
-        adjusted = np.matmul(self.matrix, raws)
+        adjusted = np.matmul(self.matrix.matrix, raws)
         out = Stream(
             [
                 self.create_trace(
@@ -147,7 +146,7 @@ class AdjustedAlgorithm(Algorithm):
         )
         if "F" in inchannels and "F" in outchannels:
             f = stream.select(channel="F")[0]
-            out += self.create_trace("F", f.stats, f.data + self.pier_correction)
+            out += self.create_trace("F", f.stats, f.data + self.matrix.pier_correction)
         return out
 
     def can_produce_data(self, starttime, endtime, stream):
