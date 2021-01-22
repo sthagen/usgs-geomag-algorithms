@@ -42,7 +42,7 @@ This is the content of /etc/adjusted/adjbou_state_.json:
 
 ### API Example
 
-This example uses AdjustedMatrix object to produce X, Y, Z and F channels
+This example uses an AdjustedMatrix object to produce X, Y, Z and F channels
 from raw H, E, Z and F channels using the EDGE channel naming
 convention.  Absolutes were used to compute the transform matrix and pier correction
 contained in the object.
