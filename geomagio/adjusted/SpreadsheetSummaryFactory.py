@@ -12,7 +12,7 @@ class SpreadsheetSummaryFactory(object):
     """Read absolutes from summary spreadsheets"""
 
     def __init__(
-        self, base_directory: str = r"Volumes/geomag/pub/Caldata/Checked Baseline Data"
+        self, base_directory: str = r"/Volumes/geomag/pub/Caldata/Checked Baseline Data"
     ):
         self.base_directory = base_directory
 
@@ -28,19 +28,16 @@ class SpreadsheetSummaryFactory(object):
         endtime: end date of readings
         """
         readings = []
+        start_filename = f"{observatory}{starttime.datetime:%Y%j%H%M}.xlsm"
+        end_filename = f"{observatory}{endtime.datetime:%Y%j%H%M}.xlsm"
         for year in range(starttime.year, endtime.year + 1):
-            for (dirpath, _, filenames) in os.walk(self.base_directory):
+            observatory_directory = os.path.join(
+                self.base_directory, observatory, f"{year}"
+            )
+            for (dirpath, _, filenames) in os.walk(observatory_directory):
                 filenames.sort()
                 for filename in filenames:
-                    if (
-                        filename.split(".")[-1] != "xlsm"
-                        or filename[0:3] != observatory
-                    ):
-                        continue
-                    year = int(filename[3:7])
-                    yd = int(filename[7:10])
-                    file_date = UTCDateTime(f"{year}-01-01") + (yd * 86400)
-                    if starttime <= file_date < endtime:
+                    if start_filename <= filename < end_filename:
                         rs = self.parse_spreadsheet(
                             os.path.join(dirpath, filename),
                         )
