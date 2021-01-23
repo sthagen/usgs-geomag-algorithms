@@ -26,9 +26,7 @@ class AdjustedAlgorithm(Algorithm):
         inchannels = inchannels or ["H", "E", "Z", "F"]
         outchannels = outchannels or ["X", "Y", "Z", "F"]
         Algorithm.__init__(
-            self,
-            inchannels=inchannels,
-            outchannels=outchannels,
+            self, inchannels=inchannels, outchannels=outchannels,
         )
         # state variables
         self.matrix = matrix
@@ -58,11 +56,9 @@ class AdjustedAlgorithm(Algorithm):
             sys.stderr.write("I/O error {0}".format(err))
         if data is None or data == "":
             return
-        for row in range(matrix_size):
-            for col in range(matrix_size):
-                matrix[row, col] = np.float64(data[f"M{row+1}{col+1}"])
-        pier_correction = np.float64(data["PC"])
-        self.matrix = AdjustedMatrix(matrix=matrix, pier_correction=pier_correction)
+        self.matrix = AdjustedMatrix(
+            matrix=np.array(data["matrix"]), pier_correction=data["pier_correction"]
+        )
 
     def save_state(self):
         """Save algorithm state to a file.
@@ -70,12 +66,11 @@ class AdjustedAlgorithm(Algorithm):
         """
         if self.statefile is None:
             return
-        data = {"PC": self.matrix.pier_correction}
-        length = len(self.matrix.matrix[0, :])
-        for i in range(0, length):
-            for j in range(0, length):
-                key = "M" + str(i + 1) + str(j + 1)
-                data[key] = self.matrix.matrix[i, j]
+        data = {
+            "matrix": list(self.matrix.matrix),
+            "pier_correction": self.matrix.pier_correction,
+        }
+
         with open(self.statefile, "w") as f:
             f.write(json.dumps(data))
 

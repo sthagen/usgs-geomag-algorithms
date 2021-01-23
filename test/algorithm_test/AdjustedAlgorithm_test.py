@@ -80,12 +80,7 @@ def test_process_reverse_polarity_AdjustedMatrix():
     # Initiate algorithm with AdjustedMatrix object
     a = adj(
         matrix=AdjustedMatrix(
-            matrix=[
-                [-1, 0, 0],
-                [0, -1, 0],
-                [0, 0, 1],
-            ],
-            pier_correction=-22,
+            matrix=[[-1, 0, 0], [0, -1, 0], [0, 0, 1],], pier_correction=-22,
         ),
         inchannels=["H", "E"],
         outchannels=["H", "E"],
