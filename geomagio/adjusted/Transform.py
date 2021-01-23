@@ -98,11 +98,8 @@ class LeastSq(Transform):
         if weights is None:
             return values
         weights = np.sqrt(weights)
-        return (
-            values[0] * weights,
-            values[1] * weights,
-            values[2] * weights,
-        )
+        weights = np.vstack((weights, weights, weights)).T.ravel()
+        return values * weights
 
 
 class SVD(Transform):
@@ -146,8 +143,6 @@ class NoConstraints(LeastSq):
         weights: List[float],
     ) -> np.array:
         """Calculates affine with no constraints using least squares."""
-        ordinates = self.get_weighted_values(ordinates, weights)
-        absolutes = self.get_weighted_values(absolutes, weights)
         # LHS, or dependent variables
         #
         # [A[0,0], A[1,0], A[2,0], A[0,1], A[1,1], A[2,1], ...]
@@ -176,6 +171,9 @@ class NoConstraints(LeastSq):
         ord_stacked[10, 2::3] = ordinates[2]
         ord_stacked[11, 2::3] = 1.0
 
+        ord_stacked = self.get_weighted_values(ord_stacked, weights)
+        abs_stacked = self.get_weighted_values(abs_stacked, weights)
+
         # regression matrix M that minimizes L2 norm
         M_r, res, rank, sigma = spl.lstsq(ord_stacked.T, abs_stacked.T)
 
@@ -200,8 +198,6 @@ class ZRotationShear(LeastSq):
         weights: List[float],
     ) -> np.array:
         """Calculates affine using least squares, constrained to rotate about the Z axis."""
-        ordinates = self.get_weighted_values(ordinates, weights)
-        absolutes = self.get_weighted_values(absolutes, weights)
         # LHS, or dependent variables
         #
         abs_stacked = self.get_stacked_absolutes(absolutes)
@@ -220,6 +216,9 @@ class ZRotationShear(LeastSq):
         ord_stacked[5, 1::3] = 1.0
         ord_stacked[6, 2::3] = ordinates[2]
         ord_stacked[7, 2::3] = 1.0
+
+        ord_stacked = self.get_weighted_values(ord_stacked, weights)
+        abs_stacked = self.get_weighted_values(abs_stacked, weights)
 
         # regression matrix M that minimizes L2 norm
         M_r, res, rank, sigma = spl.lstsq(ord_stacked.T, abs_stacked.T)
@@ -246,8 +245,6 @@ class ZRotationHscale(LeastSq):
         absolutes: Tuple[List[float], List[float], List[float]],
         weights: List[float],
     ) -> np.array:
-        ordinates = self.get_weighted_values(ordinates, weights)
-        absolutes = self.get_weighted_values(absolutes, weights)
         # LHS, or dependent variables
         #
         abs_stacked = self.get_stacked_absolutes(absolutes)
@@ -266,6 +263,9 @@ class ZRotationHscale(LeastSq):
         ord_stacked[3, 1::3] = 1.0
         ord_stacked[4, 2::3] = ordinates[2]
         ord_stacked[5, 2::3] = 1.0
+
+        ord_stacked = self.get_weighted_values(ord_stacked, weights)
+        abs_stacked = self.get_weighted_values(abs_stacked, weights)
 
         # regression matrix M that minimizes L2 norm
         M_r, res, rank, sigma = spl.lstsq(ord_stacked.T, abs_stacked.T)
@@ -344,15 +344,14 @@ class RotationTranslation3D(SVD):
         # generate weighted "covariance" matrix
         H = np.dot(
             self.get_stacked_values(
-                values=ordinates,
-                weighted_values=weighted_ordinates,
-                ndims=3,
+                values=ordinates, weighted_values=weighted_ordinates, ndims=3,
             ),
-            self.get_stacked_values(
-                values=absolutes,
-                weighted_values=weighted_absolutes,
-                ndims=3,
-            ).T,
+            np.dot(
+                np.diag(weights),
+                self.get_stacked_values(
+                    values=absolutes, weighted_values=weighted_absolutes, ndims=3,
+                ).T,
+            ),
         )
         # Singular value decomposition, then rotation matrix from L&R eigenvectors
         # (the determinant guarantees a rotation, and not a reflection)
@@ -388,8 +387,6 @@ class Rescale3D(LeastSq):
         absolutes: Tuple[List[float], List[float], List[float]],
         weights: List[float],
     ) -> np.array:
-        absolutes = self.get_weighted_values(values=absolutes, weights=weights)
-        ordinates = self.get_weighted_values(values=ordinates, weights=weights)
         abs_stacked = self.get_stacked_absolutes(absolutes=absolutes)
         # RHS, or independent variables
         # (reduces degrees of freedom by 13:
@@ -403,6 +400,9 @@ class Rescale3D(LeastSq):
         ord_stacked[0, 0::3] = ordinates[0]
         ord_stacked[1, 1::3] = ordinates[1]
         ord_stacked[2, 2::3] = ordinates[2]
+
+        abs_stacked = self.get_weighted_values(values=abs_stacked, weights=weights)
+        ord_stacked = self.get_weighted_values(values=ord_stacked, weights=weights)
 
         # regression matrix M that minimizes L2 norm
         M_r, res, rank, sigma = spl.lstsq(ord_stacked.T, abs_stacked.T)
@@ -483,8 +483,6 @@ class ShearYZ(LeastSq):
         absolutes: Tuple[List[float], List[float], List[float]],
         weights: List[float],
     ) -> np.array:
-        ordinates = self.get_weighted_values(values=ordinates, weights=weights)
-        # return generate_affine_7(ord_hez, abs_xyz, weights)
         # RHS, or independent variables
         # (reduces degrees of freedom by 13:
         #  - 2 for making x independent of y,z;
@@ -498,9 +496,10 @@ class ShearYZ(LeastSq):
         ord_stacked[2, 0::3] = ordinates[0]
         ord_stacked[2, 1::3] = ordinates[1]
         ord_stacked[2, 2::3] = 1.0
-
-        # regression matrix M that minimizes L2 norm
         abs_stacked = self.get_stacked_absolutes(absolutes=absolutes)
+        ord_stacked = self.get_weighted_values(values=ord_stacked, weights=weights)
+        abs_stacked = self.get_weighted_values(values=abs_stacked, weights=weights)
+        # regression matrix M that minimizes L2 norm
         M_r, res, rank, sigma = spl.lstsq(ord_stacked.T, abs_stacked.T)
 
         if rank < 3:
@@ -534,16 +533,12 @@ class RotationTranslationXY(SVD):
         # generate weighted "covariance" matrix
         H = np.dot(
             self.get_stacked_values(
-                values=ordinates,
-                weighted_values=weighted_ordinates,
-                ndims=2,
+                values=ordinates, weighted_values=weighted_ordinates, ndims=2,
             ),
             np.dot(
                 np.diag(weights),
                 self.get_stacked_values(
-                    values=absolutes,
-                    weighted_values=weighted_absolutes,
-                    ndims=2,
+                    values=absolutes, weighted_values=weighted_absolutes, ndims=2,
                 ).T,
             ),
         )
@@ -588,12 +583,7 @@ class QRFactorization(SVD):
         if weights is None:
             return values
         weights = np.sqrt(weights)
-        return np.array(
-            [
-                values[0] * weights,
-                values[1] * weights,
-            ]
-        )
+        return np.array([values[0] * weights, values[1] * weights,])
 
     def calculate(
         self,
@@ -611,25 +601,19 @@ class QRFactorization(SVD):
         # return generate_affine_9(ord_hez, abs_xyz, weights)
         # LHS, or dependent variables
         abs_stacked = self.get_stacked_values(
-            values=absolutes,
-            weighted_values=weighted_absolutes,
-            ndims=2,
+            values=absolutes, weighted_values=weighted_absolutes, ndims=2,
         )
 
         # RHS, or independent variables
         ord_stacked = self.get_stacked_values(
-            values=ordinates,
-            weighted_values=weighted_ordinates,
-            ndims=2,
+            values=ordinates, weighted_values=weighted_ordinates, ndims=2,
         )
 
         abs_stacked = self.get_weighted_values_lstsq(
-            values=abs_stacked,
-            weights=weights,
+            values=abs_stacked, weights=weights,
         )
         ord_stacked = self.get_weighted_values_lstsq(
-            values=ord_stacked,
-            weights=weights,
+            values=ord_stacked, weights=weights,
         )
 
         # regression matrix M that minimizes L2 norm
