@@ -68,7 +68,9 @@ def test_NoConstraints_synthetic():
     ordinates, absolutes, weights = get_sythetic_variables()
     assert_array_almost_equal(
         NoConstraints().calculate(
-            ordinates=ordinates, absolutes=absolutes, weights=weights,
+            ordinates=ordinates,
+            absolutes=absolutes,
+            weights=weights,
         ),
         get_expected_synthetic_result("NoConstraints"),
         decimal=3,
@@ -79,7 +81,9 @@ def test_ZRotationShear_synthetic():
     ordinates, absolutes, weights = get_sythetic_variables()
     assert_array_almost_equal(
         ZRotationShear().calculate(
-            ordinates=ordinates, absolutes=absolutes, weights=weights,
+            ordinates=ordinates,
+            absolutes=absolutes,
+            weights=weights,
         ),
         get_expected_synthetic_result("ZRotationShear"),
         decimal=3,
@@ -90,7 +94,9 @@ def test_ZRotationHscale_synthetic():
     ordinates, absolutes, weights = get_sythetic_variables()
     assert_array_almost_equal(
         ZRotationHscale().calculate(
-            ordinates=ordinates, absolutes=absolutes, weights=weights,
+            ordinates=ordinates,
+            absolutes=absolutes,
+            weights=weights,
         ),
         get_expected_synthetic_result("ZRotationHscale"),
         decimal=3,
@@ -101,7 +107,9 @@ def test_ZRotationHscaleZbaseline_synthetic():
     ordinates, absolutes, weights = get_sythetic_variables()
     assert_array_almost_equal(
         ZRotationHscaleZbaseline().calculate(
-            ordinates=ordinates, absolutes=absolutes, weights=weights,
+            ordinates=ordinates,
+            absolutes=absolutes,
+            weights=weights,
         ),
         get_expected_synthetic_result("ZRotationHscaleZbaseline"),
         decimal=3,
@@ -112,7 +120,9 @@ def test_RotationTranslation3D_synthetic():
     ordinates, absolutes, weights = get_sythetic_variables()
     assert_array_almost_equal(
         RotationTranslation3D().calculate(
-            ordinates=ordinates, absolutes=absolutes, weights=weights,
+            ordinates=ordinates,
+            absolutes=absolutes,
+            weights=weights,
         ),
         get_expected_synthetic_result("RotationTranslation3D"),
         decimal=3,
@@ -123,7 +133,9 @@ def test_Rescale3D_synthetic():
     ordinates, absolutes, weights = get_sythetic_variables()
     assert_array_almost_equal(
         Rescale3D().calculate(
-            ordinates=ordinates, absolutes=absolutes, weights=weights,
+            ordinates=ordinates,
+            absolutes=absolutes,
+            weights=weights,
         ),
         get_expected_synthetic_result("Rescale3D"),
         decimal=3,
@@ -134,7 +146,9 @@ def test_TranslateOrigins_synthetic():
     ordinates, absolutes, weights = get_sythetic_variables()
     assert_array_almost_equal(
         TranslateOrigins().calculate(
-            ordinates=ordinates, absolutes=absolutes, weights=weights,
+            ordinates=ordinates,
+            absolutes=absolutes,
+            weights=weights,
         ),
         get_expected_synthetic_result("TranslateOrigins"),
         decimal=3,
@@ -144,7 +158,11 @@ def test_TranslateOrigins_synthetic():
 def test_ShearYZ_synthetic():
     ordinates, absolutes, weights = get_sythetic_variables()
     assert_array_almost_equal(
-        ShearYZ().calculate(ordinates=ordinates, absolutes=absolutes, weights=weights,),
+        ShearYZ().calculate(
+            ordinates=ordinates,
+            absolutes=absolutes,
+            weights=weights,
+        ),
         get_expected_synthetic_result("ShearYZ"),
         decimal=3,
     )
@@ -154,7 +172,9 @@ def test_RotationTranslationXY_synthetic():
     ordinates, absolutes, weights = get_sythetic_variables()
     assert_array_almost_equal(
         RotationTranslationXY().calculate(
-            ordinates=ordinates, absolutes=absolutes, weights=weights,
+            ordinates=ordinates,
+            absolutes=absolutes,
+            weights=weights,
         ),
         get_expected_synthetic_result("RotationTranslationXY"),
         decimal=3,
@@ -165,7 +185,9 @@ def test_QRFactorization_synthetic():
     ordinates, absolutes, weights = get_sythetic_variables()
     assert_array_almost_equal(
         QRFactorization().calculate(
-            ordinates=ordinates, absolutes=absolutes, weights=weights,
+            ordinates=ordinates,
+            absolutes=absolutes,
+            weights=weights,
         ),
         get_expected_synthetic_result("QRFactorization"),
         decimal=3,
@@ -238,7 +260,9 @@ def test_BOU201911202001_short_acausal():
         endtime=endtime,
         update_interval=update_interval,
         acausal=True,
-    ).calculate(readings=readings,)
+    ).calculate(
+        readings=readings,
+    )
 
     matrices = format_result([adjusted_matrix.matrix for adjusted_matrix in result])
     expected_matrices = get_excpected_matrices("BOU", "short_acausal")
@@ -270,7 +294,9 @@ def test_BOU201911202001_infinite_weekly():
             RotationTranslationXY(memory=np.inf),
             TranslateOrigins(memory=np.inf),
         ],
-    ).calculate(readings=readings,)
+    ).calculate(
+        readings=readings,
+    )
 
     matrices = format_result([adjusted_matrix.matrix for adjusted_matrix in result])
     expected_matrices = get_excpected_matrices("BOU", "inf_weekly")
@@ -296,7 +322,9 @@ def test_BOU201911202001_infinite_one_interval():
             TranslateOrigins(memory=np.inf),
         ],
         update_interval=None,
-    ).calculate(readings=readings,)
+    ).calculate(
+        readings=readings,
+    )
 
     matrices = format_result([adjusted_matrix.matrix for adjusted_matrix in result])
     expected_matrices = get_excpected_matrices("BOU", "inf_one_interval")
@@ -329,7 +357,9 @@ def test_CMO2015_causal():
         starttime=starttime,
         endtime=endtime,
         update_interval=update_interval,
-    ).calculate(readings=readings,)
+    ).calculate(
+        readings=readings,
+    )
 
     matrices = format_result([adjusted_matrix.matrix for adjusted_matrix in result])
     expected_matrices = get_excpected_matrices("CMO", "short_causal")
@@ -363,7 +393,9 @@ def test_CMO2015_acausal():
         endtime=endtime,
         update_interval=update_interval,
         acausal=True,
-    ).calculate(readings=readings,)
+    ).calculate(
+        readings=readings,
+    )
 
     matrices = format_result([adjusted_matrix.matrix for adjusted_matrix in result])
     expected_matrices = get_excpected_matrices("CMO", "short_acausal")
@@ -401,7 +433,9 @@ def test_CMO2015_infinite_weekly():
         ],
         update_interval=update_interval,
         acausal=True,
-    ).calculate(readings=readings,)
+    ).calculate(
+        readings=readings,
+    )
 
     matrices = format_result([adjusted_matrix.matrix for adjusted_matrix in result])
     expected_matrices = get_excpected_matrices("CMO", "inf_weekly")
@@ -435,7 +469,9 @@ def test_CMO2015_infinite_one_interval():
         ],
         acausal=True,
         update_interval=None,
-    ).calculate(readings=readings,)
+    ).calculate(
+        readings=readings,
+    )
 
     matrices = format_result([adjusted_matrix.matrix for adjusted_matrix in result])
     expected_matrices = get_excpected_matrices("CMO", "inf_one_interval")
