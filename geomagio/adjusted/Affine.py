@@ -245,7 +245,7 @@ class Affine(BaseModel):
         times = self.get_times(readings)
         Ms = []
         weights = []
-
+        metrics = []
         inputs = ordinates
 
         for transform in self.transforms:
@@ -268,7 +268,7 @@ class Affine(BaseModel):
             inputs = np.dot(
                 M, np.vstack([inputs[0], inputs[1], inputs[2], np.ones_like(inputs[0])])
             )[0:3]
-
+            metrics.append(transform.metric)
             Ms.append(M)
 
         # compose affine transform matrices using reverse ordered matrices
@@ -277,7 +277,9 @@ class Affine(BaseModel):
             [reading.pier_correction for reading in readings], weights=weights
         )
 
-        return AdjustedMatrix(matrix=M_composed, pier_correction=pier_correction)
+        return AdjustedMatrix(
+            matrix=M_composed, pier_correction=pier_correction, metrics=metrics
+        )
 
     def get_weights(
         self,

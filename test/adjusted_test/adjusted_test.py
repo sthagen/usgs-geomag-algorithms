@@ -1,6 +1,6 @@
 import json
 import numpy as np
-from numpy.testing import assert_equal, assert_array_almost_equal
+from numpy.testing import assert_equal, assert_array_almost_equal, assert_array_less
 from obspy.core import UTCDateTime
 
 from geomagio.adjusted.SpreadsheetSummaryFactory import SpreadsheetSummaryFactory
@@ -235,6 +235,7 @@ def test_BOU201911202001_short_causal():
     ).calculate(readings=readings)
 
     matrices = format_result([adjusted_matrix.matrix for adjusted_matrix in result])
+    metrics = [adjusted_matrix.metrics for adjusted_matrix in result]
     expected_matrices = get_excpected_matrices("BOU", "short_causal")
     for i in range(len(matrices)):
         assert_array_almost_equal(
@@ -243,6 +244,7 @@ def test_BOU201911202001_short_causal():
             decimal=3,
             err_msg=f"Matrix {i} not equal",
         )
+        assert_array_less(metrics[i], 5.0)
     assert_equal(len(matrices), ((endtime - starttime) // update_interval) + 1)
 
 
@@ -265,6 +267,7 @@ def test_BOU201911202001_short_acausal():
     )
 
     matrices = format_result([adjusted_matrix.matrix for adjusted_matrix in result])
+    metrics = [adjusted_matrix.metrics for adjusted_matrix in result]
     expected_matrices = get_excpected_matrices("BOU", "short_acausal")
     for i in range(len(matrices)):
         assert_array_almost_equal(
@@ -273,6 +276,7 @@ def test_BOU201911202001_short_acausal():
             decimal=3,
             err_msg=f"Matrix {i} not equal",
         )
+        assert_array_less(metrics[i], 5.0)
     assert_equal(len(matrices), ((endtime - starttime) // update_interval) + 1)
 
 
@@ -299,6 +303,7 @@ def test_BOU201911202001_infinite_weekly():
     )
 
     matrices = format_result([adjusted_matrix.matrix for adjusted_matrix in result])
+    metrics = [adjusted_matrix.metrics for adjusted_matrix in result]
     expected_matrices = get_excpected_matrices("BOU", "inf_weekly")
     for i in range(len(matrices)):
         assert_array_almost_equal(
@@ -307,6 +312,7 @@ def test_BOU201911202001_infinite_weekly():
             decimal=3,
             err_msg=f"Matrix {i} not equal",
         )
+        assert_array_less(metrics[i], 5.0)
     assert_equal(len(matrices), ((endtime - starttime) // update_interval) + 1)
 
 
@@ -327,6 +333,7 @@ def test_BOU201911202001_infinite_one_interval():
     )
 
     matrices = format_result([adjusted_matrix.matrix for adjusted_matrix in result])
+    metrics = [adjusted_matrix.metrics for adjusted_matrix in result]
     expected_matrices = get_excpected_matrices("BOU", "inf_one_interval")
     for i in range(len(matrices)):
         assert_array_almost_equal(
@@ -335,6 +342,7 @@ def test_BOU201911202001_infinite_one_interval():
             decimal=3,
             err_msg=f"Matrix {i} not equal",
         )
+        assert_array_less(metrics[i], 5.0)
     assert_equal(len(matrices), 1)
 
 
@@ -362,6 +370,7 @@ def test_CMO2015_causal():
     )
 
     matrices = format_result([adjusted_matrix.matrix for adjusted_matrix in result])
+    metrics = [adjusted_matrix.metrics for adjusted_matrix in result]
     expected_matrices = get_excpected_matrices("CMO", "short_causal")
     for i in range(len(matrices)):
         assert_array_almost_equal(
@@ -370,6 +379,7 @@ def test_CMO2015_causal():
             decimal=3,
             err_msg=f"Matrix {i} not equal",
         )
+        assert_array_less(metrics[i], 5.0)
     assert_equal(len(matrices), ((endtime - starttime) // update_interval) + 1)
 
 
@@ -398,6 +408,7 @@ def test_CMO2015_acausal():
     )
 
     matrices = format_result([adjusted_matrix.matrix for adjusted_matrix in result])
+    metrics = [adjusted_matrix.metrics for adjusted_matrix in result]
     expected_matrices = get_excpected_matrices("CMO", "short_acausal")
     for i in range(len(matrices)):
         assert_array_almost_equal(
@@ -406,6 +417,7 @@ def test_CMO2015_acausal():
             decimal=3,
             err_msg=f"Matrix {i} not equal",
         )
+        assert_array_less(metrics[i], 5.0)
     assert_equal(len(matrices), ((endtime - starttime) // update_interval) + 1)
 
 
@@ -438,6 +450,7 @@ def test_CMO2015_infinite_weekly():
     )
 
     matrices = format_result([adjusted_matrix.matrix for adjusted_matrix in result])
+    metrics = [adjusted_matrix.metrics for adjusted_matrix in result]
     expected_matrices = get_excpected_matrices("CMO", "inf_weekly")
     for i in range(len(matrices)):
         assert_array_almost_equal(
@@ -446,6 +459,7 @@ def test_CMO2015_infinite_weekly():
             decimal=3,
             err_msg=f"Matrix {i} not equal",
         )
+        assert_array_less(metrics[i], 5.0)
     assert_equal(len(matrices), ((endtime - starttime) // update_interval) + 1)
 
 
@@ -474,6 +488,7 @@ def test_CMO2015_infinite_one_interval():
     )
 
     matrices = format_result([adjusted_matrix.matrix for adjusted_matrix in result])
+    metrics = [adjusted_matrix.metrics for adjusted_matrix in result]
     expected_matrices = get_excpected_matrices("CMO", "inf_one_interval")
     for i in range(len(matrices)):
         assert_array_almost_equal(
@@ -482,4 +497,6 @@ def test_CMO2015_infinite_one_interval():
             decimal=3,
             err_msg=f"Matrix {i} not equal",
         )
+        assert_array_less(metrics[i], 5.0)
+
     assert_equal(len(matrices), 1)
