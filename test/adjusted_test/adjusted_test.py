@@ -244,7 +244,6 @@ def test_BOU201911202001_short_causal():
             decimal=3,
             err_msg=f"Matrix {i} not equal",
         )
-        assert_array_less(metrics[i], 5.0)
     assert_equal(len(matrices), ((endtime - starttime) // update_interval) + 1)
 
 
@@ -276,7 +275,6 @@ def test_BOU201911202001_short_acausal():
             decimal=3,
             err_msg=f"Matrix {i} not equal",
         )
-        assert_array_less(metrics[i], 5.0)
     assert_equal(len(matrices), ((endtime - starttime) // update_interval) + 1)
 
 
@@ -312,7 +310,6 @@ def test_BOU201911202001_infinite_weekly():
             decimal=3,
             err_msg=f"Matrix {i} not equal",
         )
-        assert_array_less(metrics[i], 5.0)
     assert_equal(len(matrices), ((endtime - starttime) // update_interval) + 1)
 
 
@@ -342,7 +339,6 @@ def test_BOU201911202001_infinite_one_interval():
             decimal=3,
             err_msg=f"Matrix {i} not equal",
         )
-        assert_array_less(metrics[i], 5.0)
     assert_equal(len(matrices), 1)
 
 
@@ -379,7 +375,6 @@ def test_CMO2015_causal():
             decimal=3,
             err_msg=f"Matrix {i} not equal",
         )
-        assert_array_less(metrics[i], 5.0)
     assert_equal(len(matrices), ((endtime - starttime) // update_interval) + 1)
 
 
@@ -417,7 +412,6 @@ def test_CMO2015_acausal():
             decimal=3,
             err_msg=f"Matrix {i} not equal",
         )
-        assert_array_less(metrics[i], 5.0)
     assert_equal(len(matrices), ((endtime - starttime) // update_interval) + 1)
 
 
@@ -459,7 +453,6 @@ def test_CMO2015_infinite_weekly():
             decimal=3,
             err_msg=f"Matrix {i} not equal",
         )
-        assert_array_less(metrics[i], 5.0)
     assert_equal(len(matrices), ((endtime - starttime) // update_interval) + 1)
 
 
@@ -497,6 +490,5 @@ def test_CMO2015_infinite_one_interval():
             decimal=3,
             err_msg=f"Matrix {i} not equal",
         )
-        assert_array_less(metrics[i], 5.0)
 
     assert_equal(len(matrices), 1)

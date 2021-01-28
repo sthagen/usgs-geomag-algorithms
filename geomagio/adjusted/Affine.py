@@ -5,7 +5,9 @@ from pydantic import BaseModel
 from typing import List, Optional, Tuple
 
 from .AdjustedMatrix import AdjustedMatrix
+from .. import ChannelConverter
 from .. import pydantic_utcdatetime
+from .Metric import Metric
 from ..residual import Reading
 from .Transform import Transform, TranslateOrigins, RotationTranslationXY
 
@@ -273,13 +275,44 @@ class Affine(BaseModel):
 
         # compose affine transform matrices using reverse ordered matrices
         M_composed = reduce(np.dot, np.flipud(Ms))
+        absolutes = np.vstack((absolutes, np.ones_like(absolutes[0])))
+        ordinates = np.vstack((ordinates, np.ones_like(ordinates[0])))
         pier_correction = np.average(
             [reading.pier_correction for reading in readings], weights=weights
         )
+        std, mae, mae_df, std_df = self.compute_metrics(
+            absolutes=absolutes, ordinates=ordinates, matrix=M_composed
+        )
 
         return AdjustedMatrix(
-            matrix=M_composed, pier_correction=pier_correction, metrics=metrics
+            matrix=M_composed,
+            pier_correction=pier_correction,
+            metrics=[
+                Metric(element="X", mae=mae[0], std=std[0]),
+                Metric(element="Y", mae=mae[1], std=std[1]),
+                Metric(element="Z", mae=mae[2], std=std[2]),
+                Metric(element="dF", mae=mae_df, std=std_df),
+            ],
         )
+
+    def compute_metrics(
+        self, absolutes: List[float], ordinates: List[float], matrix: List[float]
+    ) -> Tuple[List[float], List[float], float, float]:
+        # expected values are absolutes
+        predicted = matrix @ ordinates
+        # mean absolute erros and standard deviations ignore the 4th row comprison, which is trivial
+        std = np.nanstd(predicted - absolutes, axis=1)[0:3]
+        mae = abs(np.nanmean(predicted - absolutes, axis=1))[0:3]
+        expected_f = ChannelConverter.get_computed_f_using_squares(
+            absolutes[0], absolutes[1], absolutes[2]
+        )
+        predicted_f = ChannelConverter.get_computed_f_using_squares(
+            predicted[0], predicted[1], predicted[2]
+        )
+        df = ChannelConverter.get_deltaf(expected_f, predicted_f)
+        std_df = abs(np.nanstd(df))
+        mae_df = abs(np.nanmean(df))
+        return list(std), list(mae), std_df, mae_df
 
     def get_weights(
         self,

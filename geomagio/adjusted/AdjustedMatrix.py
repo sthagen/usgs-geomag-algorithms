@@ -1,8 +1,13 @@
 from obspy import UTCDateTime
 from pydantic import BaseModel
-from typing import Optional, Any, List
+from typing import (
+    Any,
+    List,
+    Optional,
+)
 
 from .. import pydantic_utcdatetime
+from .Metric import Metric
 
 
 class AdjustedMatrix(BaseModel):
@@ -20,6 +25,6 @@ class AdjustedMatrix(BaseModel):
 
     matrix: Any
     pier_correction: float
-    metrics: List[float] = [0.0, 0.0]
+    metrics: Optional[List[Metric]] = None
     starttime: Optional[UTCDateTime] = None
     endtime: Optional[UTCDateTime] = None
