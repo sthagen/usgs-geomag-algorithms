@@ -1,10 +1,11 @@
 import numpy as np
 from obspy import UTCDateTime
+from pydantic import BaseModel
 import scipy.linalg as spl
 from typing import List, Tuple, Optional
 
 
-class Transform(object):
+class Transform(BaseModel):
     """Method for generating an affine matrix.
 
     Attributes
@@ -13,13 +14,7 @@ class Transform(object):
     Defaults to infinite(equal weighting)
     """
 
-    def __init__(self, memory: float = np.inf, metric: float = 0.0):
-        self.memory = memory
-        self.metric = metric
-
-    def update_metric(self, sigma):
-        # indicates the maximum possible number of lost significant values
-        self.metric = np.log(abs(sigma[0] / sigma[-1]))
+    memory: Optional[float] = None
 
     def get_weights(self, times: UTCDateTime, time: int = None) -> List[float]:
         """
@@ -32,7 +27,6 @@ class Transform(object):
         """
 
         # convert to array of floats
-        # (allows UTCDateTimes, but not datetime.datetimes)
         times = np.asarray(times).astype(float)
 
         if time is None:
@@ -80,7 +74,7 @@ class LeastSq(Transform):
 
         Output
         ------
-        X, Y and Z absolutes place end to end and transposed
+        X, Y and Z absolutes placed end to end and transposed
         """
         return np.vstack([absolutes[0], absolutes[1], absolutes[2]]).T.ravel()
 
@@ -181,7 +175,6 @@ class NoConstraints(LeastSq):
 
         # regression matrix M that minimizes L2 norm
         M_r, res, rank, sigma = spl.lstsq(ord_stacked.T, abs_stacked.T)
-        self.update_metric(sigma)
         if rank < 3:
             print("Poorly conditioned or singular matrix, returning NaNs")
             return np.nan * np.ones((4, 4))
@@ -227,7 +220,6 @@ class ZRotationShear(LeastSq):
 
         # regression matrix M that minimizes L2 norm
         M_r, res, rank, sigma = spl.lstsq(ord_stacked.T, abs_stacked.T)
-        self.update_metric(sigma)
         if rank < 3:
             print("Poorly conditioned or singular matrix, returning NaNs")
             return np.nan * np.ones((4, 4))
@@ -274,7 +266,6 @@ class ZRotationHscale(LeastSq):
 
         # regression matrix M that minimizes L2 norm
         M_r, res, rank, sigma = spl.lstsq(ord_stacked.T, abs_stacked.T)
-        self.update_metric(sigma)
         if rank < 3:
             print("Poorly conditioned or singular matrix, returning NaNs")
             return np.nan * np.ones((4, 4))
@@ -321,7 +312,6 @@ class ZRotationHscaleZbaseline(LeastSq):
 
         # regression matrix M that minimizes L2 norm
         M_r, res, rank, sigma = spl.lstsq(ord_stacked.T, abs_stacked.T)
-        self.update_metric(sigma)
         if rank < 3:
             print("Poorly conditioned or singular matrix, returning NaNs")
             return np.nan * np.ones((4, 4))
@@ -365,7 +355,6 @@ class RotationTranslation3D(SVD):
         # Singular value decomposition, then rotation matrix from L&R eigenvectors
         # (the determinant guarantees a rotation, and not a reflection)
         U, S, Vh = np.linalg.svd(H)
-        self.update_metric(S)
         if np.sum(S) < 3:
             print("Poorly conditioned or singular matrix, returning NaNs")
             return np.nan * np.ones((4, 4))
@@ -415,7 +404,6 @@ class Rescale3D(LeastSq):
 
         # regression matrix M that minimizes L2 norm
         M_r, res, rank, sigma = spl.lstsq(ord_stacked.T, abs_stacked.T)
-        self.update_metric(sigma)
         if rank < 3:
             print("Poorly conditioned or singular matrix, returning NaNs")
             return np.nan * np.ones((4, 4))
@@ -470,7 +458,6 @@ class TranslateOrigins(LeastSq):
 
         # regression matrix M that minimizes L2 norm
         M_r, res, rank, sigma = spl.lstsq(ord_stacked.T, abs_stacked.T)
-        self.update_metric(sigma)
         if rank < 3:
             print("Poorly conditioned or singular matrix, returning NaNs")
             return np.nan * np.ones((4, 4))
@@ -510,7 +497,6 @@ class ShearYZ(LeastSq):
         abs_stacked = self.get_weighted_values(values=abs_stacked, weights=weights)
         # regression matrix M that minimizes L2 norm
         M_r, res, rank, sigma = spl.lstsq(ord_stacked.T, abs_stacked.T)
-        self.update_metric(sigma)
         if rank < 3:
             print("Poorly conditioned or singular matrix, returning NaNs")
             return np.nan * np.ones((4, 4))
@@ -559,7 +545,6 @@ class RotationTranslationXY(SVD):
         # Singular value decomposition, then rotation matrix from L&R eigenvectors
         # (the determinant guarantees a rotation, and not a reflection)
         U, S, Vh = np.linalg.svd(H)
-        self.update_metric(S)
         if np.sum(S) < 2:
             print("Poorly conditioned or singular matrix, returning NaNs")
             return np.nan * np.ones((4, 4))
@@ -642,7 +627,6 @@ class QRFactorization(SVD):
 
         # regression matrix M that minimizes L2 norm
         M_r, res, rank, sigma = spl.lstsq(ord_stacked.T, abs_stacked.T)
-        self.update_metric(sigma)
         if rank < 2:
             print("Poorly conditioned or singular matrix, returning NaNs")
             return np.nan * np.ones((4, 4))

@@ -43,10 +43,8 @@ def filter_iqr(
     True that fall within these multiples of quantile ranges.
 
     NOTE: NumPy has a percentile function, but it does not yet handle
-          weights. This algorithm was adapted shamelessly from the PyPI
-          package wquantiles (https://pypi.org/project/wquantiles/). If
-          NumPy should ever implement their own weighted algorithm, we
-          should use it instead.
+          weights. This algorithm was adapted from the PyPI
+          package wquantiles (https://pypi.org/project/wquantiles/)
 
     Inputs:
     series: array of observations to filter
@@ -103,7 +101,7 @@ class Affine(BaseModel):
     endtime: end time for matrix creation
     acausal: when True, utilizes readings from after set endtime
     update_interval: window of time a matrix is representative of
-    transforms: list of methods for matrix calculation
+    transforms: list of methods for matrix calculations
     """
 
     observatory: str = None
@@ -130,17 +128,21 @@ class Affine(BaseModel):
         -------
         Ms: list of AdjustedMatrix objects created from calculations
         """
+        # default set to create one matrix between starttime and endtime
         update_interval = self.update_interval or (self.endtime - self.starttime)
         all_readings = [r for r in readings if r.valid]
         Ms = []
         time = self.starttime
         epoch_start = None
         epoch_end = None
+        # search for "bad" H values
         epochs = [r.time for r in all_readings if r.get_absolute("H").absolute == 0]
         while time < self.endtime:
+            # update epochs for current time
             epoch_start, epoch_end = self.get_epochs(
                 epoch_start=epoch_start, epoch_end=epoch_end, epochs=epochs, time=time
             )
+            # utilize readings that occur after or before a bad reading
             readings = [
                 r
                 for r in all_readings
@@ -148,10 +150,9 @@ class Affine(BaseModel):
                 or (epoch_end is None or r.time < epoch_end)
             ]
             M = self.calculate_matrix(time, readings)
+            # if readings are trimmed by bad data, mark the vakid interval
             M.starttime = epoch_start
             M.endtime = epoch_end
-
-            # increment start_UTC
             time += update_interval
 
             Ms.append(M)
@@ -165,6 +166,20 @@ class Affine(BaseModel):
         epochs: List[float],
         time: UTCDateTime,
     ) -> Tuple[float, float]:
+        """Updates valid start/end time for a given interval
+
+        Attributes
+        ----------
+        epoch_start: float value signifying start of last valid interval
+        epoch_end: float value signifying end of last valid interval
+        epochs: list of floats signifying bad data times
+        time: current time epoch is being evaluated at
+
+        Outputs
+        -------
+        epoch_start: float value signifying start of current valid interval
+        epoch_end: float value signifying end of current valid interval
+        """
         for e in epochs:
             if e > time:
                 if epoch_end is None or e < epoch_end:
@@ -237,6 +252,11 @@ class Affine(BaseModel):
     ) -> AdjustedMatrix:
         """Calculates affine matrix for a given time
 
+        Attributes
+        ----------
+        time: time within calculation interval
+        readings: list of valid readings
+
         Outputs
         -------
         AdjustedMatrix object containing result
@@ -270,7 +290,6 @@ class Affine(BaseModel):
             inputs = np.dot(
                 M, np.vstack([inputs[0], inputs[1], inputs[2], np.ones_like(inputs[0])])
             )[0:3]
-            metrics.append(transform.metric)
             Ms.append(M)
 
         # compose affine transform matrices using reverse ordered matrices
@@ -298,6 +317,21 @@ class Affine(BaseModel):
     def compute_metrics(
         self, absolutes: List[float], ordinates: List[float], matrix: List[float]
     ) -> Tuple[List[float], List[float], float, float]:
+        """Computes mean absolute error and standard deviation for X, Y, Z, and dF between expected and predicted values.
+
+        Attributes
+        ----------
+        absolutes: X, Y and Z absolutes
+        ordinates: H, E and Z ordinates
+        matrix: composed matrix
+
+        Outputs
+        -------
+        std: standard deviation between expected and predicted XYZ values
+        mae: mean absolute error between expected and predicted XYZ values
+        std_df: standard deviation of dF computed from expected and predicted XYZ values
+        mae_df: mean absolute error of dF computed from expected and predicted XYZ values
+        """
         # expected values are absolutes
         predicted = matrix @ ordinates
         # mean absolute erros and standard deviations ignore the 4th row comprison, which is trivial
@@ -320,6 +354,19 @@ class Affine(BaseModel):
         times: List[UTCDateTime],
         transform: Transform,
     ) -> np.array:
+        """
+
+        Attributes
+        ----------
+        time: time within calculation interval
+        times: times of valid readings
+        transform: matrix calculation method
+
+        Outputs
+        -------
+        weights: array of weights to apply to absolutes/ordinates within calculations
+        """
+
         weights = transform.get_weights(time=time.timestamp, times=times)
         # set weights for future observations to zero if not acausal
         if not self.acausal:
@@ -332,6 +379,7 @@ class Affine(BaseModel):
         weights: List[float],
         threshold=3,
     ) -> List[float]:
+        """Filters "bad" weights generated by unreliable readings"""
         good = (
             filter_iqr(baselines[0], threshold=threshold, weights=weights)
             & filter_iqr(baselines[1], threshold=threshold, weights=weights)
