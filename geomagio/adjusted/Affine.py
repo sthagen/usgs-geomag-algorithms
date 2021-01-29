@@ -267,7 +267,6 @@ class Affine(BaseModel):
         times = self.get_times(readings)
         Ms = []
         weights = []
-        metrics = []
         inputs = ordinates
 
         for transform in self.transforms:
@@ -278,7 +277,10 @@ class Affine(BaseModel):
             )
             # return NaNs if no valid observations
             if np.sum(weights) == 0:
-                raise ValueError(f"No valid observations for {time}")
+                return AdjustedMatrix(
+                    matrix=np.nan * np.ones((4, 4)),
+                    pier_correction=np.nan,
+                )
             # zero out statistically 'bad' baselines
             weights = self.weight_baselines(baselines=baselines, weights=weights)
 
