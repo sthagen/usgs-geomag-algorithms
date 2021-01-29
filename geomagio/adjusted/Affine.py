@@ -296,27 +296,19 @@ class Affine(BaseModel):
 
         # compose affine transform matrices using reverse ordered matrices
         M_composed = reduce(np.dot, np.flipud(Ms))
-        absolutes = np.vstack((absolutes, np.ones_like(absolutes[0])))
-        ordinates = np.vstack((ordinates, np.ones_like(ordinates[0])))
         pier_correction = np.average(
             [reading.pier_correction for reading in readings], weights=weights
         )
-        std, mae, mae_df, std_df = self.compute_metrics(
+        metrics = self.get_metrics(
             absolutes=absolutes, ordinates=ordinates, matrix=M_composed
         )
-
         return AdjustedMatrix(
             matrix=M_composed,
             pier_correction=pier_correction,
-            metrics=[
-                Metric(element="X", mae=mae[0], std=std[0]),
-                Metric(element="Y", mae=mae[1], std=std[1]),
-                Metric(element="Z", mae=mae[2], std=std[2]),
-                Metric(element="dF", mae=mae_df, std=std_df),
-            ],
+            metrics=metrics,
         )
 
-    def compute_metrics(
+    def get_metrics(
         self, absolutes: List[float], ordinates: List[float], matrix: List[float]
     ) -> Tuple[List[float], List[float], float, float]:
         """Computes mean absolute error and standard deviation for X, Y, Z, and dF between expected and predicted values.
@@ -329,16 +321,18 @@ class Affine(BaseModel):
 
         Outputs
         -------
-        std: standard deviation between expected and predicted XYZ values
-        mae: mean absolute error between expected and predicted XYZ values
-        std_df: standard deviation of dF computed from expected and predicted XYZ values
-        mae_df: mean absolute error of dF computed from expected and predicted XYZ values
+        metrics: list of Metric objects
         """
-        # expected values are absolutes
+        ordinates = np.vstack((ordinates, np.ones_like(ordinates[0])))
         predicted = matrix @ ordinates
-        # mean absolute erros and standard deviations ignore the 4th row comprison, which is trivial
-        std = np.nanstd(predicted - absolutes, axis=1)[0:3]
-        mae = abs(np.nanmean(predicted - absolutes, axis=1))[0:3]
+
+        channels = ["X", "Y", "Z"]
+        metrics = []
+        for i in range(len(channels)):
+            metric = Metric(element=channels[i])
+            metric.calculate(expected=absolutes[i], predicted=predicted[i])
+            metrics.append(metric)
+
         expected_f = ChannelConverter.get_computed_f_using_squares(
             absolutes[0], absolutes[1], absolutes[2]
         )
@@ -346,9 +340,23 @@ class Affine(BaseModel):
             predicted[0], predicted[1], predicted[2]
         )
         df = ChannelConverter.get_deltaf(expected_f, predicted_f)
-        std_df = abs(np.nanstd(df))
-        mae_df = abs(np.nanmean(df))
-        return list(std), list(mae), std_df, mae_df
+        metrics.append(self.get_metrics_df(predicted=predicted, expected=absolutes))
+        return metrics
+
+    def get_metrics_df(self, predicted, expected):
+        """Computes mean absolute error and standard deviation for dF between expected and predicted values"""
+        expected_f = ChannelConverter.get_computed_f_using_squares(
+            expected[0], expected[1], expected[2]
+        )
+        predicted_f = ChannelConverter.get_computed_f_using_squares(
+            predicted[0], predicted[1], predicted[2]
+        )
+        df = ChannelConverter.get_deltaf(expected_f, predicted_f)
+        return Metric(
+            element="dF",
+            mae=abs(np.nanmean(df)),
+            std=np.nanstd(df),
+        )
 
     def get_weights(
         self,
