@@ -4,9 +4,9 @@
 import numpy
 
 # values that represent missing data points in PCDCP
-NINES = numpy.int("9999999")
-NINES_RAW = numpy.int("99999990")
-NINES_DEG = numpy.int("9999")
+NINES = int("9999999")
+NINES_RAW = int("99999990")
+NINES_DEG = int("9999")
 
 
 class PCDCPParser(object):

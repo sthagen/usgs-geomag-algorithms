@@ -11,7 +11,7 @@ from obspy.core import Stream
 class TEMPWriter(object):
     """TEMP writer."""
 
-    def __init__(self, empty_value=numpy.int("9999")):
+    def __init__(self, empty_value=int("9999")):
         self.empty_value = empty_value
 
     def write(self, out, timeseries, channels):
