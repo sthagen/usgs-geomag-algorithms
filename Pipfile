@@ -29,6 +29,7 @@ openpyxl = "*"
 pydantic = "*"
 sqlalchemy = "*"
 sqlalchemy-utc = "*"
+typer = "*"
 typing = "*"
 typing-extensions = "*"
 uvicorn = {extras=["standard"], version="*"}
