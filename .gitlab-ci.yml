@@ -73,7 +73,7 @@ variables:
       junit: junit.xml
   before_script:
     # install dependencies
-    - pipenv install --deploy --dev --pre --system
+    - pipenv install --dev --pre --system
     - which python
   image: ${DEVOPS_REGISTRY}usgs/obspy:latest
   script:
