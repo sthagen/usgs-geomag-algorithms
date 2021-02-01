@@ -8,13 +8,8 @@ export PYTHONPATH=/geomag-algorithms
 
 
 if [ "${WEBSERVICE}" = "false" ]; then
-  # run jupyter notebook server
-  exec pipenv run jupyter \
-      notebook \
-      --ip='*' \
-      --notebook-dir=/data \
-      --no-browser \
-      --port=8000
+  # run arguments as command, or bash prompt if no arguments
+  exec "${@:-/bin/bash}"
 else
   # run gunicorn server for web service
   exec pipenv run gunicorn \
