@@ -26,7 +26,7 @@ async def delete_session(session_id: str) -> None:
 async def get_session(session_id: str) -> str:
     query = session.select().where(session.c.session_id == session_id)
     row = await database.fetch_one(query)
-    return row.data
+    return row.get("data", None)
 
 
 async def remove_expired_sessions(max_age: timedelta) -> None:
@@ -44,7 +44,7 @@ async def save_session(session_id: str, data: str) -> None:
         .values(data=data, updated=updated)
     )
     count = await database.execute(query)
-    if count == 0:
+    if count is None or count == 0:
         # no matching session, insert
         query = session.insert().values(
             session_id=session_id, data=data, updated=updated
