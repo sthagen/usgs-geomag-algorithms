@@ -69,18 +69,19 @@ variables:
 .check_code:
   artifacts:
     reports:
-      cobertura: cov.xml
+      cobertura: coverage.xml
       junit: junit.xml
   before_script:
     # install dependencies
-    - pipenv --site-packages install --dev --pre --skip-lock
-    - pipenv run which python
+    - pipenv --site-packages install --deploy --dev --pre --system
+    - which python
   image: ${DEVOPS_REGISTRY}usgs/obspy:latest
   script:
     # run checks
-    - pipenv run black --check .
-    - pipenv run pytest --cov=geomagio --cov-report xml:cov.xml --junitxml junit.xml
-    - pipenv run safety check
+    - black --check .
+    - pytest --cov=geomagio --junitxml junit.xml
+    - coverage xml
+    - safety check
   stage: test
   tags:
     - development
