@@ -151,10 +151,11 @@ variables:
 # Test Stage
 ## --------------------------------------------------
 
-Check Python 3.6:
-  extends:
-    - .check_code
-  image: ${DEVOPS_REGISTRY}usgs/obspy:3
+# Numpy 1.20 requires python 3.7 or newer
+# Check Python 3.6:
+#   extends:
+#     - .check_code
+#   image: ${DEVOPS_REGISTRY}usgs/obspy:3
 
 Check Python 3.8:
   extends:
