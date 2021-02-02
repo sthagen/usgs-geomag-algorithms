@@ -13,24 +13,22 @@ ENV GIT_BRANCH_NAME=${GIT_BRANCH_NAME} \
     WEBSERVICE=${WEBSERVICE}
 
 
-RUN useradd \
-    -c 'Docker image user' \
-    -m \
-    -r \
-    -s /sbin/nologin \
-    geomag_user \
-    && mkdir -p /data \
-    && chown -R geomag_user:geomag_user /data
+# install packages into system python, when Pipfile changes
+COPY Pipfile Pipfile.lock /geomag-algorithms/
+RUN cd /geomag-algorithms \
+    && pipenv install --dev --pre --system
 
-USER geomag_user
-
-# install dependencies via pipenv
-WORKDIR /data
-COPY Pipfile /data/
-RUN pipenv --site-packages install --dev --skip-lock
-
-# copy library (ignores set in .dockerignore)
+# install rest of library as editable
 COPY . /geomag-algorithms
+RUN cd /geomag-algorithms \
+    && pip install -e . \
+    # add data directory owned by usgs-user
+    && mkdir -p /data \
+    && chown -R usgs-user:usgs-user /data
+
+USER usgs-user
+WORKDIR /data
+
 
 # entrypoint needs double quotes
 ENTRYPOINT [ "/geomag-algorithms/docker-entrypoint.sh" ]

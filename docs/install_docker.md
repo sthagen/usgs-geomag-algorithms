@@ -25,12 +25,7 @@ The following command creates and starts a container in the background.
 
 - Run an interactive python prompt
 
-
       docker exec -it geomagio python
-
-- Use the Jupyter Notebook server
-
-  Check the output for a URL like this, that can be opened in a web browser: `http://127.0.0.1:8000/?token=...`
 
 - Use the `geomag.py` command line interface
 
