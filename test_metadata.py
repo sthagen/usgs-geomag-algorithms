@@ -114,9 +114,6 @@ for observatory in OBSERVATORIES:
     )
 
 # add null readings
-starttime = UTCDateTime("2020-01-01")
-endtime = UTCDateTime("2020-01-07")
-
 readings = WebAbsolutesFactory().get_readings(
     observatory="BOU",
     starttime=UTCDateTime("2020-01-01"),
@@ -138,6 +135,7 @@ for reading in readings:
         )
     )
 
+# add residual readings
 reading = SpreadsheetAbsolutesFactory().parse_spreadsheet(
     "etc/residual/DED-20140952332.xlsm"
 )
