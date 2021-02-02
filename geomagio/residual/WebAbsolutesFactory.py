@@ -35,14 +35,15 @@ class WebAbsolutesFactory(object):
             }
         )
         with urllib.request.urlopen(f"{self.url}?{args}") as data:
-            return self.parse_json(data)
+            return self.parse_json(data, observatory)
 
-    def parse_json(self, jsonstr: IO[str]) -> List[Reading]:
+    def parse_json(self, jsonstr: IO[str], observatory: str) -> List[Reading]:
         """Parse readings from the web absolutes JSON format."""
         readings = []
         response = json.load(jsonstr)
         for data in response["data"]:
             metadata = self._parse_metadata(data)
+            metadata["station"] = observatory
             readings.extend(
                 [self._parse_reading(metadata, r) for r in data["readings"]]
             )

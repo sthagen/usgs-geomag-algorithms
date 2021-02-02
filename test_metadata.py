@@ -113,46 +113,38 @@ for observatory in OBSERVATORIES:
         )
     )
 
-# add null readings
+# get null readings
 readings = WebAbsolutesFactory().get_readings(
     observatory="BOU",
     starttime=UTCDateTime("2020-01-01"),
     endtime=UTCDateTime("2020-01-07"),
 )
+# get residual reading
+reading = SpreadsheetAbsolutesFactory().parse_spreadsheet(
+    "etc/residual/DED-20140952332.xlsm"
+)
+readings.append(reading)
 
 for reading in readings:
     json_string = reading.json()
     reading_dict = json.loads(json_string)
+    try:
+        reviewer = reading.metadata["reviewer"]
+    except KeyError:
+        reviewer = None
     test_metadata.append(
         Metadata(
             category=MetadataCategory.READING,
             created_by="test_metadata.py",
-            reviewed_by=reading.metadata["reviewer"],
+            network="NT",
+            reviewed_by=reviewer,
             starttime=reading.time,
-            station="BOU",
+            endtime=reading.time,
+            station=reading.metadata["station"],
             metadata=reading_dict,
             metadata_valid=reading.valid,
         )
     )
-
-# add residual readings
-reading = SpreadsheetAbsolutesFactory().parse_spreadsheet(
-    "etc/residual/DED-20140952332.xlsm"
-)
-
-json_string = reading.json()
-reading_dict = json.loads(json_string)
-
-test_metadata.append(
-    Metadata(
-        category=MetadataCategory.READING,
-        created_by="test_metadata.py",
-        starttime=reading.time,
-        station="DED",
-        metadata=reading_dict,
-        metadata_valid=reading.valid,
-    )
-)
 
 
 async def load_test_metadata():
