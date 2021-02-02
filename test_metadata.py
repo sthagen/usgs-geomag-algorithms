@@ -1,8 +1,12 @@
+import json
 from obspy import UTCDateTime
 
+from geomagio.residual.SpreadsheetAbsolutesFactory import SpreadsheetAbsolutesFactory
+from geomagio import metadata
 from geomagio.api.db import database, metadata_table
 from geomagio.api.ws.Observatory import OBSERVATORIES
 from geomagio.metadata import Metadata, MetadataCategory
+from geomagio.residual import WebAbsolutesFactory, MeasurementType
 
 
 test_metadata = [
@@ -108,6 +112,49 @@ for observatory in OBSERVATORIES:
             metadata=observatory.dict(),
         )
     )
+
+# add null readings
+starttime = UTCDateTime("2020-01-01")
+endtime = UTCDateTime("2020-01-07")
+
+readings = WebAbsolutesFactory().get_readings(
+    observatory="BOU",
+    starttime=UTCDateTime("2020-01-01"),
+    endtime=UTCDateTime("2020-01-07"),
+)
+
+for reading in readings:
+    json_string = reading.json()
+    reading_dict = json.loads(json_string)
+    test_metadata.append(
+        Metadata(
+            category=MetadataCategory.READING,
+            created_by="test_metadata.py",
+            reviewed_by=reading.metadata["reviewer"],
+            starttime=reading.time,
+            station="BOU",
+            metadata=reading_dict,
+            metadata_valid=reading.valid,
+        )
+    )
+
+reading = SpreadsheetAbsolutesFactory().parse_spreadsheet(
+    "etc/residual/DED-20140952332.xlsm"
+)
+
+json_string = reading.json()
+reading_dict = json.loads(json_string)
+
+test_metadata.append(
+    Metadata(
+        category=MetadataCategory.READING,
+        created_by="test_metadata.py",
+        starttime=reading.time,
+        station="DED",
+        metadata=reading_dict,
+        metadata_valid=reading.valid,
+    )
+)
 
 
 async def load_test_metadata():

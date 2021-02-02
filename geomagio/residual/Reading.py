@@ -2,7 +2,7 @@ import collections
 from typing import Dict, List, Optional
 from typing_extensions import Literal
 
-from obspy import Stream
+from obspy import Stream, UTCDateTime
 from pydantic import BaseModel
 
 from .. import TimeseriesUtility
@@ -97,3 +97,34 @@ class Reading(BaseModel):
                 time=measurement.time,
                 default=default_existing and measurement.f or None,
             )
+
+    @property
+    def time(self) -> Optional[UTCDateTime]:
+        h = self.get_absolute("H")
+        if h:
+            return h.endtime
+        return None
+
+    @property
+    def valid(self) -> bool:
+        """ensures that readings used in calculations have been marked as valid
+
+        Attributes
+        ----------
+        readings: list containing valid and invalid readings
+        """
+        if (
+            self.get_absolute("D").valid == True
+            and self.get_absolute("H").valid == True
+            and self.get_absolute("Z").valid == True
+        ):
+            return True
+
+    def get_absolute(
+        self,
+        element: str,
+    ) -> Optional[Absolute]:
+        for absolute in self.absolutes:
+            if absolute.element == element:
+                return absolute
+        return None
