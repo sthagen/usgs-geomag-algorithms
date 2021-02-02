@@ -465,7 +465,7 @@ class SqDistAlgorithm(Algorithm):
         ts = np.linspace(
             np.max((-m, -3 * np.round(sig))),
             np.min((m, 3 * np.round(sig))),
-            np.int(np.round(np.min((2 * m, 6 * np.round(sig))) + 1)),
+            int(np.round(np.min((2 * m, 6 * np.round(sig))) + 1)),
         )
         nts = ts.size
         weights = np.exp(-0.5 * (ts / sig) ** 2)
