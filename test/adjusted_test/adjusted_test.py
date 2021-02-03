@@ -3,9 +3,9 @@ import numpy as np
 from numpy.testing import assert_equal, assert_array_almost_equal, assert_array_equal
 from obspy.core import UTCDateTime
 
-from geomagio.adjusted.SpreadsheetSummaryFactory import SpreadsheetSummaryFactory
-from geomagio.adjusted.Affine import Affine
-from geomagio.adjusted.Transform import (
+from geomagio.adjusted import (
+    SpreadsheetSummaryFactory,
+    Affine,
     NoConstraints,
     ZRotationShear,
     ZRotationHscale,

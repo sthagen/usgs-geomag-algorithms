@@ -1,4 +1,4 @@
-from geomagio.adjusted.AdjustedMatrix import AdjustedMatrix
+from geomagio.adjusted import AdjustedMatrix
 from geomagio.algorithm import AdjustedAlgorithm as adj
 import geomagio.iaga2002 as i2
 from numpy.testing import assert_almost_equal, assert_equal

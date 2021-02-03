@@ -4,11 +4,11 @@ from obspy import UTCDateTime
 from pydantic import BaseModel
 from typing import List, Optional, Tuple
 
-from .AdjustedMatrix import AdjustedMatrix
 from .. import ChannelConverter
 from .. import pydantic_utcdatetime
-from .Metric import Metric
 from ..residual import Reading
+from .AdjustedMatrix import AdjustedMatrix
+from .Metric import Metric
 from .Transform import Transform, TranslateOrigins, RotationTranslationXY
 
 

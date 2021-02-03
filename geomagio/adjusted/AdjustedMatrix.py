@@ -1,10 +1,6 @@
 from obspy import UTCDateTime
 from pydantic import BaseModel
-from typing import (
-    Any,
-    List,
-    Optional,
-)
+from typing import Any, List, Optional
 
 from .. import pydantic_utcdatetime
 from .Metric import Metric
