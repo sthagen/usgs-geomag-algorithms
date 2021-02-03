@@ -259,7 +259,10 @@ class SpreadsheetAbsolutesFactory(object):
                 for filename in filenames:
                     if start_filename <= filename < end_filename:
                         readings.append(
-                            self.parse_spreadsheet(os.path.join(dirpath, filename))
+                            self.parse_spreadsheet(
+                                path=os.path.join(dirpath, filename),
+                                include_measurements=include_measurements,
+                            )
                         )
         return readings
 

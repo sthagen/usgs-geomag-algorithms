@@ -1,12 +1,11 @@
 import json
+
 from obspy import UTCDateTime
 
-from geomagio.residual.SpreadsheetAbsolutesFactory import SpreadsheetAbsolutesFactory
-from geomagio import metadata
 from geomagio.api.db import database, metadata_table
 from geomagio.api.ws.Observatory import OBSERVATORIES
 from geomagio.metadata import Metadata, MetadataCategory
-from geomagio.residual import WebAbsolutesFactory, MeasurementType
+from geomagio.residual import SpreadsheetAbsolutesFactory, WebAbsolutesFactory
 
 
 test_metadata = [
