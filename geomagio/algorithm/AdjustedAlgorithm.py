@@ -4,7 +4,7 @@ import json
 import numpy as np
 from obspy.core import Stream, Stats
 
-from ..adjusted.AdjustedMatrix import AdjustedMatrix
+from ..adjusted import AdjustedMatrix
 from .Algorithm import Algorithm
 
 
