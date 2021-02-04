@@ -6,16 +6,20 @@ from obspy.core import UTCDateTime
 from geomagio.adjusted import (
     SpreadsheetSummaryFactory,
     Affine,
+)
+
+from geomagio.adjusted.transform import (
     NoConstraints,
-    ZRotationShear,
-    ZRotationHscale,
-    ZRotationHscaleZbaseline,
-    RotationTranslation3D,
-    Rescale3D,
-    TranslateOrigins,
-    ShearYZ,
-    RotationTranslationXY,
     QRFactorization,
+    Rescale3D,
+    RotationTranslation3D,
+    RotationTranslationXY,
+    ShearYZ,
+    TranslateOrigins,
+    ZRotationHscale,
+    TranslateOrigins,
+    ZRotationHscaleZbaseline,
+    ZRotationShear,
 )
 
 from geomagio.residual.WebAbsolutesFactory import WebAbsolutesFactory
@@ -77,15 +81,80 @@ def test_NoConstraints_synthetic():
     )
 
 
-def test_ZRotationShear_synthetic():
+def test_QRFactorization_synthetic():
     ordinates, absolutes, weights = get_sythetic_variables()
     assert_array_almost_equal(
-        ZRotationShear().calculate(
+        QRFactorization().calculate(
             ordinates=ordinates,
             absolutes=absolutes,
             weights=weights,
         ),
-        get_expected_synthetic_result("ZRotationShear"),
+        get_expected_synthetic_result("QRFactorization"),
+        decimal=3,
+    )
+
+
+def test_Rescale3D_synthetic():
+    ordinates, absolutes, weights = get_sythetic_variables()
+    assert_array_almost_equal(
+        Rescale3D().calculate(
+            ordinates=ordinates,
+            absolutes=absolutes,
+            weights=weights,
+        ),
+        get_expected_synthetic_result("Rescale3D"),
+        decimal=3,
+    )
+
+
+def test_RotationTranslation3D_synthetic():
+    ordinates, absolutes, weights = get_sythetic_variables()
+    assert_array_almost_equal(
+        RotationTranslation3D().calculate(
+            ordinates=ordinates,
+            absolutes=absolutes,
+            weights=weights,
+        ),
+        get_expected_synthetic_result("RotationTranslation3D"),
+        decimal=3,
+    )
+
+
+def test_RotationTranslationXY_synthetic():
+    ordinates, absolutes, weights = get_sythetic_variables()
+    assert_array_almost_equal(
+        RotationTranslationXY().calculate(
+            ordinates=ordinates,
+            absolutes=absolutes,
+            weights=weights,
+        ),
+        get_expected_synthetic_result("RotationTranslationXY"),
+        decimal=3,
+    )
+
+
+def test_ShearYZ_synthetic():
+    ordinates, absolutes, weights = get_sythetic_variables()
+    assert_array_almost_equal(
+        ShearYZ().calculate(
+            ordinates=ordinates,
+            absolutes=absolutes,
+            weights=weights,
+        ),
+        get_expected_synthetic_result("ShearYZ"),
+        decimal=3,
+    )
+
+
+def test_TranslateOrigins_synthetic():
+    ordinates, absolutes, weights = get_sythetic_variables()
+    assert_array_almost_equal(
+        TranslateOrigins().calculate(
+            ordinates=ordinates,
+            absolutes=absolutes,
+            weights=weights,
+        ),
+        get_expected_synthetic_result("TranslateOrigins"),
         decimal=3,
     )
 
@@ -116,80 +185,15 @@ def test_ZRotationHscaleZbaseline_synthetic():
     )
 
 
-def test_RotationTranslation3D_synthetic():
+def test_ZRotationShear_synthetic():
     ordinates, absolutes, weights = get_sythetic_variables()
     assert_array_almost_equal(
-        RotationTranslation3D().calculate(
+        ZRotationShear().calculate(
             ordinates=ordinates,
             absolutes=absolutes,
             weights=weights,
         ),
-        get_expected_synthetic_result("RotationTranslation3D"),
-        decimal=3,
-    )
-
-
-def test_Rescale3D_synthetic():
-    ordinates, absolutes, weights = get_sythetic_variables()
-    assert_array_almost_equal(
-        Rescale3D().calculate(
-            ordinates=ordinates,
-            absolutes=absolutes,
-            weights=weights,
-        ),
-        get_expected_synthetic_result("Rescale3D"),
-        decimal=3,
-    )
-
-
-def test_TranslateOrigins_synthetic():
-    ordinates, absolutes, weights = get_sythetic_variables()
-    assert_array_almost_equal(
-        TranslateOrigins().calculate(
-            ordinates=ordinates,
-            absolutes=absolutes,
-            weights=weights,
-        ),
-        get_expected_synthetic_result("TranslateOrigins"),
-        decimal=3,
-    )
-
-
-def test_ShearYZ_synthetic():
-    ordinates, absolutes, weights = get_sythetic_variables()
-    assert_array_almost_equal(
-        ShearYZ().calculate(
-            ordinates=ordinates,
-            absolutes=absolutes,
-            weights=weights,
-        ),
-        get_expected_synthetic_result("ShearYZ"),
-        decimal=3,
-    )
-
-
-def test_RotationTranslationXY_synthetic():
-    ordinates, absolutes, weights = get_sythetic_variables()
-    assert_array_almost_equal(
-        RotationTranslationXY().calculate(
-            ordinates=ordinates,
-            absolutes=absolutes,
-            weights=weights,
-        ),
-        get_expected_synthetic_result("RotationTranslationXY"),
-        decimal=3,
-    )
-
-
-def test_QRFactorization_synthetic():
-    ordinates, absolutes, weights = get_sythetic_variables()
-    assert_array_almost_equal(
-        QRFactorization().calculate(
-            ordinates=ordinates,
-            absolutes=absolutes,
-            weights=weights,
-        ),
-        get_expected_synthetic_result("QRFactorization"),
+        get_expected_synthetic_result("ZRotationShear"),
         decimal=3,
     )
 
