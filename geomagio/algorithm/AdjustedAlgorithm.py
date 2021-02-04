@@ -43,24 +43,33 @@ class AdjustedAlgorithm(Algorithm):
         """Load algorithm state from a file.
         File name is self.statefile.
         """
-        pier_correction = 0
         if self.statefile is None:
             return
-        # Adjusted matrix defaults to identity matrix
-        matrix_size = len([c for c in self.get_input_channels() if c != "F"]) + 1
-        matrix = np.eye(matrix_size)
-        data = None
         try:
             with open(self.statefile, "r") as f:
                 data = f.read()
                 data = json.loads(data)
         except IOError as err:
-            sys.stderr.write("I/O error {0}".format(err))
-        if data is None or data == "":
-            return
-        self.matrix = AdjustedMatrix(
-            matrix=np.array(data["matrix"]), pier_correction=data["pier_correction"]
-        )
+            raise FileNotFoundError("statefile not found")
+        pier_correction = 0
+        # Adjusted matrix defaults to identity matrix
+        matrix_size = len([c for c in self.get_input_channels() if c != "F"]) + 1
+        matrix = np.eye(matrix_size)
+        if self.statefile is not None:
+            try:
+                if "pier_correction" in data.keys():
+                    # read data
+                    matrix = np.array(data["matrix"])
+                    pier_correction = data["pier_correction"]
+                if "PC" in data.keys():
+                    # read data from legacy format
+                    for row in range(matrix_size):
+                        for col in range(matrix_size):
+                            matrix[row, col] = np.float64(data[f"M{row+1}{col+1}"])
+                    pier_correction = np.float64(data["PC"])
+            except:
+                raise KeyError("matrix and pier correction not found in statefile")
+        self.matrix = AdjustedMatrix(matrix=matrix, pier_correction=pier_correction)
 
     def save_state(self):
         """Save algorithm state to a file.
@@ -123,14 +132,9 @@ class AdjustedAlgorithm(Algorithm):
         inchannels = self.get_input_channels()
         outchannels = self.get_output_channels()
         raws = np.vstack(
-            [
-                stream.select(channel=channel)[0].data
-                for channel in inchannels
-                if channel != "F"
-            ]
-            + [np.ones_like(stream[0].data)]
+            [stream.select(channel=channel)[0].data for channel in inchannels]
         )
-        adjusted = np.matmul(self.matrix.matrix, raws)
+        adjusted = self.matrix.process(values=raws, outchannels=outchannels)
         out = Stream(
             [
                 self.create_trace(
@@ -138,12 +142,9 @@ class AdjustedAlgorithm(Algorithm):
                     stream.select(channel=inchannels[i])[0].stats,
                     adjusted[i],
                 )
-                for i in range(len(adjusted) - 1)
+                for i in range(len(adjusted))
             ]
         )
-        if "F" in inchannels and "F" in outchannels:
-            f = stream.select(channel="F")[0]
-            out += self.create_trace("F", f.stats, f.data + self.matrix.pier_correction)
         return out
 
     def can_produce_data(self, starttime, endtime, stream):
