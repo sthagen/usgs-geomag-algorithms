@@ -1,4 +1,3 @@
-import collections
 from typing import Dict, List, Optional
 from typing_extensions import Literal
 
@@ -8,7 +7,7 @@ from pydantic import BaseModel
 from .. import TimeseriesUtility
 from ..TimeseriesFactory import TimeseriesFactory
 from .Absolute import Absolute
-from .Measurement import AverageMeasurement, Measurement, average_measurement
+from .Measurement import Measurement, average_measurement
 from .MeasurementType import MeasurementType
 
 

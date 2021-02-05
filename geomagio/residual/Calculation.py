@@ -2,10 +2,8 @@ from typing import List, Tuple
 from typing_extensions import Literal
 
 import numpy as np
-from pydantic import BaseModel
 
 from .Absolute import Absolute
-from .Angle import from_dms, to_dms
 from .MeasurementType import (
     MeasurementType as mt,
     DECLINATION_TYPES,
