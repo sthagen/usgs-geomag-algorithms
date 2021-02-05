@@ -1,6 +1,6 @@
 import json
 import numpy as np
-from numpy.testing import assert_equal, assert_array_almost_equal, assert_array_equal
+from numpy.testing import assert_equal, assert_array_almost_equal
 from obspy.core import UTCDateTime
 
 from geomagio.adjusted import (
@@ -236,6 +236,10 @@ def test_BOU201911202001_short_causal():
         starttime=starttime,
         endtime=endtime,
         update_interval=update_interval,
+        transforms=[
+            RotationTranslationXY(memory=(86400 * 100), acausal=False),
+            TranslateOrigins(memory=(86400 * 10), acausal=False),
+        ],
     ).calculate(readings=readings)
 
     matrices = format_result([adjusted_matrix.matrix for adjusted_matrix in result])
@@ -263,7 +267,10 @@ def test_BOU201911202001_short_acausal():
         starttime=starttime,
         endtime=endtime,
         update_interval=update_interval,
-        acausal=True,
+        transforms=[
+            RotationTranslationXY(memory=(86400 * 100), acausal=True),
+            TranslateOrigins(memory=(86400 * 10), acausal=True),
+        ],
     ).calculate(
         readings=readings,
     )
@@ -293,10 +300,9 @@ def test_BOU201911202001_infinite_weekly():
         starttime=starttime,
         endtime=endtime,
         update_interval=update_interval,
-        acausal=True,
         transforms=[
-            RotationTranslationXY(memory=np.inf),
-            TranslateOrigins(memory=np.inf),
+            RotationTranslationXY(memory=np.inf, acausal=True),
+            TranslateOrigins(memory=np.inf, acausal=True),
         ],
     ).calculate(
         readings=readings,
@@ -320,10 +326,9 @@ def test_BOU201911202001_infinite_one_interval():
         observatory="BOU",
         starttime=UTCDateTime("2019-11-01T00:00:00Z"),
         endtime=UTCDateTime("2020-01-31T23:59:00Z"),
-        acausal=True,
         transforms=[
-            RotationTranslationXY(memory=np.inf),
-            TranslateOrigins(memory=np.inf),
+            RotationTranslationXY(memory=np.inf, acausal=True),
+            TranslateOrigins(memory=np.inf, acausal=True),
         ],
         update_interval=None,
     ).calculate(
@@ -348,15 +353,13 @@ def test_BOU201911202001_invalid_readings():
         observatory="BOU",
         starttime=UTCDateTime("2019-11-01T00:00:00Z"),
         endtime=UTCDateTime("2020-01-31T23:59:00Z"),
-        acausal=True,
         transforms=[
-            RotationTranslationXY(memory=np.inf),
-            TranslateOrigins(memory=np.inf),
+            RotationTranslationXY(memory=np.inf, acausal=True),
+            TranslateOrigins(memory=np.inf, acausal=True),
         ],
         update_interval=None,
     ).calculate(readings=readings,)[0]
-    assert_array_equal(result.matrix, np.nan * np.ones((4, 4)))
-    assert_equal(result.pier_correction, np.nan)
+    assert result is None
 
 
 def test_CMO2015_causal():
@@ -378,6 +381,10 @@ def test_CMO2015_causal():
         starttime=starttime,
         endtime=endtime,
         update_interval=update_interval,
+        transforms=[
+            RotationTranslationXY(memory=(86400 * 100), acausal=False),
+            TranslateOrigins(memory=(86400 * 10), acausal=False),
+        ],
     ).calculate(
         readings=readings,
     )
@@ -413,7 +420,10 @@ def test_CMO2015_acausal():
         starttime=starttime,
         endtime=endtime,
         update_interval=update_interval,
-        acausal=True,
+        transforms=[
+            RotationTranslationXY(memory=(86400 * 100), acausal=True),
+            TranslateOrigins(memory=(86400 * 10), acausal=True),
+        ],
     ).calculate(
         readings=readings,
     )
@@ -449,8 +459,8 @@ def test_CMO2015_infinite_weekly():
         starttime=starttime,
         endtime=endtime,
         transforms=[
-            RotationTranslationXY(memory=np.inf),
-            TranslateOrigins(memory=np.inf),
+            RotationTranslationXY(memory=np.inf, acausal=True),
+            TranslateOrigins(memory=np.inf, acausal=True),
         ],
         update_interval=update_interval,
         acausal=True,
@@ -485,8 +495,8 @@ def test_CMO2015_infinite_one_interval():
         starttime=UTCDateTime("2015-02-01T00:00:00Z"),
         endtime=UTCDateTime("2015-11-27T23:59:00Z"),
         transforms=[
-            RotationTranslationXY(memory=np.inf),
-            TranslateOrigins(memory=np.inf),
+            RotationTranslationXY(memory=np.inf, acausal=True),
+            TranslateOrigins(memory=np.inf, acausal=True),
         ],
         acausal=True,
         update_interval=None,

@@ -9,10 +9,12 @@ class Transform(BaseModel):
 
     Attributes
     ----------
-    memory: Controls impacts of measurements from the past.
+    acausal: if true, future readings are used in calculations
+    memory: Controls impact of measurements from the past
     Defaults to infinite(equal weighting)
     """
 
+    acausal: bool = False
     memory: Optional[float] = None
 
     def get_weights(self, times: UTCDateTime, time: int = None) -> List[float]:
@@ -41,6 +43,9 @@ class Transform(BaseModel):
         # calculate exponential decay time-dependent weights
         weights[times <= time] = np.exp((times[times <= time] - time) / self.memory)
         weights[times >= time] = np.exp((time - times[times >= time]) / self.memory)
+
+        if not self.acausal:
+            weights[times > time] = 0.0
 
         return weights
 

@@ -8,15 +8,10 @@ class Metric(BaseModel):
     Attributes
     ----------
     element: Channel that metrics are representative of
-    mae: mean absolute error
-    std: standard deviation
+    absmean: mean absolute error
+    stddev: standard deviation
     """
 
     element: str
-    mae: float = None
-    std: float = None
-
-    def calculate(self, expected, predicted):
-        """Calculates mean absolute error and standard deviation between expected and predicted data"""
-        self.mae = abs(np.nanmean(expected - predicted))
-        self.std = np.nanstd(expected - predicted)
+    absmean: float = None
+    stddev: float = None

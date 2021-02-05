@@ -1,8 +1,9 @@
 import numpy as np
 from obspy import UTCDateTime
 from pydantic import BaseModel
-from typing import Any, List, Optional
+from typing import Any, List, Optional, Tuple
 
+from .. import ChannelConverter
 from .. import pydantic_utcdatetime
 from .Metric import Metric
 
@@ -36,3 +37,41 @@ class AdjustedMatrix(BaseModel):
         else:
             adjusted = adjusted[0 : len(outchannels)]
         return adjusted
+
+    def set_metrics(
+        self,
+        ordinates: Tuple[List[float], List[float], List[float]],
+        absolutes: Tuple[List[float], List[float], List[float]],
+    ):
+        """Computes mean absolute error and standard deviation for X, Y, Z, and dF between expected and predicted values.
+
+        Attributes
+        ----------
+        absolutes: X, Y and Z absolutes
+        ordinates: H, E and Z ordinates
+        matrix: composed matrix
+
+        Outputs
+        -------
+        metrics: list of Metric objects
+        """
+        ordinates = np.vstack((ordinates, np.ones_like(ordinates[0])))
+        predicted = self.matrix @ ordinates
+        metrics = []
+        elements = ["X", "Y", "Z", "dF"]
+        expected = absolutes + tuple(
+            ChannelConverter.get_computed_f_using_squares(*absolutes)
+        )
+        predicted = predicted[0:3] + tuple(
+            ChannelConverter.get_computed_f_using_squares(*predicted[0:3])
+        )
+        for i in range(len(elements) - 1):
+            diff = expected[i] - predicted[i]
+            metrics.append(
+                Metric(
+                    element=elements[i],
+                    absmean=abs(np.nanmean(diff)),
+                    stddev=np.std(diff),
+                )
+            )
+        self.metrics = metrics
