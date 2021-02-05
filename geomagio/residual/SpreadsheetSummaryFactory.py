@@ -50,7 +50,7 @@ class SpreadsheetSummaryFactory(object):
         readings = self._parse_readings(sheet, path)
         return readings
 
-    def _parse_metadata(self, sheet: openpyxl.worksheet, observatory: str) -> dict:
+    def _parse_metadata(self, sheet: openpyxl.worksheet) -> dict:
         """gather metadata from spreadsheet
 
         Attributes
@@ -61,7 +61,7 @@ class SpreadsheetSummaryFactory(object):
         date = sheet["I1"].value
         date = f"{date.year}{date.month:02}{date.day:02}"
         return {
-            "observatory": observatory,
+            "observatory": sheet["D49"].value[0:3],
             "pier_correction": sheet["C5"].value,
             "instrument": sheet["B3"].value,
             "date": date,
@@ -81,7 +81,7 @@ class SpreadsheetSummaryFactory(object):
         List of valid readings from spreadsheet.
         If all readings are valid, 4 readings are returned
         """
-        metadata = self._parse_metadata(sheet, path.split("/")[-1][0:3])
+        metadata = self._parse_metadata(sheet)
         date = sheet["I1"].value
         base_date = f"{date.year}{date.month:02}{date.day:02}"
         readings = []
