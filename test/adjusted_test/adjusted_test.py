@@ -3,10 +3,7 @@ import numpy as np
 from numpy.testing import assert_equal, assert_array_almost_equal
 from obspy.core import UTCDateTime
 
-from geomagio.adjusted import (
-    SpreadsheetSummaryFactory,
-    Affine,
-)
+from geomagio.adjusted import Affine
 
 from geomagio.adjusted.transform import (
     NoConstraints,
@@ -22,34 +19,8 @@ from geomagio.adjusted.transform import (
     ZRotationShear,
 )
 
-from geomagio.residual.WebAbsolutesFactory import WebAbsolutesFactory
-
-
-def get_spreadsheet_directory_readings(path, observatory, starttime, endtime):
-    ssf = SpreadsheetSummaryFactory(base_directory=path)
-    readings = ssf.get_readings(
-        observatory=observatory, starttime=starttime, endtime=endtime
-    )
-    return readings
-
-
-def test_CMO_summaries():
-    starttime = UTCDateTime("2015-04-01")
-    endtime = UTCDateTime("2015-06-15")
-    readings = get_spreadsheet_directory_readings(
-        path="etc/adjusted/Caldata",
-        observatory="CMO",
-        starttime=starttime,
-        endtime=endtime,
-    )
-    for reading in readings:
-        assert_equal(reading.metadata["observatory"], "CMO")
-        assert_equal(reading.metadata["instrument"], 200803)
-        assert_equal(reading.pier_correction, 10.5)
-    assert_equal(len(readings), 26)
-
-    assert readings[0].time > starttime
-    assert readings[-1].time < endtime
+from geomagio.residual import WebAbsolutesFactory
+from test.residual_test.residual_test import get_spreadsheet_directory_readings
 
 
 def get_sythetic_variables():

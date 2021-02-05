@@ -4,16 +4,16 @@ from obspy import UTCDateTime
 import openpyxl
 from typing import List
 
-from ..residual import Absolute, Angle, Reading
-from ..residual.SpreadsheetAbsolutesFactory import parse_relative_time
+from .Absolute import Absolute
+from . import Angle
+from .Reading import Reading
+from .SpreadsheetAbsolutesFactory import parse_relative_time
 
 
 class SpreadsheetSummaryFactory(object):
     """Read absolutes from summary spreadsheets"""
 
-    def __init__(
-        self, base_directory: str = r"/Volumes/geomag/pub/Caldata/Checked Baseline Data"
-    ):
+    def __init__(self, base_directory: str):
         self.base_directory = base_directory
 
     def get_readings(

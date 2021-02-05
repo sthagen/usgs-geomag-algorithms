@@ -20,6 +20,7 @@ from .MeasurementType import (
 )
 from .Reading import Reading
 from .SpreadsheetAbsolutesFactory import SpreadsheetAbsolutesFactory
+from .SpreadsheetSummaryFactory import SpreadsheetSummaryFactory
 from .WebAbsolutesFactory import WebAbsolutesFactory
 
 __all__ = [
@@ -39,5 +40,6 @@ __all__ = [
     "MeasurementType",
     "Reading",
     "SpreadsheetAbsolutesFactory",
+    "SpreadsheetSummaryFactory",
     "WebAbsolutesFactory",
 ]

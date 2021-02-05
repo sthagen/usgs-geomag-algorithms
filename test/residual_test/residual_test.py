@@ -1,4 +1,4 @@
-from numpy.testing import assert_almost_equal
+from numpy.testing import assert_almost_equal, assert_equal
 import pytest
 
 from obspy.core import UTCDateTime
@@ -6,6 +6,7 @@ from geomagio.residual import (
     calculate,
     Reading,
     SpreadsheetAbsolutesFactory,
+    SpreadsheetSummaryFactory,
     WebAbsolutesFactory,
 )
 
@@ -63,6 +64,33 @@ def get_spreadsheet_absolutes(path):
     # Read spreadsheet containing test data
     reading = saf.parse_spreadsheet(path=path)
     return reading
+
+
+def get_spreadsheet_directory_readings(path, observatory, starttime, endtime):
+    ssf = SpreadsheetSummaryFactory(base_directory=path)
+    readings = ssf.get_readings(
+        observatory=observatory, starttime=starttime, endtime=endtime
+    )
+    return readings
+
+
+def test_CMO_summaries():
+    starttime = UTCDateTime("2015-04-01")
+    endtime = UTCDateTime("2015-06-15")
+    readings = get_spreadsheet_directory_readings(
+        path="etc/adjusted/Caldata",
+        observatory="CMO",
+        starttime=starttime,
+        endtime=endtime,
+    )
+    for reading in readings:
+        assert_equal(reading.metadata["observatory"], "CMO")
+        assert_equal(reading.metadata["instrument"], 200803)
+        assert_equal(reading.pier_correction, 10.5)
+    assert_equal(len(readings), 26)
+
+    assert readings[0].time > starttime
+    assert readings[-1].time < endtime
 
 
 def test_DED_20140952332():
