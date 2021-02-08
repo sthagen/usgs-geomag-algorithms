@@ -19,7 +19,6 @@ class RotationTranslationXY(SVD):
             weights = np.ones_like(ordinates[0])
         weighted_ordinates = self.get_weighted_values(values=ordinates, weights=weights)
         weighted_absolutes = self.get_weighted_values(values=absolutes, weights=weights)
-        # return generate_affine_8(ord_hez, abs_xyz, weights)
         # generate weighted "covariance" matrix
         H = np.dot(
             self.get_stacked_values(

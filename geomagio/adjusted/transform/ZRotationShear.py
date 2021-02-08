@@ -16,7 +16,6 @@ class ZRotationShear(LeastSq):
         # LHS, or dependent variables
         #
         abs_stacked = self.get_stacked_absolutes(absolutes)
-        # return generate_affine_1(ord_hez, abs_xyz, weights)
         # RHS, or independent variables
         # (reduces degrees of freedom by 8:
         #  - 2 for making x,y independent of z;

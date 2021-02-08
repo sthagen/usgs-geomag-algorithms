@@ -4,7 +4,8 @@ from typing import List, Tuple
 
 from .LeastSq import LeastSq
 
-
+# TODO: DEFAULT IMPLEMENTATION FOR LEAST SQUARES?
+# TODO: GET_STACKED_ORDINATES SO METHOD CAN BE SHARED
 class NoConstraints(LeastSq):
     def calculate(
         self,
@@ -17,7 +18,6 @@ class NoConstraints(LeastSq):
         #
         # [A[0,0], A[1,0], A[2,0], A[0,1], A[1,1], A[2,1], ...]
         abs_stacked = self.get_stacked_absolutes(absolutes)
-        # return generate_affine_0(ord_hez, abs_xyz, weights)
         # RHS, or independent variables
         # (reduces degrees of freedom by 4:
         #  - 4 for the last row of zeros and a one)

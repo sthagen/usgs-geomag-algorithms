@@ -36,8 +36,6 @@ class QRFactorization(SVD):
 
         weighted_absolutes = self.get_weighted_values(values=absolutes, weights=weights)
         weighted_ordinates = self.get_weighted_values(values=ordinates, weights=weights)
-
-        # return generate_affine_9(ord_hez, abs_xyz, weights)
         # LHS, or dependent variables
         abs_stacked = self.get_stacked_values(
             values=absolutes,
