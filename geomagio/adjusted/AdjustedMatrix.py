@@ -21,11 +21,12 @@ class AdjustedMatrix(BaseModel):
     Matrix is non-constrained otherwise
     """
 
-    matrix: Any
-    pier_correction: float
+    matrix: Optional[Any] = None
+    pier_correction: Optional[float] = None
     metrics: Optional[List[Metric]] = None
     starttime: Optional[UTCDateTime] = None
     endtime: Optional[UTCDateTime] = None
+    time: Optional[UTCDateTime] = None
 
     def process(self, values: List[List[float]], outchannels=["X", "Y", "Z", "F"]):
         """ Apply matrix to raw data. Apply pier correction to F when necessary """
@@ -38,11 +39,12 @@ class AdjustedMatrix(BaseModel):
             adjusted = adjusted[0 : len(outchannels)]
         return adjusted
 
-    def set_metrics(
+    # TODO: MOVE GET ABSOLUTES/ORDINATES INTO READING
+    def get_metrics(
         self,
         ordinates: Tuple[List[float], List[float], List[float]],
         absolutes: Tuple[List[float], List[float], List[float]],
-    ):
+    ) -> List[Metric]:
         """Computes mean absolute error and standard deviation for X, Y, Z, and dF between expected and predicted values.
 
         Attributes
@@ -74,4 +76,4 @@ class AdjustedMatrix(BaseModel):
                     stddev=np.std(diff),
                 )
             )
-        self.metrics = metrics
+        return metrics
