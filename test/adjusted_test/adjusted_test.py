@@ -1,9 +1,10 @@
+from geomagio.adjusted.AdjustedMatrix import AdjustedMatrix
 import json
 import numpy as np
 from numpy.testing import assert_equal, assert_array_almost_equal
 from obspy.core import UTCDateTime
 
-from geomagio.adjusted import Affine
+from geomagio.adjusted.Affine import Affine, get_epochs
 
 from geomagio.adjusted.transform import (
     NoConstraints,
@@ -320,9 +321,10 @@ def test_BOU201911202001_infinite_one_interval():
 
 def test_BOU201911202001_invalid_readings():
     readings = []
+    starttime = UTCDateTime("2019-11-01T00:00:00Z")
     result = Affine(
         observatory="BOU",
-        starttime=UTCDateTime("2019-11-01T00:00:00Z"),
+        starttime=starttime,
         endtime=UTCDateTime("2020-01-31T23:59:00Z"),
         transforms=[
             RotationTranslationXY(memory=np.inf, acausal=True),
@@ -330,7 +332,7 @@ def test_BOU201911202001_invalid_readings():
         ],
         update_interval=None,
     ).calculate(readings=readings,)[0]
-    assert result is None
+    assert result == AdjustedMatrix(time=starttime)
 
 
 def test_CMO2015_causal():
@@ -486,3 +488,31 @@ def test_CMO2015_infinite_one_interval():
         )
 
     assert_equal(len(matrices), 1)
+
+
+def test_get_epochs():
+    readings = WebAbsolutesFactory().get_readings(
+        observatory="BOU",
+        starttime=UTCDateTime("2020-01-01"),
+        endtime=UTCDateTime("2020-01-14"),
+    )
+    # force a bad measurement for second reading
+    readings[2].absolutes[1].absolute = 0
+    epochs = [r.time for r in readings if r.get_absolute("H").absolute == 0]
+    assert len(epochs) == 1
+    epoch_start, epoch_end = get_epochs(
+        epochs=epochs,
+        time=UTCDateTime("2019-11-01T00:00:00Z"),
+    )
+    assert epoch_start is None
+    assert epoch_end == readings[2].time
+    epoch_start, epoch_end = get_epochs(
+        epochs=epochs,
+        time=UTCDateTime("2020-01-07T00:00:00Z"),
+    )
+    assert epoch_start == readings[2].time
+    assert epoch_end is None
+    epoch_start, epoch_end = get_epochs(
+        epochs=epochs,
+        time=UTCDateTime("2020-01-07T00:00:00Z"),
+    )

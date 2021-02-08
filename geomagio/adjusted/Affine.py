@@ -36,7 +36,9 @@ class Affine(BaseModel):
     class Config:
         arbitrary_types_allowed = True
 
-    def calculate(self, readings: List[Reading]) -> List[AdjustedMatrix]:
+    def calculate(
+        self, readings: List[Reading], epochs: Optional[List[UTCDateTime]] = None
+    ) -> List[AdjustedMatrix]:
         """Calculates affine matrices for a range of times
 
         Attributes
@@ -52,15 +54,13 @@ class Affine(BaseModel):
         all_readings = [r for r in readings if r.valid]
         Ms = []
         time = self.starttime
-        epoch_start = None
-        epoch_end = None
         # search for "bad" H values
-        epochs = [r.time for r in all_readings if r.get_absolute("H").absolute == 0]
+        epochs = epochs or [
+            r.time for r in all_readings if r.get_absolute("H").absolute == 0
+        ]
         while time < self.endtime:
             # update epochs for current time
-            epoch_start, epoch_end = get_epochs(
-                epoch_start=epoch_start, epoch_end=epoch_end, epochs=epochs, time=time
-            )
+            epoch_start, epoch_end = get_epochs(epochs=epochs, time=time)
             # utilize readings that occur after or before a bad reading
             readings = [
                 r
@@ -81,7 +81,7 @@ class Affine(BaseModel):
 
     def calculate_matrix(
         self, time: UTCDateTime, readings: List[Reading]
-    ) -> Optional[AdjustedMatrix]:
+    ) -> AdjustedMatrix:
         """Calculates affine matrix for a given time
 
         Attributes
@@ -110,7 +110,7 @@ class Affine(BaseModel):
             weights = filter_iqrs(multiseries=baselines, weights=weights)
             # return None if no valid observations
             if np.sum(weights) == 0:
-                return None
+                return AdjustedMatrix(time=time)
 
             M = transform.calculate(
                 ordinates=inputs, absolutes=absolutes, weights=weights
@@ -131,7 +131,7 @@ class Affine(BaseModel):
             matrix=M_composed,
             pier_correction=pier_correction,
         )
-        matrix.set_metrics(absolutes=absolutes, ordinates=ordinates)
+        matrix.metrics = matrix.get_metrics(absolutes=absolutes, ordinates=ordinates)
         return AdjustedMatrix(
             matrix=M_composed,
             pier_correction=pier_correction,
@@ -245,8 +245,6 @@ def get_baselines(
 
 
 def get_epochs(
-    epoch_start: float,
-    epoch_end: float,
     epochs: List[float],
     time: UTCDateTime,
 ) -> Tuple[float, float]:
@@ -264,6 +262,8 @@ def get_epochs(
     epoch_start: float value signifying start of current valid interval
     epoch_end: float value signifying end of current valid interval
     """
+    epoch_start = None
+    epoch_end = None
     for e in epochs:
         if e > time:
             if epoch_end is None or e < epoch_end:
@@ -289,6 +289,7 @@ def get_ordinates(
     # WebAbsolutes defines/generates h differently than USGS residual
     # method spreadsheets. The following should ensure that ordinate
     # values are converted back to their original raw measurements:
+    # TODO: REMOVE OR FIX IN RESIDUALS
     e_o = h_abs * d_ord * 60 / 3437.7468
     if observatory in ["DED", "CMO"]:
         h_o = np.sqrt(h_ord ** 2 - e_o ** 2)
