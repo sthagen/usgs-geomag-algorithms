@@ -7,7 +7,7 @@ from obspy.core import UTCDateTime
 from geomagio.adjusted.Affine import Affine, get_epochs
 
 from geomagio.adjusted.transform import (
-    NoConstraints,
+    LeastSq,
     QRFactorization,
     Rescale3D,
     RotationTranslation3D,
@@ -40,15 +40,15 @@ def get_expected_synthetic_result(key):
     return expected["results"][key]
 
 
-def test_NoConstraints_synthetic():
+def test_LeastSq_synthetic():
     ordinates, absolutes, weights = get_sythetic_variables()
     assert_array_almost_equal(
-        NoConstraints().calculate(
+        LeastSq().calculate(
             ordinates=ordinates,
             absolutes=absolutes,
             weights=weights,
         ),
-        get_expected_synthetic_result("NoConstraints"),
+        get_expected_synthetic_result("LeastSq"),
         decimal=3,
     )
 

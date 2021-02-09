@@ -1,4 +1,4 @@
-from .NoConstraints import NoConstraints
+from .LeastSq import LeastSq
 from .QRFactorization import QRFactorization
 from .Rescale3D import Rescale3D
 from .RotationTranslation3D import RotationTranslation3D
@@ -11,7 +11,7 @@ from .ZRotationHScaleZBaseline import ZRotationHscaleZbaseline
 from .ZRotationShear import ZRotationShear
 
 __all__ = [
-    "NoConstraints",
+    "LeastSq",
     "QRFactorization",
     "Rescale3D",
     "RotationTranslation3D",
