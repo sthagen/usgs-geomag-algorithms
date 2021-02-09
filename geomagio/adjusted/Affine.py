@@ -5,7 +5,12 @@ from pydantic import BaseModel
 from typing import List, Optional, Tuple
 
 from .. import pydantic_utcdatetime
-from ..residual import Reading
+from ..residual.Reading import (
+    Reading,
+    get_absolutes_xyz,
+    get_baselines,
+    get_ordinates,
+)
 from .AdjustedMatrix import AdjustedMatrix
 
 from .transform import RotationTranslationXY, TranslateOrigins, Transform
@@ -95,7 +100,7 @@ class Affine(BaseModel):
         """
         absolutes = get_absolutes_xyz(readings)
         baselines = get_baselines(readings)
-        ordinates = get_ordinates(readings, self.observatory)
+        ordinates = get_ordinates(readings)
         times = get_times(readings)
         Ms = []
         weights = []
@@ -131,7 +136,7 @@ class Affine(BaseModel):
             matrix=M_composed,
             pier_correction=pier_correction,
         )
-        matrix.metrics = matrix.get_metrics(absolutes=absolutes, ordinates=ordinates)
+        matrix.metrics = matrix.get_metrics(readings=readings)
         return AdjustedMatrix(
             matrix=M_composed,
             pier_correction=pier_correction,
@@ -214,39 +219,6 @@ def filter_iqrs(
     return weights * good
 
 
-def get_absolutes(
-    readings: List[Reading],
-) -> Tuple[List[float], List[float], List[float]]:
-    """Get H, D and Z absolutes"""
-    h_abs = np.array([reading.get_absolute("H").absolute for reading in readings])
-    d_abs = np.array([reading.get_absolute("D").absolute for reading in readings])
-    z_abs = np.array([reading.get_absolute("Z").absolute for reading in readings])
-
-    return (h_abs, d_abs, z_abs)
-
-
-def get_absolutes_xyz(
-    readings: List[Reading],
-) -> Tuple[List[float], List[float], List[float]]:
-    """Get X, Y and Z absolutes from H, D and Z baselines"""
-    h_abs, d_abs, z_abs = get_absolutes(readings)
-    # convert from cylindrical to Cartesian coordinates
-    x_a = h_abs * np.cos(np.radians(d_abs))
-    y_a = h_abs * np.sin(np.radians(d_abs))
-    z_a = z_abs
-    return (x_a, y_a, z_a)
-
-
-def get_baselines(
-    readings: List[Reading],
-) -> Tuple[List[float], List[float], List[float]]:
-    """Get H, D and Z baselines"""
-    h_bas = np.array([reading.get_absolute("H").baseline for reading in readings])
-    d_bas = np.array([reading.get_absolute("D").baseline for reading in readings])
-    z_bas = np.array([reading.get_absolute("Z").baseline for reading in readings])
-    return (h_bas, d_bas, z_bas)
-
-
 def get_epochs(
     epochs: List[float],
     time: UTCDateTime,
@@ -275,31 +247,6 @@ def get_epochs(
             if epoch_start is None or e > epoch_start:
                 epoch_start = e
     return epoch_start, epoch_end
-
-
-def get_ordinates(
-    readings: List[Reading], observatory: str
-) -> Tuple[List[float], List[float], List[float]]:
-    """Calculates ordinates from absolutes and baselines"""
-    h_abs, d_abs, z_abs = get_absolutes(readings)
-    h_bas, d_bas, z_bas = get_baselines(readings)
-
-    # recreate ordinate variometer measurements from absolutes and baselines
-    h_ord = h_abs - h_bas
-    d_ord = d_abs - d_bas
-    z_ord = z_abs - z_bas
-
-    # WebAbsolutes defines/generates h differently than USGS residual
-    # method spreadsheets. The following should ensure that ordinate
-    # values are converted back to their original raw measurements:
-    # TODO: REMOVE OR FIX IN RESIDUALS
-    e_o = h_abs * d_ord * 60 / 3437.7468
-    if observatory in ["DED", "CMO"]:
-        h_o = np.sqrt(h_ord ** 2 - e_o ** 2)
-    else:
-        h_o = h_ord
-    z_o = z_ord
-    return (h_o, e_o, z_o)
 
 
 def get_times(readings: List[UTCDateTime]):

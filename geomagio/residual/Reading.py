@@ -1,6 +1,7 @@
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Tuple
 from typing_extensions import Literal
 
+import numpy as np
 from obspy import Stream, UTCDateTime
 from pydantic import BaseModel
 
@@ -39,6 +40,15 @@ class Reading(BaseModel):
         Example: reading[MeasurementType.WEST_DOWN]
         """
         return [m for m in self.measurements if m.measurement_type == measurement_type]
+
+    def get_absolute(
+        self,
+        element: str,
+    ) -> Optional[Absolute]:
+        for absolute in self.absolutes:
+            if absolute.element == element:
+                return absolute
+        return None
 
     def load_ordinates(
         self,
@@ -119,11 +129,60 @@ class Reading(BaseModel):
         ):
             return True
 
-    def get_absolute(
-        self,
-        element: str,
-    ) -> Optional[Absolute]:
-        for absolute in self.absolutes:
-            if absolute.element == element:
-                return absolute
-        return None
+
+def get_absolutes(
+    readings: List[Reading],
+) -> Tuple[List[float], List[float], List[float]]:
+    """Get H, D and Z absolutes"""
+    h_abs = np.array([reading.get_absolute("H").absolute for reading in readings])
+    d_abs = np.array([reading.get_absolute("D").absolute for reading in readings])
+    z_abs = np.array([reading.get_absolute("Z").absolute for reading in readings])
+
+    return (h_abs, d_abs, z_abs)
+
+
+def get_absolutes_xyz(
+    readings: List[Reading],
+) -> Tuple[List[float], List[float], List[float]]:
+    """Get X, Y and Z absolutes from H, D and Z baselines"""
+    h_abs, d_abs, z_abs = get_absolutes(readings)
+    # convert from cylindrical to Cartesian coordinates
+    x_a = h_abs * np.cos(np.radians(d_abs))
+    y_a = h_abs * np.sin(np.radians(d_abs))
+    z_a = z_abs
+    return (x_a, y_a, z_a)
+
+
+def get_baselines(
+    readings: List[Reading],
+) -> Tuple[List[float], List[float], List[float]]:
+    """Get H, D and Z baselines"""
+    h_bas = np.array([reading.get_absolute("H").baseline for reading in readings])
+    d_bas = np.array([reading.get_absolute("D").baseline for reading in readings])
+    z_bas = np.array([reading.get_absolute("Z").baseline for reading in readings])
+    return (h_bas, d_bas, z_bas)
+
+
+def get_ordinates(
+    readings: List[Reading],
+) -> Tuple[List[float], List[float], List[float]]:
+    """Calculates ordinates from absolutes and baselines"""
+    h_abs, d_abs, z_abs = get_absolutes(readings)
+    h_bas, d_bas, z_bas = get_baselines(readings)
+
+    # recreate ordinate variometer measurements from absolutes and baselines
+    h_ord = h_abs - h_bas
+    d_ord = d_abs - d_bas
+    z_ord = z_abs - z_bas
+
+    # WebAbsolutes defines/generates h differently than USGS residual
+    # method spreadsheets. The following should ensure that ordinate
+    # values are converted back to their original raw measurements:
+    # TODO: REMOVE OR FIX IN RESIDUALS
+    e_o = h_abs * d_ord * 60 / 3437.7468
+    if len(readings) > 0 and readings[0].metadata["station"] in ["DED", "CMO"]:
+        h_o = np.sqrt(h_ord ** 2 - e_o ** 2)
+    else:
+        h_o = h_ord
+    z_o = z_ord
+    return (h_o, e_o, z_o)

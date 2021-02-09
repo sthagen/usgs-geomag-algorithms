@@ -1,11 +1,12 @@
 import numpy as np
 from obspy import UTCDateTime
 from pydantic import BaseModel
-from typing import Any, List, Optional, Tuple
+from typing import Any, List, Optional
 
 from .. import ChannelConverter
 from .. import pydantic_utcdatetime
 from .Metric import Metric
+from ..residual.Reading import Reading, get_absolutes_xyz, get_ordinates
 
 
 class AdjustedMatrix(BaseModel):
@@ -39,26 +40,22 @@ class AdjustedMatrix(BaseModel):
             adjusted = adjusted[0 : len(outchannels)]
         return adjusted
 
-    # TODO: MOVE GET ABSOLUTES/ORDINATES INTO READING
-    def get_metrics(
-        self,
-        ordinates: Tuple[List[float], List[float], List[float]],
-        absolutes: Tuple[List[float], List[float], List[float]],
-    ) -> List[Metric]:
+    def get_metrics(self, readings: List[Reading]) -> List[Metric]:
         """Computes mean absolute error and standard deviation for X, Y, Z, and dF between expected and predicted values.
 
         Attributes
         ----------
-        absolutes: X, Y and Z absolutes
-        ordinates: H, E and Z ordinates
+        readings: list of Readings
         matrix: composed matrix
 
         Outputs
         -------
         metrics: list of Metric objects
         """
-        ordinates = np.vstack((ordinates, np.ones_like(ordinates[0])))
-        predicted = self.matrix @ ordinates
+        absolutes = get_absolutes_xyz(readings=readings)
+        ordinates = get_ordinates(readings=readings)
+        stacked_ordinates = np.vstack((ordinates, np.ones_like(ordinates[0])))
+        predicted = self.matrix @ stacked_ordinates
         metrics = []
         elements = ["X", "Y", "Z", "dF"]
         expected = absolutes + tuple(

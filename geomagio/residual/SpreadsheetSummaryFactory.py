@@ -61,7 +61,7 @@ class SpreadsheetSummaryFactory(object):
         date = sheet["I1"].value
         date = f"{date.year}{date.month:02}{date.day:02}"
         return {
-            "observatory": sheet["D49"].value[0:3],
+            "station": sheet["D49"].value[0:3],
             "pier_correction": sheet["C5"].value,
             "instrument": sheet["B3"].value,
             "date": date,
