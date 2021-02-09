@@ -9,16 +9,7 @@ class ZRotationHscale(LeastSq):
     """Calculates affine using least squares, constrained to rotate about the Z axis
     and apply uniform horizontal scaling."""
 
-    def calculate(
-        self,
-        ordinates: Tuple[List[float], List[float], List[float]],
-        absolutes: Tuple[List[float], List[float], List[float]],
-        weights: List[float],
-    ) -> np.array:
-        # LHS, or dependent variables
-        #
-        abs_stacked = self.get_stacked_absolutes(absolutes)
-        # RHS, or independent variables
+    def get_stacked_ordinates(self, ordinates):
         # (reduces degrees of freedom by 10:
         #  - 2 for making x,y independent of z;
         #  - 2 for making z independent of x,y
@@ -33,19 +24,12 @@ class ZRotationHscale(LeastSq):
         ord_stacked[3, 1::3] = 1.0
         ord_stacked[4, 2::3] = ordinates[2]
         ord_stacked[5, 2::3] = 1.0
+        return ord_stacked
 
-        ord_stacked = self.get_weighted_values(ord_stacked, weights)
-        abs_stacked = self.get_weighted_values(abs_stacked, weights)
-
-        # regression matrix M that minimizes L2 norm
-        M_r, res, rank, sigma = spl.lstsq(ord_stacked.T, abs_stacked.T)
-        if rank < 3:
-            print("Poorly conditioned or singular matrix, returning NaNs")
-            return np.nan * np.ones((4, 4))
-
+    def format_matrix(self, matrix):
         return [
-            [M_r[0], M_r[1], 0.0, M_r[2]],
-            [-M_r[1], M_r[0], 0.0, M_r[3]],
-            [0.0, 0.0, M_r[4], M_r[5]],
+            [matrix[0], matrix[1], 0.0, matrix[2]],
+            [-matrix[1], matrix[0], 0.0, matrix[3]],
+            [0.0, 0.0, matrix[4], matrix[5]],
             [0.0, 0.0, 0.0, 1.0],
         ]

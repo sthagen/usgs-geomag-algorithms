@@ -6,17 +6,7 @@ from .LeastSq import LeastSq
 
 
 class ZRotationShear(LeastSq):
-    def calculate(
-        self,
-        ordinates: Tuple[List[float], List[float], List[float]],
-        absolutes: Tuple[List[float], List[float], List[float]],
-        weights: List[float],
-    ) -> np.array:
-        """Calculates affine using least squares, constrained to rotate about the Z axis."""
-        # LHS, or dependent variables
-        #
-        abs_stacked = self.get_stacked_absolutes(absolutes)
-        # RHS, or independent variables
+    def get_stacked_ordinates(self, ordinates):
         # (reduces degrees of freedom by 8:
         #  - 2 for making x,y independent of z;
         #  - 2 for making z independent of x,y
@@ -30,19 +20,12 @@ class ZRotationShear(LeastSq):
         ord_stacked[5, 1::3] = 1.0
         ord_stacked[6, 2::3] = ordinates[2]
         ord_stacked[7, 2::3] = 1.0
+        return ord_stacked
 
-        ord_stacked = self.get_weighted_values(ord_stacked, weights)
-        abs_stacked = self.get_weighted_values(abs_stacked, weights)
-
-        # regression matrix M that minimizes L2 norm
-        M_r, res, rank, sigma = spl.lstsq(ord_stacked.T, abs_stacked.T)
-        if rank < 3:
-            print("Poorly conditioned or singular matrix, returning NaNs")
-            return np.nan * np.ones((4, 4))
-
+    def format_matrix(self, matrix):
         return [
-            [M_r[0], M_r[1], 0.0, M_r[2]],
-            [M_r[3], M_r[4], 0.0, M_r[5]],
-            [0.0, 0.0, M_r[6], M_r[7]],
+            [matrix[0], matrix[1], 0.0, matrix[2]],
+            [matrix[3], matrix[4], 0.0, matrix[5]],
+            [0.0, 0.0, matrix[6], matrix[7]],
             [0.0, 0.0, 0.0, 1.0],
         ]

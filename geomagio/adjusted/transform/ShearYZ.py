@@ -8,13 +8,7 @@ from .LeastSq import LeastSq
 class ShearYZ(LeastSq):
     """Calculates affine using least squares, constrained to shear y and z, but not x."""
 
-    def calculate(
-        self,
-        ordinates: Tuple[List[float], List[float], List[float]],
-        absolutes: Tuple[List[float], List[float], List[float]],
-        weights: List[float],
-    ) -> np.array:
-        # RHS, or independent variables
+    def get_stacked_ordinates(self, ordinates):
         # (reduces degrees of freedom by 13:
         #  - 2 for making x independent of y,z;
         #  - 1 for making y independent of z;
@@ -27,18 +21,12 @@ class ShearYZ(LeastSq):
         ord_stacked[2, 0::3] = ordinates[0]
         ord_stacked[2, 1::3] = ordinates[1]
         ord_stacked[2, 2::3] = 1.0
-        abs_stacked = self.get_stacked_absolutes(absolutes=absolutes)
-        ord_stacked = self.get_weighted_values(values=ord_stacked, weights=weights)
-        abs_stacked = self.get_weighted_values(values=abs_stacked, weights=weights)
-        # regression matrix M that minimizes L2 norm
-        M_r, res, rank, sigma = spl.lstsq(ord_stacked.T, abs_stacked.T)
-        if rank < 3:
-            print("Poorly conditioned or singular matrix, returning NaNs")
-            return np.nan * np.ones((4, 4))
+        return ord_stacked
 
+    def format_matrix(self, matrix):
         return [
             [1.0, 0.0, 0.0, 0.0],
-            [M_r[0], 1.0, 0.0, 0.0],
-            [M_r[1], M_r[2], 1.0, 0.0],
+            [matrix[0], 1.0, 0.0, 0.0],
+            [matrix[1], matrix[2], 1.0, 0.0],
             [0.0, 0.0, 0.0, 1.0],
         ]
