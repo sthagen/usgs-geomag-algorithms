@@ -7,7 +7,28 @@ from .Transform import Transform
 class SVD(Transform):
     """Instance of Transform. Applies singular value decomposition to generate matrices"""
 
-    def get_stacked_values(self, values, weighted_values, ndims=3) -> np.array:
+    ndims = 3
+
+    def get_covariance_matrix(self, absolutes, ordinates, weights):
+        weighted_ordinates = self.get_weighted_values(values=ordinates, weights=weights)
+        weighted_absolutes = self.get_weighted_values(values=absolutes, weights=weights)
+        # generate weighted "covariance" matrix
+        H = np.dot(
+            self.get_stacked_values(
+                values=ordinates,
+                weighted_values=weighted_ordinates,
+            ),
+            np.dot(
+                np.diag(weights),
+                self.get_stacked_values(
+                    values=absolutes,
+                    weighted_values=weighted_absolutes,
+                ).T,
+            ),
+        )
+        return H
+
+    def get_stacked_values(self, values, weighted_values) -> np.array:
         """Supports intermediate mathematical steps by differencing and shaping values for SVD
 
         Attributes
@@ -20,7 +41,7 @@ class SVD(Transform):
         -------
         Stacked and differenced values from their weighted counterparts
         """
-        return np.vstack([[values[i] - weighted_values[i]] for i in range(ndims)])
+        return np.vstack([[values[i] - weighted_values[i]] for i in range(self.ndims)])
 
     def get_weighted_values(
         self,
@@ -35,3 +56,49 @@ class SVD(Transform):
             np.average(values[1], weights=weights),
             np.average(values[2], weights=weights),
         )
+
+    def get_rotation_matrix(self, U, Vh):
+        return np.dot(
+            Vh.T, np.dot(np.diag([1, 1, np.linalg.det(np.dot(Vh.T, U.T))]), U.T)
+        )
+
+    def get_translation_matrix(self, R, weighted_absolutes, weighted_ordinates):
+        return np.array([weighted_absolutes[i] for i in range(self.ndims)]) - np.dot(
+            R, [weighted_ordinates[i] for i in range(self.ndims)]
+        )
+
+    def calculate(
+        self,
+        ordinates: Tuple[List[float], List[float], List[float]],
+        absolutes: Tuple[List[float], List[float], List[float]],
+        weights: List[float],
+    ) -> np.array:
+        weighted_ordinates = self.get_weighted_values(values=ordinates, weights=weights)
+        weighted_absolutes = self.get_weighted_values(values=absolutes, weights=weights)
+        # generate weighted "covariance" matrix
+        H = self.get_covariance_matrix(absolutes, ordinates, weights)
+        # Singular value decomposition, then rotation matrix from L&R eigenvectors
+        # (the determinant guarantees a rotation, and not a reflection)
+        U, S, Vh = np.linalg.svd(H)
+        if np.sum(S) < 3:
+            print("Poorly conditioned or singular matrix, returning NaNs")
+            return np.nan * np.ones((4, 4))
+        R = self.get_rotation_matrix(U, Vh)
+        # now get translation using weighted centroids and R
+        T = self.get_translation_matrix(R, weighted_absolutes, weighted_ordinates)
+
+        return self.format_matrix(R, T, weighted_absolutes, weighted_ordinates)
+
+    def format_matrix(
+        self,
+        R,
+        T,
+        weighted_absolutes,
+        weighted_ordinates,
+    ):
+        return [
+            [R[0, 0], R[0, 1], R[0, 2], T[0]],
+            [R[1, 0], R[1, 1], R[1, 2], T[1]],
+            [R[2, 0], R[2, 1], R[2, 2], T[2]],
+            [0.0, 0.0, 0.0, 1.0],
+        ]

@@ -10,7 +10,7 @@ from geomagio.adjusted.transform import (
     LeastSq,
     QRFactorization,
     Rescale3D,
-    RotationTranslation3D,
+    SVD,
     RotationTranslationXY,
     ShearYZ,
     TranslateOrigins,
@@ -79,15 +79,15 @@ def test_Rescale3D_synthetic():
     )
 
 
-def test_RotationTranslation3D_synthetic():
+def test_SVD_synthetic():
     ordinates, absolutes, weights = get_sythetic_variables()
     assert_array_almost_equal(
-        RotationTranslation3D().calculate(
+        SVD().calculate(
             ordinates=ordinates,
             absolutes=absolutes,
             weights=weights,
         ),
-        get_expected_synthetic_result("RotationTranslation3D"),
+        get_expected_synthetic_result("SVD"),
         decimal=3,
     )
 

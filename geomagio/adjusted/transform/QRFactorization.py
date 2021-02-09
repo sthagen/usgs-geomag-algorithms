@@ -8,6 +8,8 @@ from .SVD import SVD
 class QRFactorization(SVD):
     """Calculates affine using singular value decomposition with QR factorization"""
 
+    ndims = 2
+
     def get_weighted_values_lstsq(
         self,
         values: Tuple[List[float], List[float], List[float]],
@@ -40,14 +42,12 @@ class QRFactorization(SVD):
         abs_stacked = self.get_stacked_values(
             values=absolutes,
             weighted_values=weighted_absolutes,
-            ndims=2,
         )
 
         # RHS, or independent variables
         ord_stacked = self.get_stacked_values(
             values=ordinates,
             weighted_values=weighted_ordinates,
-            ndims=2,
         )
 
         abs_stacked = self.get_weighted_values_lstsq(
