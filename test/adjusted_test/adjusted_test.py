@@ -340,7 +340,7 @@ def test_CMO2015_causal():
         observatory="CMO",
         starttime=UTCDateTime("2015-01-01T00:00:00Z"),
         endtime=UTCDateTime("2015-12-31T23:59:00Z"),
-        path="etc/adjusted/Caldata/",
+        path="etc/residual/Caldata/",
     )
     assert len(readings) == 146
 
@@ -379,7 +379,7 @@ def test_CMO2015_acausal():
         observatory="CMO",
         starttime=UTCDateTime("2015-01-01T00:00:00Z"),
         endtime=UTCDateTime("2015-12-31T23:59:00Z"),
-        path="etc/adjusted/Caldata/",
+        path="etc/residual/Caldata/",
     )
     assert len(readings) == 146
 
@@ -418,7 +418,7 @@ def test_CMO2015_infinite_weekly():
         observatory="CMO",
         starttime=UTCDateTime("2015-01-01T00:00:00Z"),
         endtime=UTCDateTime("2015-12-31T23:59:00Z"),
-        path="etc/adjusted/Caldata/",
+        path="etc/residual/Caldata/",
     )
     assert len(readings) == 146
 
@@ -458,7 +458,7 @@ def test_CMO2015_infinite_one_interval():
         observatory="CMO",
         starttime=UTCDateTime("2015-01-01T00:00:00Z"),
         endtime=UTCDateTime("2015-12-31T23:59:00Z"),
-        path="etc/adjusted/Caldata/",
+        path="etc/residual/Caldata/",
     )
 
     assert len(readings) == 146

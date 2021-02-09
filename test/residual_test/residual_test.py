@@ -78,13 +78,13 @@ def test_CMO_summaries():
     starttime = UTCDateTime("2015-04-01")
     endtime = UTCDateTime("2015-06-15")
     readings = get_spreadsheet_directory_readings(
-        path="etc/adjusted/Caldata",
+        path="etc/residual/Caldata",
         observatory="CMO",
         starttime=starttime,
         endtime=endtime,
     )
     for reading in readings:
-        assert_equal(reading.metadata["observatory"], "CMO")
+        assert_equal(reading.metadata["station"], "CMO")
         assert_equal(reading.metadata["instrument"], 200803)
         assert_equal(reading.pier_correction, 10.5)
     assert_equal(len(readings), 26)
