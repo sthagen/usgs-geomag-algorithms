@@ -137,10 +137,7 @@ class Affine(BaseModel):
             pier_correction=pier_correction,
         )
         matrix.metrics = matrix.get_metrics(readings=readings)
-        return AdjustedMatrix(
-            matrix=M_composed,
-            pier_correction=pier_correction,
-        )
+        return matrix
 
 
 def filter_iqr(
