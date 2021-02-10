@@ -1,6 +1,6 @@
 import numpy as np
 import scipy.linalg as spl
-from typing import List, Optional, Tuple
+from typing import List, Optional, Tuple, Union
 
 from .Transform import Transform
 
@@ -8,21 +8,49 @@ from .Transform import Transform
 class LeastSq(Transform):
     """Intance of Transform. Applies least squares to generate matrices"""
 
-    def get_stacked_values(self, absolutes, ordinates, weights=None):
-        # LHS, or dependent variables
-        # [A[0,0], A[1,0], A[2,0], A[0,1], A[1,1], A[2,1], ...]
-        abs_stacked = self.get_stacked_absolutes(absolutes)
-        # RHS, or independent variables
-        # [
-        # [o[0,0], 0, 0, o[0,1], 0, 0, ...],
-        # [0, o[1,0], 0, 0, o[1,1], 0, ...],
-        # [0, 0, o[2,0], 0, 0, o[2,1], ...],
-        # ...
-        # ]
-        ord_stacked = self.get_stacked_ordinates(ordinates)
-        return abs_stacked, ord_stacked
+    def calculate(
+        self,
+        ordinates: Tuple[List[float], List[float], List[float]],
+        absolutes: Tuple[List[float], List[float], List[float]],
+        weights: Optional[List[float]] = None,
+    ) -> np.array:
+        """Calculates matrix with least squares and accompanying methods
+        Defaults to least squares calculation with no constraints
+        """
+        abs_stacked, ord_stacked = self.get_stacked_values(
+            absolutes, ordinates, weights
+        )
+        ord_stacked = self.get_weighted_values(ord_stacked, weights)
+        abs_stacked = self.get_weighted_values(abs_stacked, weights)
+        # regression matrix M that minimizes L2 norm
+        matrix, res, rank, sigma = spl.lstsq(ord_stacked.T, abs_stacked.T)
+        if self.valid(rank):
+            return self.get_matrix(matrix, absolutes, ordinates, weights)
+        print("Poorly conditioned or singular matrix, returning NaNs")
+        return np.nan * np.ones((4, 4))
 
-    def get_stacked_absolutes(self, absolutes):
+    def get_matrix(
+        self,
+        matrix: List[List[float]],
+        absolutes: Optional[Tuple[List[float], List[float], List[float]]] = None,
+        ordinates: Optional[Tuple[List[float], List[float], List[float]]] = None,
+        weights: Optional[List[float]] = None,
+    ) -> np.array:
+        """Returns matrix formatted for no constraints
+        NOTE: absolutes, ordinates, and weights are only used by QRFactorization's child function
+        """
+        return np.array(
+            [
+                [matrix[0], matrix[1], matrix[2], matrix[3]],
+                [matrix[4], matrix[5], matrix[6], matrix[7]],
+                [matrix[8], matrix[9], matrix[10], matrix[11]],
+                [0.0, 0.0, 0.0, 1.0],
+            ]
+        )
+
+    def get_stacked_absolutes(
+        self, absolutes: Tuple[List[float], List[float], List[float]]
+    ) -> List[float]:
         """Formats absolutes for least squares method
 
         Attributes
@@ -35,7 +63,10 @@ class LeastSq(Transform):
         """
         return np.vstack([absolutes[0], absolutes[1], absolutes[2]]).T.ravel()
 
-    def get_stacked_ordinates(self, ordinates):
+    def get_stacked_ordinates(
+        self, ordinates: Tuple[List[float], List[float], List[float]]
+    ) -> List[List[float]]:
+        """ Formats ordinates for least squares method """
         # (reduces degrees of freedom by 4:
         #  - 4 for the last row of zeros and a one)
         ord_stacked = np.zeros((12, len(ordinates[0]) * 3))
@@ -54,17 +85,34 @@ class LeastSq(Transform):
 
         return ord_stacked
 
-    def valid(self, rank):
-        if rank < self.ndims:
-            return False
-        return True
+    def get_stacked_values(
+        self,
+        absolutes: Tuple[List[float], List[float], List[float]],
+        ordinates: Tuple[List[float], List[float], List[float]],
+        weights: Optional[List[float]] = None,
+    ) -> Tuple[List[float], List[List[float]]]:
+        """Gathers stacked stacked absolutes/ordinates
+        NOTE: weights are only used in QRFactorization's child function
+        """
+        # LHS, or dependent variables
+        # [A[0,0], A[1,0], A[2,0], A[0,1], A[1,1], A[2,1], ...]
+        abs_stacked = self.get_stacked_absolutes(absolutes)
+        # RHS, or independent variables
+        # [
+        # [o[0,0], 0, 0, o[0,1], 0, 0, ...],
+        # [0, o[1,0], 0, 0, o[1,1], 0, ...],
+        # [0, 0, o[2,0], 0, 0, o[2,1], ...],
+        # ...
+        # ]
+        ord_stacked = self.get_stacked_ordinates(ordinates)
+        return abs_stacked, ord_stacked
 
     def get_weighted_values(
         self,
         values: Tuple[List[float], List[float], List[float]],
-        weights: Optional[List[float]],
-    ) -> Tuple[List[float], List[float], List[float]]:
-        """Application of weights for least squares methods, which calls for square rooting of weights
+        weights: Optional[List[float]] = None,
+    ) -> Union[List[float], List[List[float]]]:
+        """Application of weights for least squares methods, which calls for square roots
 
         Attributes
         ----------
@@ -81,31 +129,8 @@ class LeastSq(Transform):
         weights = np.vstack((weights, weights, weights)).T.ravel()
         return values * weights
 
-    def calculate(
-        self,
-        ordinates: Tuple[List[float], List[float], List[float]],
-        absolutes: Tuple[List[float], List[float], List[float]],
-        weights: List[float],
-    ) -> np.array:
-        """Calculates affine with no constraints using least squares."""
-        abs_stacked, ord_stacked = self.get_stacked_values(
-            absolutes, ordinates, weights
-        )
-        ord_stacked = self.get_weighted_values(ord_stacked, weights)
-        abs_stacked = self.get_weighted_values(abs_stacked, weights)
-        # regression matrix M that minimizes L2 norm
-        matrix, res, rank, sigma = spl.lstsq(ord_stacked.T, abs_stacked.T)
-        if self.valid(rank):
-            return self.get_matrix(matrix, absolutes, ordinates, weights)
-        print("Poorly conditioned or singular matrix, returning NaNs")
-        return np.nan * np.ones((4, 4))
-
-    def get_matrix(self, matrix, absolutes=None, ordinates=None, weights=None):
-        return np.array(
-            [
-                [matrix[0], matrix[1], matrix[2], matrix[3]],
-                [matrix[4], matrix[5], matrix[6], matrix[7]],
-                [matrix[8], matrix[9], matrix[10], matrix[11]],
-                [0.0, 0.0, 0.0, 1.0],
-            ]
-        )
+    def valid(self, rank: float) -> bool:
+        """ validates whether or not a matrix can reliably transform the method's number of dimensions """
+        if rank < self.ndims:
+            return False
+        return True

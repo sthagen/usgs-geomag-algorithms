@@ -1,6 +1,6 @@
 import numpy as np
 import scipy.linalg as spl
-from typing import List, Tuple
+from typing import List, Optional, Tuple
 
 from .LeastSq import LeastSq
 
@@ -9,7 +9,23 @@ class ZRotationHscale(LeastSq):
     """Calculates affine using least squares, constrained to rotate about the Z axis
     and apply uniform horizontal scaling."""
 
-    def get_stacked_ordinates(self, ordinates):
+    def get_matrix(
+        self,
+        matrix: List[List[float]],
+        absolutes: Optional[Tuple[List[float], List[float], List[float]]] = None,
+        ordinates: Optional[Tuple[List[float], List[float], List[float]]] = None,
+        weights: Optional[List[float]] = None,
+    ) -> np.array:
+        return [
+            [matrix[0], matrix[1], 0.0, matrix[2]],
+            [-matrix[1], matrix[0], 0.0, matrix[3]],
+            [0.0, 0.0, matrix[4], matrix[5]],
+            [0.0, 0.0, 0.0, 1.0],
+        ]
+
+    def get_stacked_ordinates(
+        self, ordinates: Tuple[List[float], List[float], List[float]]
+    ) -> List[List[float]]:
         # (reduces degrees of freedom by 10:
         #  - 2 for making x,y independent of z;
         #  - 2 for making z independent of x,y
@@ -25,11 +41,3 @@ class ZRotationHscale(LeastSq):
         ord_stacked[4, 2::3] = ordinates[2]
         ord_stacked[5, 2::3] = 1.0
         return ord_stacked
-
-    def get_matrix(self, matrix, absolutes=None, ordinates=None, weights=None):
-        return [
-            [matrix[0], matrix[1], 0.0, matrix[2]],
-            [-matrix[1], matrix[0], 0.0, matrix[3]],
-            [0.0, 0.0, matrix[4], matrix[5]],
-            [0.0, 0.0, 0.0, 1.0],
-        ]

@@ -1,13 +1,29 @@
 import numpy as np
 import scipy.linalg as spl
-from typing import List, Tuple
+from typing import List, Optional, Tuple
 from .LeastSq import LeastSq
 
 
 class Rescale3D(LeastSq):
     """Calculates affine using using least squares, constrained to re-scale each axis"""
 
-    def get_stacked_ordinates(self, ordinates):
+    def get_matrix(
+        self,
+        matrix: List[List[float]],
+        absolutes: Optional[Tuple[List[float], List[float], List[float]]] = None,
+        ordinates: Optional[Tuple[List[float], List[float], List[float]]] = None,
+        weights: Optional[List[float]] = None,
+    ) -> np.array:
+        return [
+            [matrix[0], 0.0, 0.0, 0.0],
+            [0.0, matrix[1], 0.0, 0.0],
+            [0.0, 0.0, matrix[2], 0.0],
+            [0.0, 0.0, 0.0, 1.0],
+        ]
+
+    def get_stacked_ordinates(
+        self, ordinates: Tuple[List[float], List[float], List[float]]
+    ) -> List[List[float]]:
         # (reduces degrees of freedom by 13:
         #  - 2 for making x independent of y,z;
         #  - 2 for making y,z independent of x;
@@ -20,11 +36,3 @@ class Rescale3D(LeastSq):
         ord_stacked[1, 1::3] = ordinates[1]
         ord_stacked[2, 2::3] = ordinates[2]
         return ord_stacked
-
-    def get_matrix(self, matrix, absolutes=None, ordinates=None, weights=None):
-        return [
-            [matrix[0], 0.0, 0.0, 0.0],
-            [0.0, matrix[1], 0.0, 0.0],
-            [0.0, 0.0, matrix[2], 0.0],
-            [0.0, 0.0, 0.0, 1.0],
-        ]

@@ -9,12 +9,15 @@ class RotationTranslationXY(SVD):
     constrained to rotation and translation in XY(no scale or shear),
     and only translation in Z"""
 
-    ndims = 2
+    ndims: int = 2
 
-    def get_rotation_matrix(self, U, Vh):
-        return np.dot(Vh.T, np.dot(np.diag([1, np.linalg.det(np.dot(Vh.T, U.T))]), U.T))
-
-    def get_matrix(self, R, T, weighted_absolutes, weighted_ordinates):
+    def get_matrix(
+        self,
+        R: List[List[float]],
+        T: List[List[float]],
+        weighted_absolutes: Tuple[List[float], List[float], List[float]],
+        weighted_ordinates: Tuple[List[float], List[float], List[float]],
+    ) -> np.array:
         return [
             [R[0, 0], R[0, 1], 0.0, T[0]],
             [R[1, 0], R[1, 1], 0.0, T[1]],
@@ -27,3 +30,8 @@ class RotationTranslationXY(SVD):
             ],
             [0.0, 0.0, 0.0, 1.0],
         ]
+
+    def get_rotation_matrix(
+        self, U: List[List[float]], Vh: List[List[float]]
+    ) -> List[List[float]]:
+        return np.dot(Vh.T, np.dot(np.diag([1, np.linalg.det(np.dot(Vh.T, U.T))]), U.T))

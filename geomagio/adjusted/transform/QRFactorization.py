@@ -7,43 +7,19 @@ from .SVD import SVD
 
 
 class QRFactorization(LeastSq):
-    """Calculates affine using singular value decomposition with QR factorization"""
+    """Calculates affine using least squares with QR factorization"""
 
-    ndims = 2
-    svd = SVD(ndims=ndims)
+    ndims: int = 2
+    svd: SVD = SVD(ndims=ndims)
 
-    def get_weighted_values(
+    def get_matrix(
         self,
-        values: Tuple[List[float], List[float], List[float]],
-        weights: Optional[List[float]],
-    ):
-        """ Applies least squares weights in two dimensions(X and Y)"""
-        if weights is None:
-            return values
-        weights = np.sqrt(weights)
-        return np.array([values[i] * weights for i in range(self.ndims)])
-
-    def get_stacked_values(self, absolutes, ordinates, weights):
-        weighted_absolutes = self.svd.get_weighted_values(
-            values=absolutes, weights=weights
-        )
-        weighted_ordinates = self.svd.get_weighted_values(
-            values=ordinates, weights=weights
-        )
-        # LHS, or dependent variables
-        abs_stacked = self.svd.get_stacked_values(
-            values=absolutes,
-            weighted_values=weighted_absolutes,
-        )
-
-        # RHS, or independent variables
-        ord_stacked = self.svd.get_stacked_values(
-            values=ordinates,
-            weighted_values=weighted_ordinates,
-        )
-        return abs_stacked, ord_stacked
-
-    def get_matrix(self, matrix, absolutes, ordinates, weights):
+        matrix: List[List[float]],
+        absolutes: Tuple[List[float], List[float], List[float]],
+        ordinates: Tuple[List[float], List[float], List[float]],
+        weights: List[float],
+    ) -> np.array:
+        """ performs QR factorization steps and formats result within the returned matrix """
         # QR fatorization
         # NOTE: forcing the diagonal elements of Q to be positive
         #       ensures that the determinant is 1, not -1, and is
@@ -78,3 +54,40 @@ class QRFactorization(LeastSq):
             ],
             [0.0, 0.0, 0.0, 1.0],
         ]
+
+    def get_stacked_values(
+        self,
+        absolutes: Tuple[List[float], List[float], List[float]],
+        ordinates: Tuple[List[float], List[float], List[float]],
+        weights: Optional[List[float]] = None,
+    ) -> Tuple[List[List[float]], List[List[float]]]:
+        """ stacks and weights absolutes/ordinates """
+        weighted_absolutes = self.svd.get_weighted_values(
+            values=absolutes, weights=weights
+        )
+        weighted_ordinates = self.svd.get_weighted_values(
+            values=ordinates, weights=weights
+        )
+        # LHS, or dependent variables
+        abs_stacked = self.svd.get_stacked_values(
+            values=absolutes,
+            weighted_values=weighted_absolutes,
+        )
+
+        # RHS, or independent variables
+        ord_stacked = self.svd.get_stacked_values(
+            values=ordinates,
+            weighted_values=weighted_ordinates,
+        )
+        return abs_stacked, ord_stacked
+
+    def get_weighted_values(
+        self,
+        values: Tuple[List[float], List[float], List[float]],
+        weights: Optional[List[float]] = None,
+    ) -> List[List[float]]:
+        """ Applies least squares weights in two dimensions(X and Y)"""
+        if weights is None:
+            return values
+        weights = np.sqrt(weights)
+        return np.array([values[i] * weights for i in range(self.ndims)])

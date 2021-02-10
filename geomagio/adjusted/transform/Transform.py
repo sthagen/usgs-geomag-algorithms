@@ -16,7 +16,23 @@ class Transform(BaseModel):
 
     acausal: bool = False
     memory: Optional[float] = None
-    ndims = 3
+    ndims: int = 3
+
+    def calculate(
+        self,
+        ordinates: Tuple[List[float], List[float], List[float]],
+        absolutes: Tuple[List[float], List[float], List[float]],
+        weights: List[float],
+    ) -> np.array:
+        """Type skeleton inherited by any instance of Transform
+
+        Attributes
+        ----------
+        ordinates: H, E and Z ordinates
+        absolutes: X, Y and Z absolutes(NOTE: absolutes must be rotated from original H, E and Z values)
+        weights: time weights to apply during calculations of matrices
+        """
+        return
 
     def get_weights(self, times: UTCDateTime, time: int = None) -> List[float]:
         """
@@ -49,19 +65,3 @@ class Transform(BaseModel):
             weights[times > time] = 0.0
 
         return weights
-
-    def calculate(
-        self,
-        ordinates: Tuple[List[float], List[float], List[float]],
-        absolutes: Tuple[List[float], List[float], List[float]],
-        weights: List[float],
-    ) -> np.array:
-        """Type skeleton inherited by any instance of Transform
-
-        Attributes
-        ----------
-        ordinates: H, E and Z ordinates
-        absolutes: X, Y and Z absolutes(NOTE: absolutes must be rotated from original H, E and Z values)
-        weights: time weights to apply during calculations of matrices
-        """
-        return
