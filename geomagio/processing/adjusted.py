@@ -13,10 +13,10 @@ def main():
 
 def generate_matrix(
     observatory: str,
-    starttime: UTCDateTime,
-    endtime: UTCDateTime,
-    readings_starttime: UTCDateTime,
-    readings_endtime: UTCDateTime,
+    starttime: str,
+    endtime: str,
+    readings_starttime: str,
+    readings_endtime: str,
     output_file: str,
     input_factory: str = "webabsolutes",
     spreadsheet_directory: Optional[str] = None,
@@ -29,22 +29,22 @@ def generate_matrix(
             base_directory=spreadsheet_directory
         ).get_readings(
             observatory=observatory,
-            starttime=readings_starttime,
-            endtime=readings_endtime,
+            starttime=UTCDateTime(readings_starttime),
+            endtime=UTCDateTime(readings_endtime),
         )
     elif input_factory == "webabsolutes":
         readings = WebAbsolutesFactory(url=webabsolutes_url).get_readings(
             observatory=observatory,
-            starttime=readings_starttime,
-            endtime=readings_endtime,
+            starttime=UTCDateTime(readings_starttime),
+            endtime=UTCDateTime(readings_endtime),
         )
     else:
         readings = []
 
     result = Affine(
         observatory=observatory,
-        starttime=starttime,
-        endtime=endtime,
+        starttime=UTCDateTime(starttime),
+        endtime=UTCDateTime(endtime),
     ).calculate(readings=readings)[0]
     result.matrix = result.matrix.tolist()
 
