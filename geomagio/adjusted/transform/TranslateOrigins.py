@@ -8,7 +8,7 @@ from .LeastSq import LeastSq
 class TranslateOrigins(LeastSq):
     """Calculates affine using using least squares, constrained to tanslate origins"""
 
-    def get_stacked_values(self, absolutes, ordinates):
+    def get_stacked_values(self, absolutes, ordinates, weights=None):
         # LHS, or dependent variables
         abs_stacked = self.get_stacked_absolutes(absolutes)
         # subtract ords from abs to force simple translation
@@ -40,7 +40,7 @@ class TranslateOrigins(LeastSq):
         ord_stacked[2, 2::3] = 1.0
         return ord_stacked
 
-    def format_matrix(self, matrix):
+    def get_matrix(self, matrix, absolutes=None, ordinates=None, weights=None):
         return [
             [1.0, 0.0, 0.0, matrix[0]],
             [0.0, 1.0, 0.0, matrix[1]],

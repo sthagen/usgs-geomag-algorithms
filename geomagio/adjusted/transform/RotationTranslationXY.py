@@ -14,7 +14,7 @@ class RotationTranslationXY(SVD):
     def get_rotation_matrix(self, U, Vh):
         return np.dot(Vh.T, np.dot(np.diag([1, np.linalg.det(np.dot(Vh.T, U.T))]), U.T))
 
-    def format_matrix(self, R, T, weighted_absolutes, weighted_ordinates):
+    def get_matrix(self, R, T, weighted_absolutes, weighted_ordinates):
         return [
             [R[0, 0], R[0, 1], 0.0, T[0]],
             [R[1, 0], R[1, 1], 0.0, T[1]],

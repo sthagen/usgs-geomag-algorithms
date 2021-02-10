@@ -21,7 +21,7 @@ class Rescale3D(LeastSq):
         ord_stacked[2, 2::3] = ordinates[2]
         return ord_stacked
 
-    def format_matrix(self, matrix):
+    def get_matrix(self, matrix, absolutes=None, ordinates=None, weights=None):
         return [
             [matrix[0], 0.0, 0.0, 0.0],
             [0.0, matrix[1], 0.0, 0.0],

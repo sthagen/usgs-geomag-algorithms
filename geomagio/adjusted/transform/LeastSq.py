@@ -8,7 +8,7 @@ from .Transform import Transform
 class LeastSq(Transform):
     """Intance of Transform. Applies least squares to generate matrices"""
 
-    def get_stacked_values(self, absolutes, ordinates):
+    def get_stacked_values(self, absolutes, ordinates, weights=None):
         # LHS, or dependent variables
         # [A[0,0], A[1,0], A[2,0], A[0,1], A[1,1], A[2,1], ...]
         abs_stacked = self.get_stacked_absolutes(absolutes)
@@ -54,6 +54,11 @@ class LeastSq(Transform):
 
         return ord_stacked
 
+    def valid(self, rank):
+        if rank < self.ndims:
+            return False
+        return True
+
     def get_weighted_values(
         self,
         values: Tuple[List[float], List[float], List[float]],
@@ -83,17 +88,19 @@ class LeastSq(Transform):
         weights: List[float],
     ) -> np.array:
         """Calculates affine with no constraints using least squares."""
-        abs_stacked, ord_stacked = self.get_stacked_values(absolutes, ordinates)
+        abs_stacked, ord_stacked = self.get_stacked_values(
+            absolutes, ordinates, weights
+        )
         ord_stacked = self.get_weighted_values(ord_stacked, weights)
         abs_stacked = self.get_weighted_values(abs_stacked, weights)
         # regression matrix M that minimizes L2 norm
         matrix, res, rank, sigma = spl.lstsq(ord_stacked.T, abs_stacked.T)
-        if rank < 3:
-            print("Poorly conditioned or singular matrix, returning NaNs")
-            return np.nan * np.ones((4, 4))
-        return self.format_matrix(matrix)
+        if self.valid(rank):
+            return self.get_matrix(matrix, absolutes, ordinates, weights)
+        print("Poorly conditioned or singular matrix, returning NaNs")
+        return np.nan * np.ones((4, 4))
 
-    def format_matrix(self, matrix):
+    def get_matrix(self, matrix, absolutes=None, ordinates=None, weights=None):
         return np.array(
             [
                 [matrix[0], matrix[1], matrix[2], matrix[3]],

@@ -22,7 +22,7 @@ class ZRotationShear(LeastSq):
         ord_stacked[7, 2::3] = 1.0
         return ord_stacked
 
-    def format_matrix(self, matrix):
+    def get_matrix(self, matrix, absolutes=None, ordinates=None, weights=None):
         return [
             [matrix[0], matrix[1], 0.0, matrix[2]],
             [matrix[3], matrix[4], 0.0, matrix[5]],

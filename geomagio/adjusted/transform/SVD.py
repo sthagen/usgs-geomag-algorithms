@@ -7,8 +7,6 @@ from .Transform import Transform
 class SVD(Transform):
     """Instance of Transform. Applies singular value decomposition to generate matrices"""
 
-    ndims = 3
-
     def get_covariance_matrix(self, absolutes, ordinates, weights):
         weighted_ordinates = self.get_weighted_values(values=ordinates, weights=weights)
         weighted_absolutes = self.get_weighted_values(values=absolutes, weights=weights)
@@ -67,6 +65,11 @@ class SVD(Transform):
             R, [weighted_ordinates[i] for i in range(self.ndims)]
         )
 
+    def valid(self, singular_values):
+        if np.sum(singular_values) < self.ndims:
+            return False
+        return True
+
     def calculate(
         self,
         ordinates: Tuple[List[float], List[float], List[float]],
@@ -80,21 +83,20 @@ class SVD(Transform):
         # Singular value decomposition, then rotation matrix from L&R eigenvectors
         # (the determinant guarantees a rotation, and not a reflection)
         U, S, Vh = np.linalg.svd(H)
-        if np.sum(S) < 3:
-            print("Poorly conditioned or singular matrix, returning NaNs")
-            return np.nan * np.ones((4, 4))
-        R = self.get_rotation_matrix(U, Vh)
-        # now get translation using weighted centroids and R
-        T = self.get_translation_matrix(R, weighted_absolutes, weighted_ordinates)
+        if self.valid(S):
+            R = self.get_rotation_matrix(U, Vh)
+            # now get translation using weighted centroids and R
+            T = self.get_translation_matrix(R, weighted_absolutes, weighted_ordinates)
+            return self.get_matrix(R, T, weighted_absolutes, weighted_ordinates)
+        print("Poorly conditioned or singular matrix, returning NaNs")
+        return np.nan * np.ones((4, 4))
 
-        return self.format_matrix(R, T, weighted_absolutes, weighted_ordinates)
-
-    def format_matrix(
+    def get_matrix(
         self,
         R,
         T,
-        weighted_absolutes,
-        weighted_ordinates,
+        weighted_absolutes=None,
+        weighted_ordinates=None,
     ):
         return [
             [R[0, 0], R[0, 1], R[0, 2], T[0]],

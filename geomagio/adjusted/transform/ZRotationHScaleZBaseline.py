@@ -9,7 +9,7 @@ class ZRotationHscaleZbaseline(LeastSq):
     """Calculates affine using least squares, constrained to rotate about the Z axis,
     apply a uniform horizontal scaling, and apply a baseline shift for the Z axis."""
 
-    def get_stacked_values(self, absolutes, ordinates):
+    def get_stacked_values(self, absolutes, ordinates, weights=None):
         # LHS, or dependent variables
         abs_stacked = self.get_stacked_absolutes(absolutes)
         # subtract z_o from z_a to force simple z translation
@@ -34,7 +34,7 @@ class ZRotationHscaleZbaseline(LeastSq):
         ord_stacked[2, 2::3] = 1.0
         return ord_stacked
 
-    def format_matrix(self, matrix):
+    def get_matrix(self, matrix, absolutes=None, ordinates=None, weights=None):
         return [
             [matrix[0], matrix[1], 0.0, 0.0],
             [-matrix[1], matrix[0], 0.0, 0.0],

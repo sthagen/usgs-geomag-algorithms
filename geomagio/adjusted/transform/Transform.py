@@ -16,6 +16,7 @@ class Transform(BaseModel):
 
     acausal: bool = False
     memory: Optional[float] = None
+    ndims = 3
 
     def get_weights(self, times: UTCDateTime, time: int = None) -> List[float]:
         """

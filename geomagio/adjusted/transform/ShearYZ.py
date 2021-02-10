@@ -23,7 +23,7 @@ class ShearYZ(LeastSq):
         ord_stacked[2, 2::3] = 1.0
         return ord_stacked
 
-    def format_matrix(self, matrix):
+    def get_matrix(self, matrix, absolutes=None, ordinates=None, weights=None):
         return [
             [1.0, 0.0, 0.0, 0.0],
             [matrix[0], 1.0, 0.0, 0.0],
