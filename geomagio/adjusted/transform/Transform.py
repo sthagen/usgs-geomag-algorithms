@@ -1,5 +1,4 @@
 import numpy as np
-from obspy import UTCDateTime
 from pydantic import BaseModel
 from typing import List, Optional, Tuple
 

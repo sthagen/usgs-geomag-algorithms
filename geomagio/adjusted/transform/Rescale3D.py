@@ -1,5 +1,4 @@
 import numpy as np
-import scipy.linalg as spl
 from typing import List, Optional, Tuple
 from .LeastSq import LeastSq
 
