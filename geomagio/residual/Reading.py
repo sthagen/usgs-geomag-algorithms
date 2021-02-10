@@ -169,20 +169,10 @@ def get_ordinates(
     """Calculates ordinates from absolutes and baselines"""
     h_abs, d_abs, z_abs = get_absolutes(readings)
     h_bas, d_bas, z_bas = get_baselines(readings)
-
     # recreate ordinate variometer measurements from absolutes and baselines
     h_ord = h_abs - h_bas
     d_ord = d_abs - d_bas
     z_ord = z_abs - z_bas
-
-    # WebAbsolutes defines/generates h differently than USGS residual
-    # method spreadsheets. The following should ensure that ordinate
-    # values are converted back to their original raw measurements:
-    # TODO: REMOVE OR FIX IN RESIDUALS
-    e_o = h_abs * d_ord * 60 / 3437.7468
-    if len(readings) > 0 and readings[0].metadata["station"] in ["DED", "CMO"]:
-        h_o = np.sqrt(h_ord ** 2 - e_o ** 2)
-    else:
-        h_o = h_ord
-    z_o = z_ord
-    return (h_o, e_o, z_o)
+    e_ord = h_abs * np.radians(d_ord)
+    h_ord = np.sqrt(h_ord ** 2 - e_ord ** 2)
+    return (h_ord, e_ord, z_ord)
