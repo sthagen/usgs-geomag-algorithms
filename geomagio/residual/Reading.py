@@ -176,3 +176,7 @@ def get_ordinates(
     e_ord = h_abs * np.radians(d_ord)
     h_ord = np.sqrt(h_ord ** 2 - e_ord ** 2)
     return (h_ord, e_ord, z_ord)
+
+
+def get_times(readings: List[UTCDateTime]):
+    return np.array([reading.get_absolute("H").endtime for reading in readings])

@@ -1,12 +1,12 @@
 import numpy as np
-from obspy import UTCDateTime
+from obspy import Stream, UTCDateTime
 from pydantic import BaseModel
 from typing import Any, List, Optional
 
 from .. import ChannelConverter
 from .. import pydantic_utcdatetime
-from .Metric import Metric
 from ..residual.Reading import Reading, get_absolutes_xyz, get_ordinates
+from .Metric import Metric
 
 
 class AdjustedMatrix(BaseModel):
@@ -29,15 +29,25 @@ class AdjustedMatrix(BaseModel):
     endtime: Optional[UTCDateTime] = None
     time: Optional[UTCDateTime] = None
 
-    def process(self, values: List[List[float]], outchannels=["X", "Y", "Z", "F"]):
+    def process(
+        self,
+        stream: Stream,
+        inchannels=["H", "E", "Z", "F"],
+        outchannels=["X", "Y", "Z", "F"],
+    ):
         """ Apply matrix to raw data. Apply pier correction to F when necessary """
-        data = np.vstack([values[0:3]] + [np.ones_like(values[0])])
-        adjusted = self.matrix @ data
-        if "F" in outchannels:
-            f = values[-1] + self.pier_correction
-            adjusted = np.vstack([adjusted[0 : len(outchannels) - 1]] + [f])
-        else:
-            adjusted = adjusted[0 : len(outchannels)]
+        raws = np.vstack(
+            [
+                stream.select(channel=channel)[0].data
+                for channel in inchannels
+                if channel != "F"
+            ]
+            + [np.ones_like(stream[0].data)]
+        )
+        adjusted = self.matrix @ raws
+        if "F" in inchannels and "F" in outchannels:
+            f = stream.select(channel="F")[0].data + self.pier_correction
+            adjusted[-1] = f
         return adjusted
 
     def get_metrics(self, readings: List[Reading]) -> List[Metric]:

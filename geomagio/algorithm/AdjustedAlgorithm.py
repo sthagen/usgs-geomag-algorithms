@@ -131,10 +131,11 @@ class AdjustedAlgorithm(Algorithm):
         out = None
         inchannels = self.get_input_channels()
         outchannels = self.get_output_channels()
-        raws = np.vstack(
-            [stream.select(channel=channel)[0].data for channel in inchannels]
+        adjusted = self.matrix.process(
+            stream,
+            inchannels=inchannels,
+            outchannels=outchannels,
         )
-        adjusted = self.matrix.process(values=raws, outchannels=outchannels)
         out = Stream(
             [
                 self.create_trace(
@@ -142,7 +143,7 @@ class AdjustedAlgorithm(Algorithm):
                     stream.select(channel=inchannels[i])[0].stats,
                     adjusted[i],
                 )
-                for i in range(len(adjusted))
+                for i in range(len(outchannels))
             ]
         )
         return out
