@@ -27,6 +27,7 @@ setuptools.setup(
         "console_scripts": [
             "magproc-prepfiles=geomagio.processing.magproc:main",
             "filter-realtime=geomagio.processing.obsrio:main",
+            "generate-matrix:geomagio.processing.adjusted:main",
         ],
     },
 )
