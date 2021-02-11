@@ -4,12 +4,12 @@ from obspy import UTCDateTime
 from pydantic import BaseModel
 from typing import List, Optional, Tuple
 
-from .. import pydantic_utcdatetime
 from ..residual.Reading import (
     Reading,
     get_absolutes_xyz,
     get_ordinates,
 )
+from .. import pydantic_utcdatetime
 from .AdjustedMatrix import AdjustedMatrix
 from .transform import RotationTranslationXY, TranslateOrigins, Transform
 
@@ -22,9 +22,8 @@ class Affine(BaseModel):
     observatory: 3-letter observatory code
     starttime: beginning time for matrix creation
     endtime: end time for matrix creation
-    acausal: when True, utilizes readings from after set endtime
-    update_interval: window of time a matrix is representative of
-    transforms: list of methods for matrix calculations
+    update_interval: window of time(in seconds) a matrix is representative of
+    transforms: methods for matrix calculations
     """
 
     observatory: str = None
@@ -46,11 +45,12 @@ class Affine(BaseModel):
 
         Attributes
         ----------
-        readings: list of readings containing absolutes
+        readings: readings containing absolutes
+        epochs: optional time markers for unreliable observations
 
         Outputs
         -------
-        Ms: list of AdjustedMatrix objects created from calculations
+        Ms: AdjustedMatrix objects created from calculations
         """
         # default set to create one matrix between starttime and endtime
         update_interval = self.update_interval or (self.endtime - self.starttime)
@@ -141,15 +141,13 @@ def get_epochs(
 
     Attributes
     ----------
-    epoch_start: float value signifying start of last valid interval
-    epoch_end: float value signifying end of last valid interval
-    epochs: list of floats signifying bad data times
+    epochs: bad data times
     time: current time epoch is being evaluated at
 
     Outputs
     -------
-    epoch_start: float value signifying start of current valid interval
-    epoch_end: float value signifying end of current valid interval
+    epoch_start: start of current valid interval
+    epoch_end: end of current valid interval
     """
     epoch_start = None
     epoch_end = None

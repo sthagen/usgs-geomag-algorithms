@@ -40,8 +40,12 @@ class Transform(BaseModel):
         Calculate time-dependent weights according to exponential decay.
 
         Inputs:
-        times: array of times, or any time-like index whose relative values represent spacing between events
+        -------
+        readings: list of valid readings
+        time: time weights are calculated for
+
         Output:
+        -------
         weights: array of vector distances/metrics
         """
 
@@ -56,7 +60,7 @@ class Transform(BaseModel):
 
         # if memory is actually infinite, return equal weights
         if np.isinf(self.memory):
-            return filter_iqrs(multiseries=baselines, weights=np.ones(times.shape))
+            weights = np.ones(times.shape)
 
         # initialize weights
         weights = np.zeros(times.shape)

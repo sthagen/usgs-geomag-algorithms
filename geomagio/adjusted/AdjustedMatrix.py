@@ -3,9 +3,9 @@ from obspy import Stream, UTCDateTime
 from pydantic import BaseModel
 from typing import Any, List, Optional
 
+from ..residual.Reading import Reading, get_absolutes_xyz, get_ordinates
 from .. import ChannelConverter
 from .. import pydantic_utcdatetime
-from ..residual.Reading import Reading, get_absolutes_xyz, get_ordinates
 from .Metric import Metric
 
 
@@ -51,11 +51,12 @@ class AdjustedMatrix(BaseModel):
         return adjusted
 
     def get_metrics(self, readings: List[Reading]) -> List[Metric]:
-        """Computes mean absolute error and standard deviation for X, Y, Z, and dF between expected and predicted values.
+        """Computes mean absolute error and standard deviation between expected and predicted values
+        Metrics are computed for X, Y, Z, and dF values
 
         Attributes
         ----------
-        readings: list of Readings
+        readings: list of valid readings
         matrix: composed matrix
 
         Outputs
