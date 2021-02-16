@@ -17,7 +17,7 @@ __all__ = [
     "obsrio_minute",
     "obsrio_second",
     "obsrio_temperatures",
-    "obsrid_tenhertz",
+    "obsrio_tenhertz",
     "rotate",
     "sqdist_minute",
 ]

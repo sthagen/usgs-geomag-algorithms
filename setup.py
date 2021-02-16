@@ -28,6 +28,7 @@ setuptools.setup(
             "magproc-prepfiles=geomagio.processing.magproc:main",
             "generate-matrix=geomagio.processing.adjusted:main",
             "obsrio-filter=geomagio.processing.obsrio:main",
+            "metadata-client=geomagio.geomagioapi.metadata:main",
         ],
     },
 )
