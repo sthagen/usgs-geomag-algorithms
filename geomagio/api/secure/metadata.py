@@ -41,7 +41,7 @@ async def create_metadata(
 
 @router.delete("/metadata/{id}")
 async def delete_metadata(
-    id: int, user: User = Depends(require_user(os.getenv("ADMIN_GROUP", "admin")))
+    id: int, user: User = Depends(require_user([os.getenv("ADMIN_GROUP", "admin")]))
 ):
     await metadata_table.delete_metadata(id)
 

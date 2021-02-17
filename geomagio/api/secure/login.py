@@ -33,8 +33,10 @@ Usage:
             /logout     - logout current user
             /user       - access current user information as json
 """
+import json
 import logging
 import os
+import requests
 from typing import Callable, List, Optional
 
 from authlib.integrations.starlette_client import OAuth
@@ -56,15 +58,57 @@ class User(BaseModel):
 
 
 async def current_user(request: Request) -> Optional[User]:
-    """Get logged in user, or None if not logged in.
+    """Get user information from gitlab access token or session(if currently logged in).
+    Returns none if access token is not vald or user is not logged in.
 
     Usage example:
         user: Optional[User] = Depends(current_user)
 
     """
+    if "Authorization" in request.headers:
+        return get_api_user(token=request.headers["Authorization"])
     if "user" in request.session:
         return User(**request.session["user"])
     return None
+
+
+def get_api_user(token: str) -> Optional[User]:
+    url = os.getenv("GITLAB_API_URL")
+    header = {"PRIVATE-TOKEN": token}
+    # request user information from gitlab api with access token
+    user_response = requests.get(
+        f"{url}/user",
+        headers=header,
+    )
+    userinfo = json.loads(user_response.content)
+    try:
+        user = User(
+            email=userinfo["email"],
+            sub=userinfo["id"],
+            name=userinfo["name"],
+            nickname=userinfo["username"],
+            picture=userinfo["avatar_url"],
+        )
+    except KeyError:
+        logging.info("Invalid token")
+        return None
+    # use valid token to retrieve user's groups
+    user.groups = get_groups_api(
+        groups_response=requests.get(
+            f"{url}/groups",
+            headers=header,
+        )
+    )
+
+    return user
+
+
+def get_groups_api(groups_response: requests.Response) -> List[str]:
+    """returns a user's groups via gitlab api"""
+    groups = json.loads(groups_response.content)
+    group_urls = [g["web_url"] for g in groups]
+    group_names = [url[url.find("ghsc") :] for url in group_urls]
+    return group_names
 
 
 def require_user(

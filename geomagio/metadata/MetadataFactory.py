@@ -1,16 +1,14 @@
-import os
 import json
+from json.decoder import JSONDecodeError
+import os
 import requests
-import urllib
 from typing import Dict, List, Optional
+import urllib
 
 from obspy import UTCDateTime
-from pydantic import parse_obj_as
 
-from ..api.secure import MetadataQuery
-from ..residual import Reading
+from ..api.secure.MetadataQuery import MetadataQuery
 from .Metadata import Metadata
-from .MetadataCategory import MetadataCategory
 
 
 class MetadataFactory(object):
@@ -19,50 +17,62 @@ class MetadataFactory(object):
         url: str = "http://{}/ws/secure/metadata".format(
             os.getenv("EDGE_HOST", "127.0.0.1:8000")
         ),
+        token: str = os.getenv("GITLAB_API_TOKEN"),
     ):
         self.url = url
+        self.token = token
+        self.header = {"Authorization": self.token} if token else None
 
-    def delete_metadata(self, query: MetadataQuery):
-        raise NotImplementedError
+    def delete_metadata(self, id: int) -> Dict:
+        response = requests.delete(url=f"{self.url}/{id}", headers=self.header)
+        return response
 
-    def format_metadata(self, data: Dict):
-        # formats responses as Metadata objects
-        return parse_obj_as(List[Metadata], data)
-
-    def get_metadata(self, query: MetadataQuery) -> List[Metadata]:
+    def get_metadata(self, query: MetadataQuery) -> List[Dict]:
         args = parse_params(query=query)
-        response = web_request(url=f"{self.url}?{args}")
-        metadata = self.format_metadata(data=response)
-        return metadata
+        raw_response = requests.get(url=f"{self.url}{args}", headers=self.header)
+        try:
+            response = json.loads(raw_response.content)
+        except JSONDecodeError:
+            raise ValueError("Data not found")
+        return response
 
-    def post_metadata(self, query: MetadataQuery):
-        raise NotImplementedError
+    def post_metadata(
+        self, query: MetadataQuery, data: Optional[Dict] = {}
+    ) -> requests.Response:
+        metadata = parse_metadata(query=query, data=data)
+        response = requests.post(url=self.url, data=metadata, headers=self.header)
+        return response
 
-    def update_metadata(self, query: MetadataQuery):
-        raise NotImplementedError
+    def update_metadata(
+        self, id: int, query: MetadataQuery, data: Optional[Dict] = {}
+    ) -> requests.Response:
+        metadata = parse_metadata(query=query, data=data)
+        response = requests.put(
+            url=f"{self.url}/{query.id}", data=metadata, headers=self.header
+        )
+        return response
 
 
-def web_request(url: str) -> Dict:
-    client_id = os.getenv("OPENID_CLIENT_ID")
-    client_secret = os.getenv("OPENID_CLIENT_SECRET")
-    response = requests.get(
-        url, data={"grant_type": "client_credentials"}, auth=(client_id, client_secret)
-    )
-    metadata = json.loads(response.text)
-    return metadata
+def parse_metadata(query: MetadataQuery, data: Optional[Dict] = {}) -> str:
+    metadata = Metadata(**query.dict())
+    metadata.metadata = data
+    return metadata.json()
 
 
-def parse_params(query: MetadataQuery):
-    d = query.dict()
-    data = {}
-    for key in d.keys():
-        if d[key] is None:
-            continue
-        # convert times to strings
-        if type(d[key]) == UTCDateTime:
-            d[key] = d[key].isoformat()
-        if key == "category":
-            d[key] = d[key].value
-        data[key] = d[key]
+def parse_params(query: MetadataQuery) -> str:
+    query = query.dict()
+    args = {}
+    for key in query.keys():
+        element = query[key]
+        if element is not None:
+            # convert times to strings
+            if type(element) == UTCDateTime:
+                element = element.isoformat()
+            # get string value of metadata category
+            if key == "category":
+                element = element.value
+            elif key == "id":
+                return f"/{element}"
+            args[key] = element
 
-    return urllib.parse.urlencode(data)
+    return f"?{urllib.parse.urlencode(args)}"
