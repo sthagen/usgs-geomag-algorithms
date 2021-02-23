@@ -1,12 +1,13 @@
 import datetime
 import enum
-from typing import Any, Dict, List, Optional, Union
+import os
+from typing import Dict, List, Optional, Union
 
 from obspy import UTCDateTime
 from pydantic import BaseModel, root_validator, validator
 
 from ... import pydantic_utcdatetime
-from .Element import ELEMENTS, ELEMENT_INDEX
+from .Element import ELEMENTS
 from .Observatory import OBSERVATORY_INDEX
 
 
@@ -47,6 +48,7 @@ class DataApiQuery(BaseModel):
     sampling_period: SamplingPeriod = SamplingPeriod.MINUTE
     data_type: Union[DataType, str] = DataType.VARIATION
     format: OutputFormat = OutputFormat.IAGA2002
+    factory: Optional[str] = "edge"
 
     @validator("data_type")
     def validate_data_type(
@@ -72,6 +74,12 @@ class DataApiQuery(BaseModel):
                     f" Valid values are: {', '.join(VALID_ELEMENTS)}."
                 )
         return elements
+
+    @validator("factory")
+    def validate_factory(cls, factory: str):
+        if factory not in ["edge", "miniseed"]:
+            raise ValueError("Unsupported factory")
+        return factory
 
     @validator("id")
     def validate_id(cls, id: str) -> str:

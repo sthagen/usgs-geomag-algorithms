@@ -1,7 +1,7 @@
 from datetime import timezone
 
 from obspy import UTCDateTime
-from pydantic import BaseModel, validator
+from pydantic import BaseModel
 
 from ...metadata import MetadataCategory
 from ... import pydantic_utcdatetime

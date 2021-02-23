@@ -1,7 +1,7 @@
 from datetime import datetime
 import os
 import sys
-from typing import List, Tuple
+from typing import List
 
 from dateutil.relativedelta import relativedelta
 from obspy.core import UTCDateTime, Stream

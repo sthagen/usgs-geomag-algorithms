@@ -14,6 +14,7 @@ def test_get_data_query():
         data_type="R1",
         sampling_period=60,
         format="iaga2002",
+        factory="edge",
     )
     assert_equal(query.id, "BOU")
     assert_equal(query.starttime, UTCDateTime("2020-09-01T00:00:01"))
@@ -22,3 +23,4 @@ def test_get_data_query():
     assert_equal(query.sampling_period, SamplingPeriod.MINUTE)
     assert_equal(query.format, OutputFormat.IAGA2002)
     assert_equal(query.data_type, "R1")
+    assert_equal(query.factory, "edge")

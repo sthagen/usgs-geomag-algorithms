@@ -1,10 +1,9 @@
-import base64
 import json
 from typing import Callable, Dict, Mapping
 import uuid
 
 from cryptography.fernet import Fernet
-from starlette.datastructures import MutableHeaders, Secret
+from starlette.datastructures import MutableHeaders
 from starlette.requests import HTTPConnection
 from starlette.types import ASGIApp, Message, Receive, Scope, Send
 

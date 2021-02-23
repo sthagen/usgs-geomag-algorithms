@@ -10,6 +10,9 @@ class Element(BaseModel):
 
 
 ELEMENTS = [
+    Element(id="U", name="North Component(miniseed)", units="nT"),
+    Element(id="V", name="East Component(miniseed)", units="nT"),
+    Element(id="W", name="Vertical Component(miniseed)", units="nT"),
     Element(id="H", name="North Component", units="nT"),
     Element(id="E", name="East Component", units="nT"),
     Element(id="X", name="Geographic North Magnitude", units="nT"),

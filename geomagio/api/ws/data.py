@@ -1,12 +1,12 @@
 import os
-from typing import Any, Dict, List, Union
+from typing import List, Union
 
 from fastapi import APIRouter, Depends, Query
 from obspy import UTCDateTime, Stream
 from starlette.responses import Response
 
 from ... import TimeseriesFactory, TimeseriesUtility
-from ...edge import EdgeFactory
+from ...edge import EdgeFactory, MiniSeedFactory
 from ...iaga2002 import IAGA2002Writer
 from ...imfjson import IMFJSONWriter
 from .DataApiQuery import (
@@ -16,23 +16,6 @@ from .DataApiQuery import (
     OutputFormat,
     SamplingPeriod,
 )
-
-
-def get_data_factory() -> TimeseriesFactory:
-    """Reads environment variable to determine the factory to be used
-
-    Returns
-    -------
-    data_factory
-        Edge or miniseed factory object
-    """
-    data_type = os.getenv("DATA_TYPE", "edge")
-    data_host = os.getenv("DATA_HOST", "cwbpub.cr.usgs.gov")
-    data_port = int(os.getenv("DATA_PORT", "2060"))
-    if data_type == "edge":
-        return EdgeFactory(host=data_host, port=data_port)
-    else:
-        return None
 
 
 def get_data_query(
@@ -66,6 +49,11 @@ def get_data_query(
         " For example: R0 is 'internet variation'",
     ),
     format: OutputFormat = Query(OutputFormat.IAGA2002),
+    factory: str = Query(
+        "edge",
+        title="data factory",
+        description="Data source. NOTE: Only edge and miniseed factories are supported",
+    ),
 ) -> DataApiQuery:
     """Define query parameters used for webservice requests.
 
@@ -99,8 +87,29 @@ def get_data_query(
         sampling_period=sampling_period,
         data_type=data_type,
         format=format,
+        factory=factory,
     )
     return query
+
+
+def get_data_factory(
+    query: DataApiQuery = Depends(get_data_query),
+) -> TimeseriesFactory:
+    """Reads environment variable to determine the factory to be used
+
+    Returns
+    -------
+    data_factory
+        Edge or miniseed factory object
+    """
+    host = os.getenv("DATA_HOST", "cwbpub.cr.usgs.gov")
+    port = int(os.getenv("DATA_PORT", "2060"))
+    if query.factory == "edge":
+        return EdgeFactory(host=host, port=port)
+    elif query.factory == "miniseed":
+        return MiniSeedFactory(host=host, port=port)
+    else:
+        return None
 
 
 def format_timeseries(
