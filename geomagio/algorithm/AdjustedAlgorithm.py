@@ -51,24 +51,22 @@ class AdjustedAlgorithm(Algorithm):
                 data = json.loads(data)
         except IOError as err:
             raise FileNotFoundError("statefile not found")
-        pier_correction = 0
         # Adjusted matrix defaults to identity matrix
         matrix_size = len([c for c in self.get_input_channels() if c != "F"]) + 1
-        matrix = np.eye(matrix_size)
-        if self.statefile is not None:
-            try:
-                if "pier_correction" in data.keys():
-                    # read data
-                    matrix = np.array(data["matrix"])
-                    pier_correction = data["pier_correction"]
-                if "PC" in data.keys():
-                    # read data from legacy format
-                    for row in range(matrix_size):
-                        for col in range(matrix_size):
-                            matrix[row, col] = np.float64(data[f"M{row+1}{col+1}"])
-                    pier_correction = np.float64(data["PC"])
-            except:
-                raise KeyError("matrix and pier correction not found in statefile")
+        if "pier_correction" in data.keys():
+            m = AdjustedMatrix(**data)
+            matrix = m.matrix
+            pier_correction = m.pier_correction
+        elif "PC" in data.keys():
+            matrix = np.eye(matrix_size)
+            # read data from legacy format
+            for row in range(matrix_size):
+                for col in range(matrix_size):
+                    matrix[row, col] = np.float64(data[f"M{row+1}{col+1}"])
+            pier_correction = np.float64(data["PC"])
+        else:
+            raise ValueError("pier correction not found in statefile")
+
         self.matrix = AdjustedMatrix(matrix=matrix, pier_correction=pier_correction)
 
     def save_state(self):
@@ -77,13 +75,10 @@ class AdjustedAlgorithm(Algorithm):
         """
         if self.statefile is None:
             return
-        data = {
-            "matrix": list(self.matrix.matrix),
-            "pier_correction": self.matrix.pier_correction,
-        }
-
+        json_string = self.matrix.json()
+        json_dict = json.loads(json_string)
         with open(self.statefile, "w") as f:
-            f.write(json.dumps(data))
+            f.write(json.dumps(json_dict))
 
     def create_trace(self, channel, stats, data):
         """Utility to create a new trace object.

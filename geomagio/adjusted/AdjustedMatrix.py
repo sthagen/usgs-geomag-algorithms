@@ -6,7 +6,7 @@ from typing import Any, List, Optional
 from ..residual.Reading import Reading, get_absolutes_xyz, get_ordinates
 from .. import ChannelConverter
 from .. import pydantic_utcdatetime
-from .Metric import Metric
+from .Metric import Metric, get_metric
 
 
 class AdjustedMatrix(BaseModel):
@@ -88,6 +88,11 @@ class AdjustedMatrix(BaseModel):
                     element=elements[i],
                     absmean=abs(np.nanmean(diff)),
                     stddev=np.std(diff),
+                )
+            )
+            metrics.append(
+                get_metric(
+                    element=elements[i], expected=expected[i], actual=predicted[i]
                 )
             )
         return metrics

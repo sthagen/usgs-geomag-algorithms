@@ -1,3 +1,6 @@
+from typing import List
+
+import numpy as np
 from pydantic import BaseModel
 
 
@@ -14,3 +17,8 @@ class Metric(BaseModel):
     element: str
     absmean: float = None
     stddev: float = None
+
+
+def get_metric(element: str, expected: List[float], actual: List[float]) -> Metric:
+    diff = np.array(expected) - np.array(actual)
+    return Metric(element=element, absmean=np.average(abs(diff)), stddev=np.std(diff))

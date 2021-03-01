@@ -1,5 +1,5 @@
 from geomagio.adjusted import AdjustedMatrix
-from geomagio.algorithm import AdjustedAlgorithm as adj
+from geomagio.algorithm import AdjustedAlgorithm
 import geomagio.iaga2002 as i2
 from numpy.testing import assert_almost_equal, assert_equal
 
@@ -7,9 +7,9 @@ from numpy.testing import assert_almost_equal, assert_equal
 def test_construct():
     """algorithm_test.AdjustedAlgorithm_test.test_construct()"""
     # load adjusted data transform matrix and pier correction
-    a = adj(statefile="etc/adjusted/adjbou_state_.json")
+    a = AdjustedAlgorithm(statefile="etc/adjusted/adjbou_state_.json")
 
-    assert_almost_equal(actual=a.matrix.matrix[0, 0], desired=9.83427577e-01, decimal=6)
+    assert_almost_equal(actual=a.matrix.matrix[0][0], desired=9.83427577e-01, decimal=6)
 
     assert_equal(actual=a.matrix.pier_correction, desired=-22)
 
@@ -30,7 +30,7 @@ def test_process_XYZF_AdjustedMatrix():
     original script
     """
     # Initiate algorithm with AdjustedMatrix object
-    a = adj(
+    a = AdjustedAlgorithm(
         matrix=AdjustedMatrix(
             matrix=[
                 [
@@ -78,7 +78,7 @@ def test_process_reverse_polarity_AdjustedMatrix():
     original script. Tests reverse polarity martix.
     """
     # Initiate algorithm with AdjustedMatrix object
-    a = adj(
+    a = AdjustedAlgorithm(
         matrix=AdjustedMatrix(
             matrix=[
                 [-1, 0, 0],
@@ -114,7 +114,7 @@ def test_process_XYZF_statefile():
     Uses statefile to generate AdjustedMatrix
     """
     # load adjusted data transform matrix and pier correction
-    a = adj(statefile="etc/adjusted/adjbou_state_.json")
+    a = AdjustedAlgorithm(statefile="etc/adjusted/adjbou_state_.json")
 
     # load boulder Jan 16 files from /etc/ directory
     with open("etc/adjusted/BOU201601vmin.min") as f:
@@ -139,7 +139,7 @@ def test_process_reverse_polarity_statefile():
     Uses statefile to generate AdjustedMatrix
     """
     # load adjusted data transform matrix and pier correction
-    a = adj(
+    a = AdjustedAlgorithm(
         statefile="etc/adjusted/adjbou_state_HE_.json",
         inchannels=["H", "E"],
         outchannels=["H", "E"],

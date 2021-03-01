@@ -33,7 +33,8 @@ class Transform(BaseModel):
         absolutes: X, Y and Z absolutes(NOTE: absolutes must be rotated from original H, E and Z values)
         weights: time weights to apply during calculations of matrices
         """
-        return
+        # return identity matrix
+        return np.eye(4)
 
     def get_weights(self, readings: List[Reading], time: int = None) -> List[float]:
         """

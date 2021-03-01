@@ -1,7 +1,7 @@
 from functools import reduce
 import numpy as np
 from obspy import UTCDateTime
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import List, Optional, Tuple
 
 from ..residual.Reading import (
@@ -27,16 +27,13 @@ class Affine(BaseModel):
     """
 
     observatory: str = None
-    starttime: UTCDateTime = UTCDateTime() - (86400 * 7)
+    starttime: UTCDateTime = Field(default_factory=lambda: UTCDateTime() - (86400 * 7))
     endtime: UTCDateTime = UTCDateTime()
     update_interval: Optional[int] = 86400 * 7
     transforms: List[Transform] = [
         RotationTranslationXY(memory=(86400 * 100), acausal=True),
         TranslateOrigins(memory=(86400 * 10), acausal=True),
     ]
-
-    class Config:
-        arbitrary_types_allowed = True
 
     def calculate(
         self, readings: List[Reading], epochs: Optional[List[UTCDateTime]] = None
@@ -121,7 +118,7 @@ class Affine(BaseModel):
             Ms.append(M)
 
         # compose affine transform matrices using reverse ordered matrices
-        M_composed = reduce(np.dot, np.flipud(Ms))
+        M_composed = reduce(np.dot, reversed(Ms))
         pier_correction = np.average(
             [reading.pier_correction for reading in readings], weights=weights
         )

@@ -1,11 +1,11 @@
-from geomagio.adjusted.AdjustedMatrix import AdjustedMatrix
 import json
+
 import numpy as np
 from numpy.testing import assert_equal, assert_array_almost_equal
 from obspy.core import UTCDateTime
 
+from geomagio.adjusted import AdjustedMatrix
 from geomagio.adjusted.Affine import Affine, get_epochs
-
 from geomagio.adjusted.transform import (
     LeastSq,
     QRFactorization,
@@ -19,9 +19,10 @@ from geomagio.adjusted.transform import (
     ZRotationHscaleZbaseline,
     ZRotationShear,
 )
-
-from geomagio.residual import WebAbsolutesFactory
-from test.residual_test.residual_test import get_spreadsheet_directory_readings
+from test.residual_test.residual_test import (
+    get_json_readings,
+    get_spreadsheet_directory_readings,
+)
 
 
 def format_result(result) -> dict:
@@ -46,15 +47,6 @@ def get_expected_synthetic_result(key):
     return expected["results"][key]
 
 
-def get_readings_BOU201911202001():
-    readings = WebAbsolutesFactory().get_readings(
-        observatory="BOU",
-        starttime=UTCDateTime("2019-10-01T00:00:00Z"),
-        endtime=UTCDateTime("2020-02-29T23:59:00Z"),
-    )
-    return readings
-
-
 def get_sythetic_variables():
     with open("etc/adjusted/synthetic.json") as file:
         data = json.load(file)
@@ -66,7 +58,7 @@ def get_sythetic_variables():
 
 
 def test_BOU201911202001_infinite_one_interval():
-    readings = get_readings_BOU201911202001()
+    readings = get_json_readings("etc/residual/BOU20191001.json")
     result = Affine(
         observatory="BOU",
         starttime=UTCDateTime("2019-11-01T00:00:00Z"),
@@ -93,7 +85,7 @@ def test_BOU201911202001_infinite_one_interval():
 
 
 def test_BOU201911202001_infinite_weekly():
-    readings = get_readings_BOU201911202001()
+    readings = get_json_readings("etc/residual/BOU20191001.json")
 
     starttime = UTCDateTime("2019-11-01T00:00:00Z")
     endtime = UTCDateTime("2020-01-31T23:59:00Z")
@@ -142,7 +134,7 @@ def test_BOU201911202001_invalid_readings():
 
 
 def test_BOU201911202001_short_acausal():
-    readings = get_readings_BOU201911202001()
+    readings = get_json_readings("etc/residual/BOU20191001.json")
 
     starttime = UTCDateTime("2019-11-01T00:00:00Z")
     endtime = UTCDateTime("2020-01-31T23:59:00Z")
@@ -175,7 +167,7 @@ def test_BOU201911202001_short_acausal():
 
 
 def test_BOU201911202001_short_causal():
-    readings = get_readings_BOU201911202001()
+    readings = get_json_readings("etc/residual/BOU20191001.json")
 
     starttime = UTCDateTime("2019-11-01T00:00:00Z")
     endtime = UTCDateTime("2020-01-31T23:59:00Z")
@@ -361,11 +353,7 @@ def test_CMO2015_short_causal():
 
 
 def test_get_epochs():
-    readings = WebAbsolutesFactory().get_readings(
-        observatory="BOU",
-        starttime=UTCDateTime("2020-01-01"),
-        endtime=UTCDateTime("2020-01-14"),
-    )
+    readings = get_json_readings("etc/residual/BOU20200101.json")
     # force a bad measurement for second reading
     readings[2].absolutes[1].absolute = 0
     epochs = [r.time for r in readings if r.get_absolute("H").absolute == 0]

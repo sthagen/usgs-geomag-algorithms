@@ -46,7 +46,7 @@ This example uses an AdjustedMatrix object to produce X, Y, Z and F channels
 from raw H, E, Z and F channels using the EDGE channel naming
 convention.  Absolutes were used to compute the transform matrix and pier correction
 contained in the object.
-    
+
 ```python
 from geomagio.algorithm import AdjustedAlgorithm
 from geomagio.adjusted.AdjustedMatrix import AdjustedMatrix
@@ -55,7 +55,7 @@ from geomagio.iaga2002 import IAGA2002Factory
 with open("etc/adjusted/BOU201601vmin.min") as f:
         raw = IAGA2002Factory().parse_string(f.read())
 
-a = adj(
+a = AdjustedAlgorithm(
         matrix=AdjustedMatrix(
             matrix=[
                 [
@@ -83,7 +83,7 @@ a = adj(
     )
 # definition can also use statefiles
 # a = adj(statefile="etc/adjusted/adjbou_state_.json")
-  
+
 result = adjusted.process(raw)
 ```
 
