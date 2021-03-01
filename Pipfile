@@ -20,7 +20,7 @@ pycurl = "*"
 
 # web service dependencies
 authlib = "*"
-cryptography = "*"
+cryptography = "==3.3.2"
 databases = {extras=["postgresql", "sqlite"], version = "==0.3.2"}
 fastapi = "*"
 gunicorn = "*"
