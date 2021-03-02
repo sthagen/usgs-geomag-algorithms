@@ -39,6 +39,13 @@ class SamplingPeriod(float, enum.Enum):
     HOUR = 3600.0
     DAY = 86400.0
 
+    @property
+    def input_factory(self):
+        if self in [SamplingPeriod.TEN_HERTZ, SamplingPeriod.HOUR, SamplingPeriod.DAY]:
+            return "miniseed"
+        else:
+            return "edge"
+
 
 class DataApiQuery(BaseModel):
     id: str
@@ -48,7 +55,6 @@ class DataApiQuery(BaseModel):
     sampling_period: SamplingPeriod = SamplingPeriod.MINUTE
     data_type: Union[DataType, str] = DataType.VARIATION
     format: OutputFormat = OutputFormat.IAGA2002
-    factory: Optional[str] = "edge"
 
     @validator("data_type")
     def validate_data_type(
@@ -74,12 +80,6 @@ class DataApiQuery(BaseModel):
                     f" Valid values are: {', '.join(VALID_ELEMENTS)}."
                 )
         return elements
-
-    @validator("factory")
-    def validate_factory(cls, factory: str):
-        if factory not in ["edge", "miniseed"]:
-            raise ValueError("Unsupported factory")
-        return factory
 
     @validator("id")
     def validate_id(cls, id: str) -> str:

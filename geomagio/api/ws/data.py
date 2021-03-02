@@ -18,6 +18,27 @@ from .DataApiQuery import (
 )
 
 
+def get_data_factory(
+    query: DataApiQuery,
+) -> TimeseriesFactory:
+    """Reads environment variable to determine the factory to be used
+
+    Returns
+    -------
+    data_factory
+        Edge or miniseed factory object
+    """
+    host = os.getenv("DATA_HOST", "cwbpub.cr.usgs.gov")
+    port = int(os.getenv("DATA_PORT", "2060"))
+    factory = query.sampling_period.input_factory
+    if factory == "edge":
+        return EdgeFactory(host=host, port=port)
+    elif factory == "miniseed":
+        return MiniSeedFactory(host=host, port=port)
+    else:
+        return None
+
+
 def get_data_query(
     id: str = Query(..., title="Observatory code"),
     starttime: UTCDateTime = Query(
@@ -49,11 +70,6 @@ def get_data_query(
         " For example: R0 is 'internet variation'",
     ),
     format: OutputFormat = Query(OutputFormat.IAGA2002),
-    factory: str = Query(
-        "edge",
-        title="data factory",
-        description="Data source. NOTE: Only edge and miniseed factories are supported",
-    ),
 ) -> DataApiQuery:
     """Define query parameters used for webservice requests.
 
@@ -87,29 +103,8 @@ def get_data_query(
         sampling_period=sampling_period,
         data_type=data_type,
         format=format,
-        factory=factory,
     )
     return query
-
-
-def get_data_factory(
-    query: DataApiQuery = Depends(get_data_query),
-) -> TimeseriesFactory:
-    """Reads environment variable to determine the factory to be used
-
-    Returns
-    -------
-    data_factory
-        Edge or miniseed factory object
-    """
-    host = os.getenv("DATA_HOST", "cwbpub.cr.usgs.gov")
-    port = int(os.getenv("DATA_PORT", "2060"))
-    if query.factory == "edge":
-        return EdgeFactory(host=host, port=port)
-    elif query.factory == "miniseed":
-        return MiniSeedFactory(host=host, port=port)
-    else:
-        return None
 
 
 def format_timeseries(
@@ -159,8 +154,8 @@ router = APIRouter()
 @router.get("/data/")
 def get_data(
     query: DataApiQuery = Depends(get_data_query),
-    data_factory: TimeseriesFactory = Depends(get_data_factory),
 ) -> Response:
+    data_factory = get_data_factory(query=query)
     # read data
     timeseries = get_timeseries(data_factory, query)
     # output response

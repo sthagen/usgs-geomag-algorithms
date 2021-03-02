@@ -26,8 +26,8 @@ setuptools.setup(
     entry_points={
         "console_scripts": [
             "magproc-prepfiles=geomagio.processing.magproc:main",
-            "filter-realtime=geomagio.processing.obsrio:main",
             "generate-matrix=geomagio.processing.adjusted:main",
+            "obsrio-filter=geomagio.processing.obsrio:main",
         ],
     },
 )
