@@ -53,21 +53,18 @@ class AdjustedAlgorithm(Algorithm):
             raise FileNotFoundError("statefile not found")
         # Adjusted matrix defaults to identity matrix
         matrix_size = len([c for c in self.get_input_channels() if c != "F"]) + 1
-        if "pier_correction" in data.keys():
-            m = AdjustedMatrix(**data)
-            matrix = m.matrix
-            pier_correction = m.pier_correction
-        elif "PC" in data.keys():
+        if "pier_correction" in data:
+            self.matrix = AdjustedMatrix(**data)
+        elif "PC" in data:
             matrix = np.eye(matrix_size)
             # read data from legacy format
             for row in range(matrix_size):
                 for col in range(matrix_size):
                     matrix[row, col] = np.float64(data[f"M{row+1}{col+1}"])
             pier_correction = np.float64(data["PC"])
+            self.matrix = AdjustedMatrix(matrix=matrix, pier_correction=pier_correction)
         else:
             raise ValueError("pier correction not found in statefile")
-
-        self.matrix = AdjustedMatrix(matrix=matrix, pier_correction=pier_correction)
 
     def save_state(self):
         """Save algorithm state to a file.

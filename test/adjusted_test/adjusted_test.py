@@ -3,6 +3,7 @@ import json
 import numpy as np
 from numpy.testing import assert_equal, assert_array_almost_equal
 from obspy.core import UTCDateTime
+import pytest
 
 from geomagio.adjusted import AdjustedMatrix
 from geomagio.adjusted.Affine import Affine, get_epochs
@@ -118,19 +119,23 @@ def test_BOU201911202001_infinite_weekly():
 
 
 def test_BOU201911202001_invalid_readings():
-    readings = []
     starttime = UTCDateTime("2019-11-01T00:00:00Z")
-    result = Affine(
-        observatory="BOU",
-        starttime=starttime,
-        endtime=UTCDateTime("2020-01-31T23:59:00Z"),
-        transforms=[
-            RotationTranslationXY(memory=np.inf, acausal=True),
-            TranslateOrigins(memory=np.inf, acausal=True),
-        ],
-        update_interval=None,
-    ).calculate(readings=readings,)[0]
-    assert result == AdjustedMatrix(time=starttime)
+    with pytest.raises(
+        ValueError, match=f"No valid observations for: {starttime}"
+    ) as error:
+        readings = []
+        result = Affine(
+            observatory="BOU",
+            starttime=starttime,
+            endtime=UTCDateTime("2020-01-31T23:59:00Z"),
+            transforms=[
+                RotationTranslationXY(memory=np.inf, acausal=True),
+                TranslateOrigins(memory=np.inf, acausal=True),
+            ],
+            update_interval=None,
+        ).calculate(
+            readings=readings,
+        )
 
 
 def test_BOU201911202001_short_acausal():

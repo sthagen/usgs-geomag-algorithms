@@ -28,7 +28,7 @@ class Affine(BaseModel):
 
     observatory: str = None
     starttime: UTCDateTime = Field(default_factory=lambda: UTCDateTime() - (86400 * 7))
-    endtime: UTCDateTime = UTCDateTime()
+    endtime: UTCDateTime = Field(default_factory=lambda: UTCDateTime())
     update_interval: Optional[int] = 86400 * 7
     transforms: List[Transform] = [
         RotationTranslationXY(memory=(86400 * 100), acausal=True),
@@ -69,10 +69,8 @@ class Affine(BaseModel):
                 or (epoch_end is None or r.time < epoch_end)
             ]
             M = self.calculate_matrix(time, readings)
-            # if readings are trimmed by bad data, mark the valid interval
-            if M:
-                M.starttime = epoch_start
-                M.endtime = epoch_end
+            M.starttime = epoch_start
+            M.endtime = epoch_end
             time += update_interval
 
             Ms.append(M)
@@ -104,9 +102,9 @@ class Affine(BaseModel):
                 readings=readings,
                 time=time.timestamp,
             )
-            # return None if no valid observations
+            # raise ValueError if no valid observations
             if np.sum(weights) == 0:
-                return AdjustedMatrix(time=time)
+                raise ValueError(f"No valid observations for: {time}")
 
             M = transform.calculate(
                 ordinates=inputs, absolutes=absolutes, weights=weights

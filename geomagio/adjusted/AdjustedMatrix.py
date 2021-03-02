@@ -69,30 +69,13 @@ class AdjustedMatrix(BaseModel):
         predicted = self.matrix @ stacked_ordinates
         metrics = []
         elements = ["X", "Y", "Z", "dF"]
-        expected = np.vstack(
-            (
-                absolutes,
-                ChannelConverter.get_computed_f_using_squares(*absolutes),
-            )
-        )
-        predicted = np.vstack(
-            (
-                predicted[0:3],
-                ChannelConverter.get_computed_f_using_squares(*predicted[0:3]),
-            )
-        )
-        for i in range(len(elements)):
-            diff = expected[i] - predicted[i]
-            metrics.append(
-                Metric(
-                    element=elements[i],
-                    absmean=abs(np.nanmean(diff)),
-                    stddev=np.std(diff),
-                )
-            )
-            metrics.append(
-                get_metric(
-                    element=elements[i], expected=expected[i], actual=predicted[i]
-                )
-            )
-        return metrics
+        expected = list(absolutes) + [
+            ChannelConverter.get_computed_f_using_squares(*absolutes)
+        ]
+        predicted = list(predicted[0:3]) + [
+            ChannelConverter.get_computed_f_using_squares(*predicted[0:3])
+        ]
+        return [
+            get_metric(element=elements[i], expected=expected[i], actual=predicted[i])
+            for i in range(len(elements))
+        ]
