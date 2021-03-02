@@ -33,7 +33,6 @@ Usage:
             /logout     - logout current user
             /user       - access current user information as json
 """
-import json
 import logging
 import os
 import requests
@@ -65,10 +64,15 @@ async def current_user(request: Request) -> Optional[User]:
         user: Optional[User] = Depends(current_user)
 
     """
-    if "Authorization" in request.headers:
-        return get_api_user(token=request.headers["Authorization"])
     if "user" in request.session:
         return User(**request.session["user"])
+    if "apiuser" in request.session:
+        return User(**request.session["apiuser"])
+    if "Authorization" in request.headers:
+        user = get_api_user(token=request.headers["Authorization"])
+        if user is not None:
+            request.session["apiuser"] = user.dict()
+            return user
     return None
 
 
@@ -76,11 +80,11 @@ def get_api_user(token: str) -> Optional[User]:
     url = os.getenv("GITLAB_API_URL")
     header = {"PRIVATE-TOKEN": token}
     # request user information from gitlab api with access token
-    user_response = requests.get(
+    userinfo_response = requests.get(
         f"{url}/user",
         headers=header,
     )
-    userinfo = json.loads(user_response.content)
+    userinfo = userinfo_response.json()
     try:
         user = User(
             email=userinfo["email"],
@@ -90,25 +94,15 @@ def get_api_user(token: str) -> Optional[User]:
             picture=userinfo["avatar_url"],
         )
     except KeyError:
-        logging.info("Invalid token")
+        logging.info(f"Invalid token: {userinfo_response.status_code}")
         return None
     # use valid token to retrieve user's groups
-    user.groups = get_groups_api(
-        groups_response=requests.get(
-            f"{url}/groups",
-            headers=header,
-        )
+    groups_response = requests.get(
+        f"{url}/groups",
+        headers=header,
     )
-
+    user.groups = [g["full_path"] for g in groups_response.json()]
     return user
-
-
-def get_groups_api(groups_response: requests.Response) -> List[str]:
-    """returns a user's groups via gitlab api"""
-    groups = json.loads(groups_response.content)
-    group_urls = [g["web_url"] for g in groups]
-    group_names = [url[url.find("ghsc") :] for url in group_urls]
-    return group_names
 
 
 def require_user(

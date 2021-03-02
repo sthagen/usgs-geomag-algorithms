@@ -1,14 +1,13 @@
-import json
-from json.decoder import JSONDecodeError
 import os
 import requests
-from typing import Dict, List, Optional
+from typing import Dict, List, Union
 import urllib
 
 from obspy import UTCDateTime
+from pydantic import parse_obj_as
 
 from ..api.secure.MetadataQuery import MetadataQuery
-from .Metadata import Metadata
+from ..metadata import Metadata
 
 
 class MetadataFactory(object):
@@ -23,40 +22,34 @@ class MetadataFactory(object):
         self.token = token
         self.header = {"Authorization": self.token} if token else None
 
-    def delete_metadata(self, id: int) -> Dict:
-        response = requests.delete(url=f"{self.url}/{id}", headers=self.header)
+    def delete_metadata(self, metadata: Metadata) -> Dict:
+        response = requests.delete(url=f"{self.url}/{metadata.id}", headers=self.header)
         return response
 
-    def get_metadata(self, query: MetadataQuery) -> List[Dict]:
+    def get_metadata(self, query: MetadataQuery) -> Union[List[Metadata], Metadata]:
         args = parse_params(query=query)
-        raw_response = requests.get(url=f"{self.url}{args}", headers=self.header)
+        responses = requests.get(url=f"{self.url}{args}", headers=self.header)
         try:
-            response = json.loads(raw_response.content)
-        except JSONDecodeError:
+            metadata = parse_obj_as(Union[List[Metadata], Metadata], responses.json())
+        except:
             raise ValueError("Data not found")
-        return response
+        return metadata
 
-    def post_metadata(
-        self, query: MetadataQuery, data: Optional[Dict] = {}
-    ) -> requests.Response:
-        metadata = parse_metadata(query=query, data=data)
-        response = requests.post(url=self.url, data=metadata, headers=self.header)
-        return response
-
-    def update_metadata(
-        self, id: int, query: MetadataQuery, data: Optional[Dict] = {}
-    ) -> requests.Response:
-        metadata = parse_metadata(query=query, data=data)
-        response = requests.put(
-            url=f"{self.url}/{query.id}", data=metadata, headers=self.header
+    def create_metadata(self, metadata: Metadata) -> requests.Response:
+        response = requests.post(
+            url=self.url, data=metadata.json(), headers=self.header
         )
         return response
 
-
-def parse_metadata(query: MetadataQuery, data: Optional[Dict] = {}) -> str:
-    metadata = Metadata(**query.dict())
-    metadata.metadata = data
-    return metadata.json()
+    def update_metadata(self, metadata: Metadata) -> requests.Response:
+        if metadata.metadata is None:
+            metadata.metadata = self.get_metadata(
+                query=MetadataQuery(**metadata.dict())
+            ).metadata
+        response = requests.put(
+            url=f"{self.url}/{metadata.id}", data=metadata.json(), headers=self.header
+        )
+        return response
 
 
 def parse_params(query: MetadataQuery) -> str:
