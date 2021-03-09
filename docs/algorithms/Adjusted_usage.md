@@ -8,7 +8,7 @@ the [Adjusted Algorithm](./Adjusted.md).
 
 `geomag.py --algorithm sqdist`
 
-### Example
+### Command Line Example
 
 This example uses a state file to produce X, Y, Z and F channels
 from raw H, E, Z and F channels using the EDGE channel naming
@@ -27,7 +27,6 @@ contained in the statefile.
       --outchannels X Y Z F \
       --output-iaga-stdout
 
-
 ### Statefile Example Content
 
 This is the content of /etc/adjusted/adjbou_state_.json:
@@ -40,6 +39,56 @@ This is the content of /etc/adjusted/adjbou_state_.json:
  "M42": -0.0, "M13": 0.027384986324932026,
  "M12": -0.15473074200902157, "M14": -1276.1646811919759,
  "M31": -0.006725053082782385}
+
+### API Example
+
+This example uses an AdjustedMatrix object to produce X, Y, Z and F channels
+from raw H, E, Z and F channels using the EDGE channel naming
+convention.  Absolutes were used to compute the transform matrix and pier correction
+contained in the object.
+
+```python
+from geomagio.algorithm import AdjustedAlgorithm
+from geomagio.adjusted.AdjustedMatrix import AdjustedMatrix
+from geomagio.iaga2002 import IAGA2002Factory
+
+with open("etc/adjusted/BOU201601vmin.min") as f:
+        raw = IAGA2002Factory().parse_string(f.read())
+
+a = AdjustedAlgorithm(
+        matrix=AdjustedMatrix(
+            matrix=[
+                [
+                    0.9834275767090617,
+                    -0.15473074200902157,
+                    0.027384986324932026,
+                    -1276.164681191976,
+                ],
+                [
+                    0.16680172992706568,
+                    0.987916201012128,
+                    -0.0049868332295851525,
+                    -0.8458192581350419,
+                ],
+                [
+                    -0.006725053082782385,
+                    -0.011809351484171948,
+                    0.9961869012493976,
+                    905.3800885796844,
+                ],
+                [0, 0, 0, 1],
+            ],
+            pier_correction=-22,
+        )
+    )
+# definition can also use statefiles
+# a = adj(statefile="etc/adjusted/adjbou_state_.json")
+
+result = adjusted.process(raw)
+```
+
+
+
 
 ### Library Notes
 

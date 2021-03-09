@@ -1,11 +1,16 @@
-from numpy.testing import assert_almost_equal
+import json
+
+from numpy.testing import assert_almost_equal, assert_equal
+from pydantic import parse_obj_as
 import pytest
+from typing import List
 
 from obspy.core import UTCDateTime
 from geomagio.residual import (
     calculate,
     Reading,
     SpreadsheetAbsolutesFactory,
+    SpreadsheetSummaryFactory,
     WebAbsolutesFactory,
 )
 
@@ -43,14 +48,10 @@ def assert_readings_equal(expected: Reading, actual: Reading, decimal: int):
         )
 
 
-def get_null_absolutes(observatory, starttime, endtime):
-    """
-    Tests functionality of WebAbsolutesFactory and recalculation of absolutes
-    """
-    # establish SpreadsheetAbsolutesFactory for reading test data from Excel
-    waf = WebAbsolutesFactory()
-    # Read spreadsheet containing test data
-    readings = waf.get_readings(observatory, starttime, endtime)
+def get_json_readings(filename: str):
+    with open(filename, "r") as file:
+        readings = json.load(file)
+    readings = parse_obj_as(List[Reading], readings)
     return readings
 
 
@@ -63,6 +64,33 @@ def get_spreadsheet_absolutes(path):
     # Read spreadsheet containing test data
     reading = saf.parse_spreadsheet(path=path)
     return reading
+
+
+def get_spreadsheet_directory_readings(path, observatory, starttime, endtime):
+    ssf = SpreadsheetSummaryFactory(base_directory=path)
+    readings = ssf.get_readings(
+        observatory=observatory, starttime=starttime, endtime=endtime
+    )
+    return readings
+
+
+def test_CMO_summaries():
+    starttime = UTCDateTime("2015-04-01")
+    endtime = UTCDateTime("2015-06-15")
+    readings = get_spreadsheet_directory_readings(
+        path="etc/residual/Caldata",
+        observatory="CMO",
+        starttime=starttime,
+        endtime=endtime,
+    )
+    for reading in readings:
+        assert_equal(reading.metadata["station"], "CMO")
+        assert_equal(reading.metadata["instrument"], 200803)
+        assert_equal(reading.pier_correction, 10.5)
+    assert_equal(len(readings), 26)
+
+    assert readings[0].time > starttime
+    assert readings[-1].time < endtime
 
 
 def test_DED_20140952332():
@@ -101,11 +129,7 @@ def test_BOU_20190702():
     Tests gathering of BOU's metadata for use by calculations.
     Tests calculations for null method measurements in units of DM.
     """
-    readings = get_null_absolutes(
-        observatory="BOU",
-        starttime=UTCDateTime("2019-07-02T00:00:00Z"),
-        endtime=UTCDateTime("2019-07-03T00:00:00Z"),
-    )
+    readings = get_json_readings("etc/residual/BOU20190702.json")
     for reading in readings:
         assert_readings_equal(
             expected=reading,
@@ -120,11 +144,7 @@ def test_BOU_20200422():
     Tests gathering of BOU's metadata for use by calculations.
     Tests calculations for null method measurements in units of DMS.
     """
-    readings = get_null_absolutes(
-        observatory="BOU",
-        starttime=UTCDateTime("2020-04-22T00:00:00Z"),
-        endtime=UTCDateTime("2020-04-23T00:00:00Z"),
-    )
+    readings = get_json_readings("etc/residual/BOU20200422.json")
     for reading in readings:
         assert_readings_equal(
             expected=reading,

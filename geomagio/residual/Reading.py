@@ -1,14 +1,14 @@
-import collections
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Tuple
 from typing_extensions import Literal
 
+import numpy as np
 from obspy import Stream, UTCDateTime
 from pydantic import BaseModel
 
 from .. import TimeseriesUtility
 from ..TimeseriesFactory import TimeseriesFactory
 from .Absolute import Absolute
-from .Measurement import AverageMeasurement, Measurement, average_measurement
+from .Measurement import Measurement, average_measurement
 from .MeasurementType import MeasurementType
 
 
@@ -40,6 +40,15 @@ class Reading(BaseModel):
         Example: reading[MeasurementType.WEST_DOWN]
         """
         return [m for m in self.measurements if m.measurement_type == measurement_type]
+
+    def get_absolute(
+        self,
+        element: str,
+    ) -> Optional[Absolute]:
+        for absolute in self.absolutes:
+            if absolute.element == element:
+                return absolute
+        return None
 
     def load_ordinates(
         self,
@@ -120,11 +129,54 @@ class Reading(BaseModel):
         ):
             return True
 
-    def get_absolute(
-        self,
-        element: str,
-    ) -> Optional[Absolute]:
-        for absolute in self.absolutes:
-            if absolute.element == element:
-                return absolute
-        return None
+
+def get_absolutes(
+    readings: List[Reading],
+) -> Tuple[List[float], List[float], List[float]]:
+    """Get H, D and Z absolutes"""
+    h_abs = np.array([reading.get_absolute("H").absolute for reading in readings])
+    d_abs = np.array([reading.get_absolute("D").absolute for reading in readings])
+    z_abs = np.array([reading.get_absolute("Z").absolute for reading in readings])
+
+    return (h_abs, d_abs, z_abs)
+
+
+def get_absolutes_xyz(
+    readings: List[Reading],
+) -> Tuple[List[float], List[float], List[float]]:
+    """Get X, Y and Z absolutes from H, D and Z baselines"""
+    h_abs, d_abs, z_abs = get_absolutes(readings)
+    # convert from cylindrical to Cartesian coordinates
+    x_a = h_abs * np.cos(np.radians(d_abs))
+    y_a = h_abs * np.sin(np.radians(d_abs))
+    z_a = z_abs
+    return (x_a, y_a, z_a)
+
+
+def get_baselines(
+    readings: List[Reading],
+) -> Tuple[List[float], List[float], List[float]]:
+    """Get H, D and Z baselines"""
+    h_bas = np.array([reading.get_absolute("H").baseline for reading in readings])
+    d_bas = np.array([reading.get_absolute("D").baseline for reading in readings])
+    z_bas = np.array([reading.get_absolute("Z").baseline for reading in readings])
+    return (h_bas, d_bas, z_bas)
+
+
+def get_ordinates(
+    readings: List[Reading],
+) -> Tuple[List[float], List[float], List[float]]:
+    """Calculates ordinates from absolutes and baselines"""
+    h_abs, d_abs, z_abs = get_absolutes(readings)
+    h_bas, d_bas, z_bas = get_baselines(readings)
+    # recreate ordinate variometer measurements from absolutes and baselines
+    h_ord = h_abs - h_bas
+    d_ord = d_abs - d_bas
+    z_ord = z_abs - z_bas
+    e_ord = h_abs * np.radians(d_ord)
+    h_ord = np.sqrt(h_ord ** 2 - e_ord ** 2)
+    return (h_ord, e_ord, z_ord)
+
+
+def get_times(readings: List[UTCDateTime]):
+    return np.array([reading.get_absolute("H").endtime for reading in readings])

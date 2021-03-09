@@ -20,13 +20,15 @@ from .MeasurementType import (
 )
 from .Reading import Reading
 from .SpreadsheetAbsolutesFactory import SpreadsheetAbsolutesFactory
+from .SpreadsheetSummaryFactory import SpreadsheetSummaryFactory
 from .WebAbsolutesFactory import WebAbsolutesFactory
 
 __all__ = [
     "Absolute",
     "Angle",
     "AverageMeasurement",
-    "average_measurement" "CalFileFactory",
+    "average_measurement",
+    "CalFileFactory",
     "calculate",
     "calculate_D_absolute",
     "calculate_HZ_absolutes",
@@ -39,5 +41,6 @@ __all__ = [
     "MeasurementType",
     "Reading",
     "SpreadsheetAbsolutesFactory",
+    "SpreadsheetSummaryFactory",
     "WebAbsolutesFactory",
 ]

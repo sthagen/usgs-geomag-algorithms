@@ -1,23 +1,22 @@
-"""Algorithm that converts from one geomagnetic coordinate system to a
-    related geographic coordinate system, by using transformations generated
-    from absolute, baseline measurements.
-"""
-from __future__ import absolute_import
+import sys
 
-from .Algorithm import Algorithm
 import json
 import numpy as np
 from obspy.core import Stream, Stats
-import sys
+
+from ..adjusted import AdjustedMatrix
+from .Algorithm import Algorithm
 
 
 class AdjustedAlgorithm(Algorithm):
-    """Adjusted Data Algorithm"""
+    """Algorithm that converts from one geomagnetic coordinate system to a
+    related geographic coordinate system, by using transformations generated
+    from absolute, baseline measurements.
+    """
 
     def __init__(
         self,
-        matrix=None,
-        pier_correction=None,
+        matrix: AdjustedMatrix = None,
         statefile=None,
         data_type=None,
         location=None,
@@ -33,7 +32,6 @@ class AdjustedAlgorithm(Algorithm):
         )
         # state variables
         self.matrix = matrix
-        self.pier_correction = pier_correction
         self.statefile = statefile
         self.data_type = data_type
         self.location = location
@@ -45,25 +43,28 @@ class AdjustedAlgorithm(Algorithm):
         """Load algorithm state from a file.
         File name is self.statefile.
         """
-        # Adjusted matrix defaults to identity matrix
-        matrix_size = len([c for c in self.get_input_channels() if c != "F"]) + 1
-        self.matrix = np.eye(matrix_size)
-        self.pier_correction = 0
         if self.statefile is None:
             return
-        data = None
         try:
             with open(self.statefile, "r") as f:
                 data = f.read()
                 data = json.loads(data)
         except IOError as err:
-            sys.stderr.write("I/O error {0}".format(err))
-        if data is None or data == "":
-            return
-        for row in range(matrix_size):
-            for col in range(matrix_size):
-                self.matrix[row, col] = np.float64(data[f"M{row+1}{col+1}"])
-        self.pier_correction = np.float64(data["PC"])
+            raise FileNotFoundError("statefile not found")
+        # Adjusted matrix defaults to identity matrix
+        matrix_size = len([c for c in self.get_input_channels() if c != "F"]) + 1
+        if "pier_correction" in data:
+            self.matrix = AdjustedMatrix(**data)
+        elif "PC" in data:
+            matrix = np.eye(matrix_size)
+            # read data from legacy format
+            for row in range(matrix_size):
+                for col in range(matrix_size):
+                    matrix[row, col] = np.float64(data[f"M{row+1}{col+1}"])
+            pier_correction = np.float64(data["PC"])
+            self.matrix = AdjustedMatrix(matrix=matrix, pier_correction=pier_correction)
+        else:
+            raise ValueError("pier correction not found in statefile")
 
     def save_state(self):
         """Save algorithm state to a file.
@@ -71,14 +72,10 @@ class AdjustedAlgorithm(Algorithm):
         """
         if self.statefile is None:
             return
-        data = {"PC": self.pier_correction}
-        length = len(self.matrix[0, :])
-        for i in range(0, length):
-            for j in range(0, length):
-                key = "M" + str(i + 1) + str(j + 1)
-                data[key] = self.matrix[i, j]
+        json_string = self.matrix.json()
+        json_dict = json.loads(json_string)
         with open(self.statefile, "w") as f:
-            f.write(json.dumps(data))
+            f.write(json.dumps(json_dict))
 
     def create_trace(self, channel, stats, data):
         """Utility to create a new trace object.
@@ -126,15 +123,11 @@ class AdjustedAlgorithm(Algorithm):
         out = None
         inchannels = self.get_input_channels()
         outchannels = self.get_output_channels()
-        raws = np.vstack(
-            [
-                stream.select(channel=channel)[0].data
-                for channel in inchannels
-                if channel != "F"
-            ]
-            + [np.ones_like(stream[0].data)]
+        adjusted = self.matrix.process(
+            stream,
+            inchannels=inchannels,
+            outchannels=outchannels,
         )
-        adjusted = np.matmul(self.matrix, raws)
         out = Stream(
             [
                 self.create_trace(
@@ -142,12 +135,9 @@ class AdjustedAlgorithm(Algorithm):
                     stream.select(channel=inchannels[i])[0].stats,
                     adjusted[i],
                 )
-                for i in range(len(adjusted) - 1)
+                for i in range(len(outchannels))
             ]
         )
-        if "F" in inchannels and "F" in outchannels:
-            f = stream.select(channel="F")[0]
-            out += self.create_trace("F", f.stats, f.data + self.pier_correction)
         return out
 
     def can_produce_data(self, starttime, endtime, stream):
