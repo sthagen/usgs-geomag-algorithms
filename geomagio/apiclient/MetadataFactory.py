@@ -14,7 +14,7 @@ class MetadataFactory(object):
     def __init__(
         self,
         url: str = "http://{}/ws/secure/metadata".format(
-            os.getenv("EDGE_HOST", "127.0.0.1:8000")
+            os.getenv("GEOMAG_API_HOST", "127.0.0.1:8000")
         ),
         token: str = os.getenv("GITLAB_API_TOKEN"),
     ):
@@ -28,7 +28,10 @@ class MetadataFactory(object):
 
     def get_metadata(self, query: MetadataQuery) -> Union[List[Metadata], Metadata]:
         args = parse_params(query=query)
-        responses = requests.get(url=f"{self.url}{args}", headers=self.header)
+        if "id" in args:
+            self.url = f"{self.url}/{args['id']}"
+            args = {}
+        responses = requests.get(url=self.url, params=args, headers=self.header)
         try:
             metadata = parse_obj_as(Union[List[Metadata], Metadata], responses.json())
         except:
@@ -42,10 +45,6 @@ class MetadataFactory(object):
         return response
 
     def update_metadata(self, metadata: Metadata) -> requests.Response:
-        if metadata.metadata is None:
-            metadata.metadata = self.get_metadata(
-                query=MetadataQuery(**metadata.dict())
-            ).metadata
         response = requests.put(
             url=f"{self.url}/{metadata.id}", data=metadata.json(), headers=self.header
         )
@@ -65,7 +64,7 @@ def parse_params(query: MetadataQuery) -> str:
             if key == "category":
                 element = element.value
             elif key == "id":
-                return f"/{element}"
+                return {"id": element}
             args[key] = element
 
-    return f"?{urllib.parse.urlencode(args)}"
+    return args

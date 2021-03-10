@@ -15,7 +15,9 @@ def main():
 
 
 def client(
-    action: str,
+    action: str = typer.Option(
+        default="get", help="get(default), delete, create, or update"
+    ),
     url: str = "http://{}/ws/secure/metadata".format(
         os.getenv("GEOMAG_API_HOST", "127.0.0.1:8000")
     ),
