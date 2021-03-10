@@ -1,5 +1,4 @@
 import os
-from typing import Callable
 
 from ..TimeseriesFactory import TimeseriesFactory
 from ..edge import EdgeFactory, MiniSeedFactory

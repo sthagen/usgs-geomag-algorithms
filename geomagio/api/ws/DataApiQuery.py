@@ -1,12 +1,13 @@
 import datetime
 import enum
-from typing import Any, Dict, List, Optional, Union
+import os
+from typing import Dict, List, Optional, Union
 
 from obspy import UTCDateTime
 from pydantic import BaseModel, root_validator, validator
 
 from ... import pydantic_utcdatetime
-from .Element import ELEMENTS, ELEMENT_INDEX
+from .Element import ELEMENTS
 from .Observatory import OBSERVATORY_INDEX
 
 
@@ -37,6 +38,13 @@ class SamplingPeriod(float, enum.Enum):
     MINUTE = 60.0
     HOUR = 3600.0
     DAY = 86400.0
+
+    @property
+    def input_factory(self):
+        if self in [SamplingPeriod.TEN_HERTZ, SamplingPeriod.HOUR, SamplingPeriod.DAY]:
+            return "miniseed"
+        else:
+            return "edge"
 
 
 class DataApiQuery(BaseModel):

@@ -1,7 +1,5 @@
 from datetime import datetime
-import enum
 
-from obspy import UTCDateTime
 from sqlalchemy import or_, Boolean, Column, Index, Integer, JSON, String, Table, Text
 import sqlalchemy_utc
 

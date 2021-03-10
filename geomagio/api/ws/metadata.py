@@ -1,6 +1,6 @@
 from typing import List
 
-from fastapi import APIRouter, Body, Response
+from fastapi import APIRouter
 from obspy import UTCDateTime
 
 from ...metadata import Metadata, MetadataCategory

@@ -15,7 +15,7 @@ def get_dbdt(
     query: DataApiQuery = Depends(get_data_query),
     data_factory: TimeseriesFactory = Depends(get_data_factory),
 ) -> Response:
-    dbdt = DbDtAlgorithm()
+    dbdt = DbDtAlgorithm(period=query.sampling_period)
     # read data
     raw = get_timeseries(data_factory, query)
     # run dbdt

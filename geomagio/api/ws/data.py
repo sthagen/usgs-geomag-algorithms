@@ -1,12 +1,12 @@
 import os
-from typing import Any, Dict, List, Union
+from typing import List, Union
 
 from fastapi import APIRouter, Depends, Query
 from obspy import UTCDateTime, Stream
 from starlette.responses import Response
 
 from ... import TimeseriesFactory, TimeseriesUtility
-from ...edge import EdgeFactory
+from ...edge import EdgeFactory, MiniSeedFactory
 from ...iaga2002 import IAGA2002Writer
 from ...imfjson import IMFJSONWriter
 from .DataApiQuery import (
@@ -18,7 +18,9 @@ from .DataApiQuery import (
 )
 
 
-def get_data_factory() -> TimeseriesFactory:
+def get_data_factory(
+    query: DataApiQuery,
+) -> TimeseriesFactory:
     """Reads environment variable to determine the factory to be used
 
     Returns
@@ -26,11 +28,12 @@ def get_data_factory() -> TimeseriesFactory:
     data_factory
         Edge or miniseed factory object
     """
-    data_type = os.getenv("DATA_TYPE", "edge")
-    data_host = os.getenv("DATA_HOST", "cwbpub.cr.usgs.gov")
-    data_port = int(os.getenv("DATA_PORT", "2060"))
-    if data_type == "edge":
-        return EdgeFactory(host=data_host, port=data_port)
+    host = os.getenv("DATA_HOST", "cwbpub.cr.usgs.gov")
+    factory = query.sampling_period.input_factory
+    if factory == "edge":
+        return EdgeFactory(host=host, port=os.getenv("DATA_EARTHWORM_PORT", "2060"))
+    elif factory == "miniseed":
+        return MiniSeedFactory(host=host, port=os.getenv("DATA_MINISEED_PORT", "2061"))
     else:
         return None
 
@@ -150,8 +153,8 @@ router = APIRouter()
 @router.get("/data/")
 def get_data(
     query: DataApiQuery = Depends(get_data_query),
-    data_factory: TimeseriesFactory = Depends(get_data_factory),
 ) -> Response:
+    data_factory = get_data_factory(query=query)
     # read data
     timeseries = get_timeseries(data_factory, query)
     # output response
