@@ -1,7 +1,7 @@
 from geomagio.adjusted import AdjustedMatrix
 from geomagio.algorithm import AdjustedAlgorithm
 import geomagio.iaga2002 as i2
-from numpy.testing import assert_almost_equal, assert_equal
+from numpy.testing import assert_almost_equal, assert_array_equal, assert_equal
 
 
 def test_construct():
@@ -24,7 +24,7 @@ def assert_streams_almost_equal(adjusted, expected, channels):
 
 
 def test_process_XYZF_AdjustedMatrix():
-    """algorithm_test.AdjustedAlgorithm_test.test_process()
+    """algorithm_test.AdjustedAlgorithm_test.test_process_XYZF_AdjustedMatrix()
 
     Check adjusted data processing versus files generated from
     original script
@@ -72,7 +72,7 @@ def test_process_XYZF_AdjustedMatrix():
 
 
 def test_process_reverse_polarity_AdjustedMatrix():
-    """algorithm_test.AdjustedAlgorithm_test.test_process()
+    """algorithm_test.AdjustedAlgorithm_test.test_process_reverse_polarity_AdjustedMatrix()
 
     Check adjusted data processing versus files generated from
     original script. Tests reverse polarity martix.
@@ -106,7 +106,7 @@ def test_process_reverse_polarity_AdjustedMatrix():
 
 
 def test_process_XYZF_statefile():
-    """algorithm_test.AdjustedAlgorithm_test.test_process()
+    """algorithm_test.AdjustedAlgorithm_test.test_process_XYZF_statefile()
 
     Check adjusted data processing versus files generated from
     original script
@@ -131,7 +131,7 @@ def test_process_XYZF_statefile():
 
 
 def test_process_reverse_polarity_statefile():
-    """algorithm_test.AdjustedAlgorithm_test.test_process()
+    """algorithm_test.AdjustedAlgorithm_test.test_process_reverse_polarity_statefile()
 
     Check adjusted data processing versus files generated from
     original script. Tests reverse polarity martix.
@@ -157,3 +157,21 @@ def test_process_reverse_polarity_statefile():
     assert_streams_almost_equal(
         adjusted=adjusted, expected=expected, channels=["H", "E"]
     )
+
+
+def test_process_no_statefile():
+    """algorithm_test.AdjustedAlgorithm_test.test_process_no_statefile()
+
+    Check adjusted data processing versus raw data
+
+    Uses default AdjustedMatrix with identity transform
+    """
+    # initialize adjusted algorithm with no statefile
+    a = AdjustedAlgorithm()
+    # load boulder Jan 16 files from /etc/ directory
+    with open("etc/adjusted/BOU201601vmin.min") as f:
+        raw = i2.IAGA2002Factory().parse_string(f.read())
+    # process hezf (raw) channels with identity transform
+    adjusted = a.process(raw)
+    for i in range(len(adjusted)):
+        assert_array_equal(adjusted[i].data, raw[i].data)
