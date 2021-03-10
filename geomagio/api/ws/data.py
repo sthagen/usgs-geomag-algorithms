@@ -36,8 +36,10 @@ def get_data_factory(
         SamplingPeriod.DAY,
     ]:
         return MiniSeedFactory(host=host, port=os.getenv("DATA_MINISEED_PORT", "2061"))
-    else:
+    elif sampling_period in [SamplingPeriod.SECOND, SamplingPeriod.MINUTE]:
         return EdgeFactory(host=host, port=os.getenv("DATA_EARTHWORM_PORT", "2060"))
+    else:
+        return None
 
 
 def get_data_query(
