@@ -29,13 +29,15 @@ def get_data_factory(
         Edge or miniseed factory object
     """
     host = os.getenv("DATA_HOST", "cwbpub.cr.usgs.gov")
-    factory = query.sampling_period.input_factory
-    if factory == "edge":
-        return EdgeFactory(host=host, port=os.getenv("DATA_EARTHWORM_PORT", "2060"))
-    elif factory == "miniseed":
+    sampling_period = query.sampling_period
+    if sampling_period in [
+        SamplingPeriod.TEN_HERTZ,
+        SamplingPeriod.HOUR,
+        SamplingPeriod.DAY,
+    ]:
         return MiniSeedFactory(host=host, port=os.getenv("DATA_MINISEED_PORT", "2061"))
     else:
-        return None
+        return EdgeFactory(host=host, port=os.getenv("DATA_EARTHWORM_PORT", "2060"))
 
 
 def get_data_query(
