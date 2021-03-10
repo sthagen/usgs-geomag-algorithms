@@ -43,7 +43,11 @@ class AdjustedAlgorithm(Algorithm):
         """Load algorithm state from a file.
         File name is self.statefile.
         """
+        # Adjusted matrix defaults to identity matrix
+        matrix_size = len([c for c in self.get_input_channels() if c != "F"]) + 1
+        matrix = np.eye(matrix_size)
         if self.statefile is None:
+            self.matrix = AdjustedMatrix(matrix=matrix)
             return
         try:
             with open(self.statefile, "r") as f:
@@ -51,12 +55,9 @@ class AdjustedAlgorithm(Algorithm):
                 data = json.loads(data)
         except IOError as err:
             raise FileNotFoundError("statefile not found")
-        # Adjusted matrix defaults to identity matrix
-        matrix_size = len([c for c in self.get_input_channels() if c != "F"]) + 1
         if "pier_correction" in data:
             self.matrix = AdjustedMatrix(**data)
         elif "PC" in data:
-            matrix = np.eye(matrix_size)
             # read data from legacy format
             for row in range(matrix_size):
                 for col in range(matrix_size):

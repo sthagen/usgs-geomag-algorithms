@@ -23,7 +23,7 @@ class AdjustedMatrix(BaseModel):
     """
 
     matrix: Optional[Any] = None
-    pier_correction: Optional[float] = None
+    pier_correction: float = 0
     metrics: Optional[List[Metric]] = None
     starttime: Optional[UTCDateTime] = None
     endtime: Optional[UTCDateTime] = None
