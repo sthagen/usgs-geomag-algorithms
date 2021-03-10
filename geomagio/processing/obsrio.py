@@ -13,10 +13,10 @@ from .factory import get_edge_factory, get_miniseed_factory
 
 
 def main():
-    typer.run(filter)
+    typer.run(obsrio_filter)
 
 
-def filter(
+def obsrio_filter(
     interval: str,
     observatory: str,
     input_factory: Optional[str] = None,
