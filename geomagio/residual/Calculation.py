@@ -11,6 +11,7 @@ from .MeasurementType import (
     MARK_TYPES,
 )
 from .Measurement import AverageMeasurement, Measurement, average_measurement
+from .Diagnostics import Diagnostics
 from .Reading import Reading
 
 
@@ -29,7 +30,7 @@ def calculate(reading: Reading, adjust_reference: bool = True) -> Reading:
     # reference measurement, used to adjust absolutes
     reference = reading[mt.WEST_DOWN][0]
     # calculate inclination
-    inclination, f, mean = calculate_I(
+    inclination, f, i_mean = calculate_I(
         hemisphere=reading.hemisphere, measurements=reading.measurements
     )
     corrected_f = f + reading.pier_correction
@@ -37,14 +38,19 @@ def calculate(reading: Reading, adjust_reference: bool = True) -> Reading:
     absoluteH, absoluteZ = calculate_HZ_absolutes(
         corrected_f=corrected_f,
         inclination=inclination,
-        mean=mean,
+        mean=i_mean,
         reference=adjust_reference and reference or None,
     )
-    absoluteD = calculate_D_absolute(
+    absoluteD, meridian = calculate_D_absolute(
         azimuth=reading.azimuth,
         h_baseline=absoluteH.baseline,
         measurements=reading.measurements,
         reference=adjust_reference and reference or None,
+    )
+    # populate diagnostics object with averaged measurements
+    diagnostics = Diagnostics(
+        inclination=inclination,
+        meridian=meridian,
     )
     # calculate scale
     scale_value = None
@@ -59,8 +65,9 @@ def calculate(reading: Reading, adjust_reference: bool = True) -> Reading:
     calculated = Reading(
         absolutes=[absoluteD, absoluteH, absoluteZ],
         scale_value=scale_value,
+        diagnostics=diagnostics,
         # copy other attributes
-        **reading.dict(exclude={"absolutes", "scale_value"}),
+        **reading.dict(exclude={"absolutes", "scale_value", "diagnostics"}),
     )
     return calculated
 
@@ -70,7 +77,7 @@ def calculate_D_absolute(
     azimuth: float,
     h_baseline: float,
     reference: Measurement,
-) -> Absolute:
+) -> Tuple[Absolute, Diagnostics]:
     """Calculate D absolute.
 
     Parameters
@@ -87,14 +94,14 @@ def calculate_D_absolute(
     mean = average_measurement(measurements, DECLINATION_TYPES)
     reference = reference or mean
     # average mark
-    average_mark = average_measurement(measurements, MARK_TYPES).angle
+    average_mark = average_measurement(measurements, MARK_TYPES)
     # adjust based on which is larger
     mark_up = average_measurement(measurements, [mt.FIRST_MARK_UP]).angle
     mark_down = average_measurement(measurements, [mt.FIRST_MARK_DOWN]).angle
     if mark_up < mark_down:
-        average_mark += 90
+        average_mark.angle += 90
     else:
-        average_mark -= 90
+        average_mark.angle -= 90
     # declination measurements
     declination_measurements = [
         average_measurement(measurements, [t]) for t in DECLINATION_TYPES
@@ -116,16 +123,20 @@ def calculate_D_absolute(
         shift = -180
     # add subtract average mark angle from average meridian angle and add
     # azimuth to get the declination baseline
-    d_b = (meridian - average_mark) + azimuth + shift
+    d_b = (meridian - average_mark.angle) + azimuth + shift
     # calculate absolute
     d_abs = d_b + np.degrees(np.arctan(reference.e / (reference.h + h_baseline)))
-    return Absolute(
-        element="D",
-        absolute=d_abs,
-        baseline=d_b,
-        shift=shift,
-        starttime=mean.time,
-        endtime=mean.endtime,
+
+    return (
+        Absolute(
+            element="D",
+            absolute=d_abs,
+            baseline=d_b,
+            shift=shift,
+            starttime=mean.time,
+            endtime=mean.endtime,
+        ),
+        meridian,
     )
 
 

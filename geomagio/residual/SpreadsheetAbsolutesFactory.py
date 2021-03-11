@@ -6,6 +6,13 @@ from obspy.core import UTCDateTime
 import openpyxl
 
 from .Absolute import Absolute
+from .Calculation import (
+    DECLINATION_TYPES,
+    MARK_TYPES,
+    INCLINATION_TYPES,
+    average_measurement,
+)
+from .Diagnostics import Diagnostics
 from .Measurement import Measurement
 from .MeasurementType import MeasurementType as mt
 from .Reading import Reading
@@ -299,6 +306,7 @@ class SpreadsheetAbsolutesFactory(object):
             metadata=metadata,
             pier_correction=metadata["pier_correction"],
             scale_value=numpy.degrees(metadata["scale_value"]),
+            diagnostics=self._parse_diagnostics(calculation_sheet),
         )
 
     def _parse_absolutes(
@@ -401,6 +409,18 @@ class SpreadsheetAbsolutesFactory(object):
             "year": year,
             "precision": measurement_sheet["H8"].value,
         }
+
+    def _parse_diagnostics(
+        self,
+        sheet: openpyxl.worksheet,
+    ) -> Diagnostics:
+        """
+        Gather diagnostics from list of measurements
+        """
+        return Diagnostics(
+            inclination=sheet["H40"].value,
+            meridian=sheet["E36"].value,
+        )
 
 
 def convert_precision(angle, precision="DMS"):
