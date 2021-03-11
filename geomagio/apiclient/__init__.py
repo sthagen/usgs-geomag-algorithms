@@ -1,4 +1,4 @@
-from .metadata import client
+from .metadata import app
 from .MetadataFactory import MetadataFactory
 
-__all__ = ["client", "MetadataFactory"]
+__all__ = ["app", "MetadataFactory"]

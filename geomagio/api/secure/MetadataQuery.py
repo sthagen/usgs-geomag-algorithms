@@ -2,6 +2,7 @@ from datetime import timezone
 
 from obspy import UTCDateTime
 from pydantic import BaseModel
+from typing import Optional
 
 from ...metadata import MetadataCategory
 from ... import pydantic_utcdatetime
@@ -18,8 +19,8 @@ class MetadataQuery(BaseModel):
     station: str = None
     channel: str = None
     location: str = None
-    data_valid: bool = None
-    metadata_valid: bool = True
+    data_valid: Optional[bool] = None
+    metadata_valid: Optional[bool] = None
 
     def datetime_dict(self, **kwargs):
         values = self.dict(**kwargs)
