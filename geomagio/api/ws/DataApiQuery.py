@@ -39,13 +39,6 @@ class SamplingPeriod(float, enum.Enum):
     HOUR = 3600.0
     DAY = 86400.0
 
-    @property
-    def input_factory(self):
-        if self in [SamplingPeriod.TEN_HERTZ, SamplingPeriod.HOUR, SamplingPeriod.DAY]:
-            return "miniseed"
-        else:
-            return "edge"
-
 
 class DataApiQuery(BaseModel):
     id: str
