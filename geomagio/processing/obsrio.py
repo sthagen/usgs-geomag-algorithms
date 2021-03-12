@@ -151,6 +151,8 @@ def obsrio_day(
     renames = {"H": "U", "E": "V", "Z": "W", "F": "F"}
     for input_channel in renames.keys():
         output_channel = renames[input_channel]
+        controller._algorithm._inchannels = (input_channel,)
+        controller._algorithm._outchannels = (output_channel,)
         controller.run_as_update(
             observatory=(observatory,),
             output_observatory=(observatory,),
@@ -186,6 +188,8 @@ def obsrio_hour(
     renames = {"H": "U", "E": "V", "Z": "W", "F": "F"}
     for input_channel in renames.keys():
         output_channel = renames[input_channel]
+        controller._algorithm._inchannels = (input_channel,)
+        controller._algorithm._outchannels = (output_channel,)
         controller.run_as_update(
             observatory=(observatory,),
             output_observatory=(observatory,),
@@ -220,6 +224,8 @@ def obsrio_minute(
         outputInterval="minute",
     )
     for channel in ["H", "E", "Z", "F"]:
+        controller._algorithm._inchannels = (channel,)
+        controller._algorithm._outchannels = (channel,)
         controller.run_as_update(
             observatory=(observatory,),
             output_observatory=(observatory,),
@@ -248,6 +254,8 @@ def obsrio_second(
         outputFactory=output_factory or get_edge_factory(data_type="variation"),
         outputInterval="second",
     )
+    controller._algorithm._inchannels = ("F",)
+    controller._algorithm._outchannels = ("F",)
     controller.run_as_update(
         observatory=(observatory,),
         output_observatory=(observatory,),
@@ -279,6 +287,8 @@ def obsrio_temperatures(
     renames = {"LK1": "UK1", "LK2": "UK2", "LK3": "UK3", "LK4": "UK4"}
     for input_channel in renames.keys():
         output_channel = renames[input_channel]
+        controller._algorithm._inchannels = (input_channel,)
+        controller._algorithm._outchannels = (output_channel,)
         controller.run_as_update(
             observatory=(observatory,),
             output_observatory=(observatory,),
@@ -312,6 +322,8 @@ def obsrio_tenhertz(
     renames = {"U": "H", "V": "E", "W": "Z"}
     for input_channel in renames.keys():
         output_channel = renames[input_channel]
+        controller._algorithm._inchannels = (input_channel,)
+        controller._algorithm._outchannels = (output_channel,)
         controller.run_as_update(
             observatory=(observatory,),
             output_observatory=(observatory,),
