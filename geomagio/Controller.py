@@ -7,7 +7,7 @@ from typing import List, Optional, Tuple, Union
 
 from obspy.core import Stream, UTCDateTime
 
-from .algorithm import algorithms, AlgorithmException
+from .algorithm import Algorithm, algorithms, AlgorithmException
 from .PlotTimeseriesFactory import PlotTimeseriesFactory
 from .StreamTimeseriesFactory import StreamTimeseriesFactory
 from . import TimeseriesUtility, Util
@@ -51,7 +51,7 @@ class Controller(object):
         self,
         inputFactory,
         outputFactory,
-        algorithm,
+        algorithm: Optional[Algorithm] = None,
         inputInterval: Optional[str] = None,
         outputInterval: Optional[str] = None,
     ):
@@ -61,7 +61,9 @@ class Controller(object):
         self._outputFactory = outputFactory
         self._outputInterval = outputInterval
 
-    def _get_input_timeseries(self, observatory, channels, starttime, endtime):
+    def _get_input_timeseries(
+        self, observatory, channels, starttime, endtime, algorithm=None
+    ):
         """Get timeseries from the input factory for requested options.
 
         Parameters
@@ -84,12 +86,13 @@ class Controller(object):
         -------
         timeseries : obspy.core.Stream
         """
+        algorithm = algorithm or self._algorithm
         timeseries = Stream()
         for obs in observatory:
             # get input interval for observatory
             # do this per observatory in case an
             # algorithm needs different amounts of data
-            input_start, input_end = self._algorithm.get_input_interval(
+            input_start, input_end = algorithm.get_input_interval(
                 start=starttime, end=endtime, observatory=obs, channels=channels
             )
             if input_start is None or input_end is None:
@@ -217,6 +220,7 @@ class Controller(object):
         observatory: List[str],
         starttime: UTCDateTime,
         endtime: UTCDateTime,
+        algorithm: Optional[Algorithm] = None,
         input_channels: Optional[List[str]] = None,
         input_timeseries: Optional[Stream] = None,
         output_channels: Optional[List[str]] = None,
@@ -243,13 +247,14 @@ class Controller(object):
         # ensure realtime is a valid value:
         if realtime <= 0:
             realtime = False
-        algorithm = self._algorithm
+        algorithm = algorithm or self._algorithm
         input_channels = input_channels or algorithm.get_input_channels()
         output_channels = output_channels or algorithm.get_output_channels()
         next_starttime = algorithm.get_next_starttime()
         starttime = next_starttime or starttime
         # input
         timeseries = input_timeseries or self._get_input_timeseries(
+            algorithm=algorithm,
             observatory=observatory,
             starttime=starttime,
             endtime=endtime,
@@ -298,6 +303,7 @@ class Controller(object):
         output_observatory: List[str],
         starttime: UTCDateTime,
         endtime: UTCDateTime,
+        algorithm: Optional[Algorithm] = None,
         input_channels: Optional[List[str]] = None,
         output_channels: Optional[List[str]] = None,
         no_trim: bool = False,
@@ -337,7 +343,7 @@ class Controller(object):
         # If an update_limit is set, make certain we don't step past it.
         if update_limit > 0 and update_count >= update_limit:
             return
-        algorithm = self._algorithm
+        algorithm = algorithm or self._algorithm
         if algorithm.get_next_starttime() is not None:
             raise AlgorithmException("Stateful algorithms cannot use run_as_update")
         input_channels = input_channels or algorithm.get_input_channels()
@@ -373,6 +379,7 @@ class Controller(object):
             ]
         for output_gap in output_gaps:
             input_timeseries = self._get_input_timeseries(
+                algorithm=algorithm,
                 observatory=observatory,
                 starttime=output_gap[0],
                 endtime=output_gap[1],
@@ -389,6 +396,7 @@ class Controller(object):
                 recurse_starttime = starttime - interval
                 recurse_endtime = starttime - 1
                 self.run_as_update(
+                    algorithm=algorithm,
                     observatory=observatory,
                     output_observatory=output_observatory,
                     starttime=recurse_starttime,
@@ -414,6 +422,7 @@ class Controller(object):
                 file=sys.stderr,
             )
             self.run(
+                algorithm=algorithm,
                 observatory=observatory,
                 starttime=gap_starttime,
                 endtime=gap_endtime,

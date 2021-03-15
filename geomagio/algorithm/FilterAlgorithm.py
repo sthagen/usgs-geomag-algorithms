@@ -123,7 +123,7 @@ class FilterAlgorithm(Algorithm):
         outchannels=None,
     ):
 
-        Algorithm.__init__(self, inchannels=None, outchannels=None)
+        Algorithm.__init__(self, inchannels=inchannels, outchannels=outchannels)
         self.coeff_filename = coeff_filename
         self.filtertype = filtertype
         self.input_sample_period = input_sample_period

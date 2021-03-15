@@ -140,9 +140,6 @@ def obsrio_day(
     starttime, endtime = get_realtime_interval(realtime_interval)
     # filter 10Hz U,V,W to H,E,Z
     controller = Controller(
-        algorithm=FilterAlgorithm(
-            input_sample_period=60.0, output_sample_period=86400.0
-        ),
         inputFactory=input_factory or get_edge_factory(data_type="variation"),
         inputInterval="minute",
         outputFactory=output_factory or get_miniseed_factory(data_type="variation"),
@@ -151,9 +148,13 @@ def obsrio_day(
     renames = {"H": "U", "E": "V", "Z": "W", "F": "F"}
     for input_channel in renames.keys():
         output_channel = renames[input_channel]
-        controller._algorithm._inchannels = (input_channel,)
-        controller._algorithm._outchannels = (output_channel,)
         controller.run_as_update(
+            algorithm=FilterAlgorithm(
+                input_sample_period=60.0,
+                output_sample_period=86400.0,
+                inchannels=(input_channel,),
+                outchannels=(output_channel,),
+            ),
             observatory=(observatory,),
             output_observatory=(observatory,),
             starttime=starttime,
@@ -177,9 +178,6 @@ def obsrio_hour(
     starttime, endtime = get_realtime_interval(realtime_interval)
     # filter 10Hz U,V,W to H,E,Z
     controller = Controller(
-        algorithm=FilterAlgorithm(
-            input_sample_period=60.0, output_sample_period=3600.0
-        ),
         inputFactory=input_factory or get_edge_factory(data_type="variation"),
         inputInterval="minute",
         outputFactory=output_factory or get_miniseed_factory(data_type="variation"),
@@ -188,9 +186,13 @@ def obsrio_hour(
     renames = {"H": "U", "E": "V", "Z": "W", "F": "F"}
     for input_channel in renames.keys():
         output_channel = renames[input_channel]
-        controller._algorithm._inchannels = (input_channel,)
-        controller._algorithm._outchannels = (output_channel,)
         controller.run_as_update(
+            algorithm=FilterAlgorithm(
+                input_sample_period=60.0,
+                output_sample_period=3600.0,
+                inchannels=(input_channel,),
+                outchannels=(output_channel,),
+            ),
             observatory=(observatory,),
             output_observatory=(observatory,),
             starttime=starttime,
@@ -217,16 +219,19 @@ def obsrio_minute(
     """
     starttime, endtime = get_realtime_interval(realtime_interval)
     controller = Controller(
-        algorithm=FilterAlgorithm(input_sample_period=1, output_sample_period=60),
         inputFactory=input_factory or get_edge_factory(data_type="variation"),
         inputInterval="second",
         outputFactory=output_factory or get_edge_factory(data_type="variation"),
         outputInterval="minute",
     )
     for channel in ["H", "E", "Z", "F"]:
-        controller._algorithm._inchannels = (channel,)
-        controller._algorithm._outchannels = (channel,)
         controller.run_as_update(
+            algorithm=FilterAlgorithm(
+                input_sample_period=1,
+                output_sample_period=60,
+                inchannels=(channel,),
+                outchannels=(channel,),
+            ),
             observatory=(observatory,),
             output_observatory=(observatory,),
             starttime=starttime,
@@ -248,14 +253,12 @@ def obsrio_second(
     """Copy 1Hz miniseed F to 1Hz legacy F."""
     starttime, endtime = get_realtime_interval(realtime_interval)
     controller = Controller(
-        algorithm=Algorithm(),
+        algorithm=Algorithm(inchannels=("F",), outchannels=("F",)),
         inputFactory=input_factory or get_miniseed_factory(data_type="variation"),
         inputInterval="second",
         outputFactory=output_factory or get_edge_factory(data_type="variation"),
         outputInterval="second",
     )
-    controller._algorithm._inchannels = ("F",)
-    controller._algorithm._outchannels = ("F",)
     controller.run_as_update(
         observatory=(observatory,),
         output_observatory=(observatory,),
@@ -278,7 +281,6 @@ def obsrio_temperatures(
     """Filter temperatures 1Hz miniseed (LK1-4) to 1 minute legacy (UK1-4)."""
     starttime, endtime = get_realtime_interval(realtime_interval)
     controller = Controller(
-        algorithm=FilterAlgorithm(input_sample_period=1, output_sample_period=60),
         inputFactory=input_factory or get_miniseed_factory(data_type="variation"),
         inputInterval="second",
         outputFactory=output_factory or get_edge_factory(data_type="variation"),
@@ -287,9 +289,13 @@ def obsrio_temperatures(
     renames = {"LK1": "UK1", "LK2": "UK2", "LK3": "UK3", "LK4": "UK4"}
     for input_channel in renames.keys():
         output_channel = renames[input_channel]
-        controller._algorithm._inchannels = (input_channel,)
-        controller._algorithm._outchannels = (output_channel,)
         controller.run_as_update(
+            algorithm=FilterAlgorithm(
+                input_sample_period=1,
+                output_sample_period=60,
+                inchannels=(input_channel,),
+                outchannels=(output_channel,),
+            ),
             observatory=(observatory,),
             output_observatory=(observatory,),
             starttime=starttime,
@@ -313,7 +319,6 @@ def obsrio_tenhertz(
     starttime, endtime = get_realtime_interval(realtime_interval)
     # filter 10Hz U,V,W to H,E,Z
     controller = Controller(
-        algorithm=FilterAlgorithm(input_sample_period=0.1, output_sample_period=1),
         inputFactory=input_factory or get_miniseed_factory(data_type="variation"),
         inputInterval="tenhertz",
         outputFactory=output_factory or get_edge_factory(data_type="variation"),
@@ -322,9 +327,13 @@ def obsrio_tenhertz(
     renames = {"U": "H", "V": "E", "W": "Z"}
     for input_channel in renames.keys():
         output_channel = renames[input_channel]
-        controller._algorithm._inchannels = (input_channel,)
-        controller._algorithm._outchannels = (output_channel,)
         controller.run_as_update(
+            algorithm=FilterAlgorithm(
+                input_sample_period=0.1,
+                output_sample_period=1,
+                inchannels=(input_channel,),
+                outchannels=(output_channel,),
+            ),
             observatory=(observatory,),
             output_observatory=(observatory,),
             starttime=starttime,
