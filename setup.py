@@ -25,10 +25,10 @@ setuptools.setup(
     use_pipfile=True,
     entry_points={
         "console_scripts": [
-            "magproc-prepfiles=geomagio.processing.magproc:main",
             "generate-matrix=geomagio.processing.adjusted:main",
-            "obsrio-filter=geomagio.processing.obsrio:main",
             "geomag-apiclient=geomagio.apiclient.metadata:main",
+            "magproc-prepfiles=geomagio.processing.magproc:main",
+            "obsrio-filter=geomagio.processing.obsrio:main",
         ],
     },
 )

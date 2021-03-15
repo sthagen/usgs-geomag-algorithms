@@ -36,6 +36,8 @@ class MetadataFactory(object):
             metadata = parse_obj_as(Union[List[Metadata], Metadata], responses.json())
         except:
             raise ValueError("Data not found")
+        if isinstance(metadata, Metadata):
+            metadata = [metadata]
         return metadata
 
     def create_metadata(self, metadata: Metadata) -> requests.Response:
