@@ -73,7 +73,6 @@ def create(
         metadata = Metadata(**metadata_dict)
     response = MetadataFactory(url=url).create_metadata(metadata=metadata)
     print(response.json())
-    return response
 
 
 @app.command()
@@ -118,7 +117,6 @@ def delete(
         )
     response = MetadataFactory(url=url).delete_metadata(metadata=metadata)
     print(response.json())
-    return response
 
 
 @app.command()
@@ -159,14 +157,10 @@ def get(
         data = [m.metadata for m in metadata]
         if len(data) == 1:
             print(json.dumps(data[0]))
-            return data[0]
         print([json.dumps(d) for d in data])
-        return data
     if len(metadata) == 1:
         print(metadata[0].json())
-        return metadata[0]
     print([m.json() for m in metadata])
-    return metadata
 
 
 @app.command()
@@ -213,7 +207,6 @@ def update(
     metadata.metadata = load_metadata(input_file=input_file)
     response = MetadataFactory(url=url).update_metadata(metadata=metadata)
     print(response.json())
-    return response
 
 
 def main():
