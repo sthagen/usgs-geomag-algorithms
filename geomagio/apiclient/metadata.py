@@ -154,13 +154,13 @@ def get(
     )
     metadata = MetadataFactory(url=url).get_metadata(query=query)
     if unwrap:
-        data = [m.metadata for m in metadata]
-        if len(data) == 1:
-            print(json.dumps(data[0]))
-        print([json.dumps(d) for d in data])
+        metadata = [json.dumps(m.metadata) for m in metadata]
+    else:
+        metadata = [m.json() for m in metadata]
     if len(metadata) == 1:
-        print(metadata[0].json())
-    print([m.json() for m in metadata])
+        print(metadata[0])
+        return
+    print(metadata)
 
 
 @app.command()
