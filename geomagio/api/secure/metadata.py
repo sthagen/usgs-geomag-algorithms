@@ -93,4 +93,6 @@ async def update_metadata(
     user: User = Depends(require_user([os.getenv("REVIEWER_GROUP", "reviewer")])),
 ):
     await metadata_table.update_metadata(metadata)
-    return get_metadata_by_id(metadata.id)
+    # should be same, but read from database
+    return await get_metadata_by_id(metadata.id)
+
