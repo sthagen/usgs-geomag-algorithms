@@ -1,7 +1,6 @@
 import os
 import requests
-from typing import Dict, List, Union
-import urllib
+from typing import List, Union
 
 from obspy import UTCDateTime
 from pydantic import parse_obj_as
@@ -22,35 +21,37 @@ class MetadataFactory(object):
         self.token = token
         self.header = {"Authorization": self.token} if token else None
 
-    def delete_metadata(self, metadata: Metadata) -> Dict:
+    def delete_metadata(self, metadata: Metadata) -> bool:
         response = requests.delete(url=f"{self.url}/{metadata.id}", headers=self.header)
-        return response
+        if response.status_code == 200:
+            return True
+        return False
 
-    def get_metadata(self, query: MetadataQuery) -> Union[List[Metadata], Metadata]:
+    def get_metadata(self, query: MetadataQuery) -> List[Metadata]:
         args = parse_params(query=query)
         if "id" in args:
             self.url = f"{self.url}/{args['id']}"
             args = {}
-        responses = requests.get(url=self.url, params=args, headers=self.header)
+        response = requests.get(url=self.url, params=args, headers=self.header)
         try:
-            metadata = parse_obj_as(Union[List[Metadata], Metadata], responses.json())
+            metadata = parse_obj_as(Union[List[Metadata], Metadata], response.json())
         except:
-            raise ValueError("Data not found")
+            return []
         if isinstance(metadata, Metadata):
             metadata = [metadata]
         return metadata
 
-    def create_metadata(self, metadata: Metadata) -> requests.Response:
+    def create_metadata(self, metadata: Metadata) -> Metadata:
         response = requests.post(
             url=self.url, data=metadata.json(), headers=self.header
         )
-        return response
+        return Metadata(**response.json())
 
-    def update_metadata(self, metadata: Metadata) -> requests.Response:
+    def update_metadata(self, metadata: Metadata) -> Metadata:
         response = requests.put(
             url=f"{self.url}/{metadata.id}", data=metadata.json(), headers=self.header
         )
-        return response
+        return Metadata(**response.json())
 
 
 def parse_params(query: MetadataQuery) -> str:
