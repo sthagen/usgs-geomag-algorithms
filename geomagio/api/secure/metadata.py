@@ -86,10 +86,12 @@ async def get_metadata_by_id(id: int):
         return meta[0]
 
 
-@router.put("/metadata/{id}")
+@router.put("/metadata/{id}", response_model=Metadata)
 async def update_metadata(
     id: int,
     metadata: Metadata = Body(...),
     user: User = Depends(require_user([os.getenv("REVIEWER_GROUP", "reviewer")])),
 ):
     await metadata_table.update_metadata(metadata)
+    # should be same, but read from database
+    return await get_metadata_by_id(metadata.id)
