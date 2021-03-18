@@ -138,7 +138,6 @@ def obsrio_day(
 ):
     """Filter 1 second edge H,E,Z,F to 1 day miniseed U,V,W,F."""
     starttime, endtime = get_realtime_interval(realtime_interval)
-    # filter 10Hz U,V,W to H,E,Z
     controller = Controller(
         inputFactory=input_factory
         or get_edge_factory(data_type="variation", interval="minute"),
@@ -178,7 +177,6 @@ def obsrio_hour(
 ):
     """Filter 1 second edge H,E,Z,F to 1 hour miniseed U,V,W,F."""
     starttime, endtime = get_realtime_interval(realtime_interval)
-    # filter 10Hz U,V,W to H,E,Z
     controller = Controller(
         inputFactory=input_factory
         or get_edge_factory(data_type="variation", interval="minute"),
@@ -325,7 +323,6 @@ def obsrio_tenhertz(
 ):
     """Filter 10Hz miniseed U,V,W to 1Hz legacy H,E,Z."""
     starttime, endtime = get_realtime_interval(realtime_interval)
-    # filter 10Hz U,V,W to H,E,Z
     controller = Controller(
         inputFactory=input_factory
         or get_miniseed_factory(data_type="variation", interval="tenhertz"),
