@@ -95,4 +95,3 @@ async def update_metadata(
     await metadata_table.update_metadata(metadata)
     # should be same, but read from database
     return await get_metadata_by_id(metadata.id)
-
