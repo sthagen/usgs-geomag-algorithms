@@ -60,6 +60,10 @@ class Controller(object):
         self._inputInterval = inputInterval
         self._outputFactory = outputFactory
         self._outputInterval = outputInterval
+        self._inputFactory.interval = self._inputInterval or self._inputFactory.interval
+        self._outputFactory.interval = (
+            self._outputInterval or self._outputFactory.interval
+        )
 
     def _get_input_timeseries(
         self, observatory, channels, starttime, endtime, algorithm=None
