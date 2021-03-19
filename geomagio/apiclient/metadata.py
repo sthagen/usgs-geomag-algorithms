@@ -58,7 +58,7 @@ def create(
             endtime=UTCDateTime(endtime) if endtime else None,
             id=id,
             location=location,
-            metadata = input_metadata["metadata"],
+            metadata=input_metadata["metadata"],
             metadata_valid=metadata_valid,
             network=network,
             starttime=UTCDateTime(starttime) if starttime else None,
@@ -125,7 +125,6 @@ def get(
         print(metadata[0].json())
         return
     print([m.json() for m in metadata])
-    
 
 
 @app.command()
