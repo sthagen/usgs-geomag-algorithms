@@ -139,11 +139,9 @@ def obsrio_day(
     """Filter 1 second edge H,E,Z,F to 1 day miniseed U,V,W,F."""
     starttime, endtime = get_realtime_interval(realtime_interval)
     controller = Controller(
-        inputFactory=input_factory
-        or get_edge_factory(data_type="variation", interval="minute"),
+        inputFactory=input_factory or get_edge_factory(),
         inputInterval="minute",
-        outputFactory=output_factory
-        or get_miniseed_factory(data_type="variation", interval="day"),
+        outputFactory=output_factory or get_miniseed_factory(),
         outputInterval="day",
     )
     renames = {"H": "U", "E": "V", "Z": "W", "F": "F"}
@@ -178,11 +176,9 @@ def obsrio_hour(
     """Filter 1 second edge H,E,Z,F to 1 hour miniseed U,V,W,F."""
     starttime, endtime = get_realtime_interval(realtime_interval)
     controller = Controller(
-        inputFactory=input_factory
-        or get_edge_factory(data_type="variation", interval="minute"),
+        inputFactory=input_factory or get_edge_factory(),
         inputInterval="minute",
-        outputFactory=output_factory
-        or get_miniseed_factory(data_type="variation", interval="hour"),
+        outputFactory=output_factory or get_miniseed_factory(),
         outputInterval="hour",
     )
     renames = {"H": "U", "E": "V", "Z": "W", "F": "F"}
@@ -221,11 +217,9 @@ def obsrio_minute(
     """
     starttime, endtime = get_realtime_interval(realtime_interval)
     controller = Controller(
-        inputFactory=input_factory
-        or get_edge_factory(data_type="variation", interval="second"),
+        inputFactory=input_factory or get_edge_factory(),
         inputInterval="second",
-        outputFactory=output_factory
-        or get_edge_factory(data_type="variation", interval="minute"),
+        outputFactory=output_factory or get_edge_factory(),
         outputInterval="minute",
     )
     for channel in ["H", "E", "Z", "F"]:
@@ -258,10 +252,8 @@ def obsrio_second(
     starttime, endtime = get_realtime_interval(realtime_interval)
     controller = Controller(
         algorithm=Algorithm(inchannels=("F",), outchannels=("F",)),
-        inputFactory=input_factory or get_miniseed_factory(data_type="variation"),
-        inputInterval="second",
-        outputFactory=output_factory or get_edge_factory(data_type="variation"),
-        outputInterval="second",
+        inputFactory=input_factory or get_miniseed_factory(),
+        outputFactory=output_factory or get_edge_factory(),
     )
     controller.run_as_update(
         observatory=(observatory,),
@@ -285,11 +277,9 @@ def obsrio_temperatures(
     """Filter temperatures 1Hz miniseed (LK1-4) to 1 minute legacy (UK1-4)."""
     starttime, endtime = get_realtime_interval(realtime_interval)
     controller = Controller(
-        inputFactory=input_factory
-        or get_miniseed_factory(data_type="variation", interval="second"),
+        inputFactory=input_factory or get_miniseed_factory(),
         inputInterval="second",
-        outputFactory=output_factory
-        or get_edge_factory(data_type="variation", interval="minute"),
+        outputFactory=output_factory or get_edge_factory(),
         outputInterval="minute",
     )
     renames = {"LK1": "UK1", "LK2": "UK2", "LK3": "UK3", "LK4": "UK4"}
@@ -324,11 +314,9 @@ def obsrio_tenhertz(
     """Filter 10Hz miniseed U,V,W to 1Hz legacy H,E,Z."""
     starttime, endtime = get_realtime_interval(realtime_interval)
     controller = Controller(
-        inputFactory=input_factory
-        or get_miniseed_factory(data_type="variation", interval="tenhertz"),
+        inputFactory=input_factory or get_miniseed_factory(),
         inputInterval="tenhertz",
-        outputFactory=output_factory
-        or get_edge_factory(data_type="variation", interval="second"),
+        outputFactory=output_factory or get_edge_factory(),
         outputInterval="second",
     )
     renames = {"U": "H", "V": "E", "W": "Z"}

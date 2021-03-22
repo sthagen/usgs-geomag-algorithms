@@ -62,7 +62,13 @@ class Controller(object):
         self._outputInterval = outputInterval
 
     def _get_input_timeseries(
-        self, observatory, channels, starttime, endtime, algorithm=None
+        self,
+        observatory,
+        channels,
+        starttime,
+        endtime,
+        algorithm=None,
+        interval=None,
     ):
         """Get timeseries from the input factory for requested options.
 
@@ -102,7 +108,7 @@ class Controller(object):
                 starttime=input_start,
                 endtime=input_end,
                 channels=channels,
-                interval=self._inputInterval,
+                interval=interval or self._inputInterval,
             )
         return timeseries
 
@@ -129,7 +135,14 @@ class Controller(object):
                 t.stats.channel = to_name
         return timeseries
 
-    def _get_output_timeseries(self, observatory, channels, starttime, endtime):
+    def _get_output_timeseries(
+        self,
+        observatory,
+        channels,
+        starttime,
+        endtime,
+        interval=None,
+    ):
         """Get timeseries from the output factory for requested options.
 
         Parameters
@@ -154,7 +167,7 @@ class Controller(object):
                 starttime=starttime,
                 endtime=endtime,
                 channels=channels,
-                interval=self._outputInterval,
+                interval=interval or self._outputInterval,
             )
         return timeseries
 
@@ -224,6 +237,8 @@ class Controller(object):
         input_channels: Optional[List[str]] = None,
         input_timeseries: Optional[Stream] = None,
         output_channels: Optional[List[str]] = None,
+        input_interval: Optional[str] = None,
+        output_interval: Optional[str] = None,
         no_trim: bool = False,
         realtime: Union[bool, int] = False,
         rename_input_channel: Optional[List[List[str]]] = None,
@@ -239,6 +254,8 @@ class Controller(object):
         input_channels: list of channels to read
         input_timeseries: used by run_as_update, which has already read input.
         output_channels: list of channels to write
+        input_interval: input data interval
+        output_interval: output data interval
         no_trim: whether to trim output to starttime/endtime interval
         realtime: number of seconds in realtime interval
         rename_input_channel: list of input channel renames
@@ -250,6 +267,8 @@ class Controller(object):
         algorithm = algorithm or self._algorithm
         input_channels = input_channels or algorithm.get_input_channels()
         output_channels = output_channels or algorithm.get_output_channels()
+        input_interval = input_interval or self._inputInterval
+        output_interval = output_interval or self._outputInterval
         next_starttime = algorithm.get_next_starttime()
         starttime = next_starttime or starttime
         # input
@@ -259,6 +278,7 @@ class Controller(object):
             starttime=starttime,
             endtime=endtime,
             channels=input_channels,
+            interval=input_interval,
         )
         if timeseries.count() == 0:
             # no data to process
@@ -295,6 +315,7 @@ class Controller(object):
             starttime=starttime,
             endtime=endtime,
             channels=output_channels,
+            interval=output_interval,
         )
 
     def run_as_update(
@@ -306,6 +327,8 @@ class Controller(object):
         algorithm: Optional[Algorithm] = None,
         input_channels: Optional[List[str]] = None,
         output_channels: Optional[List[str]] = None,
+        input_interval: Optional[str] = None,
+        output_interval: Optional[str] = None,
         no_trim: bool = False,
         realtime: Union[bool, int] = False,
         rename_input_channel: Optional[List[List[str]]] = None,
@@ -324,6 +347,8 @@ class Controller(object):
         input_channels: list of channels to read
         input_timeseries: used by run_as_update, which has already read input.
         output_channels: list of channels to write
+        input_interval: input data interval
+        output_interval: output data interval
         no_trim: whether to trim output to starttime/endtime interval
         realtime: number of seconds in realtime interval
         rename_input_channel: list of input channel renames
@@ -348,6 +373,8 @@ class Controller(object):
             raise AlgorithmException("Stateful algorithms cannot use run_as_update")
         input_channels = input_channels or algorithm.get_input_channels()
         output_channels = output_channels or algorithm.get_output_channels()
+        input_interval = input_interval or self._inputInterval
+        output_interval = output_interval or self._outputInterval
         print(
             "checking gaps",
             starttime,
@@ -362,6 +389,7 @@ class Controller(object):
             starttime=starttime,
             endtime=endtime,
             channels=output_channels,
+            interval=output_interval,
         )
         if len(output_timeseries) > 0:
             # find gaps in output, so they can be updated
@@ -384,6 +412,7 @@ class Controller(object):
                 starttime=output_gap[0],
                 endtime=output_gap[1],
                 channels=input_channels,
+                interval=input_interval,
             )
             if not algorithm.can_produce_data(
                 starttime=output_gap[0], endtime=output_gap[1], stream=input_timeseries
@@ -403,6 +432,8 @@ class Controller(object):
                     endtime=recurse_endtime,
                     input_channels=input_channels,
                     output_channels=output_channels,
+                    input_interval=input_interval,
+                    output_interval=output_interval,
                     no_trim=no_trim,
                     realtime=realtime,
                     rename_input_channel=rename_input_channel,
@@ -429,6 +460,8 @@ class Controller(object):
                 input_channels=input_channels,
                 input_timeseries=input_timeseries,
                 output_channels=output_channels,
+                input_interval=input_interval,
+                output_interval=output_interval,
                 no_trim=no_trim,
                 realtime=realtime,
                 rename_input_channel=rename_input_channel,
