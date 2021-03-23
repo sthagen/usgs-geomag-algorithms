@@ -4,8 +4,8 @@ from obspy import UTCDateTime
 from pydantic import BaseModel
 from typing import Optional
 
-from ...metadata import MetadataCategory
-from ... import pydantic_utcdatetime
+from .. import pydantic_utcdatetime
+from .MetadataCategory import MetadataCategory
 
 
 class MetadataQuery(BaseModel):

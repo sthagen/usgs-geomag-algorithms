@@ -6,8 +6,7 @@ from typing import Dict, Optional
 from obspy import UTCDateTime
 import typer
 
-from ..api.secure.MetadataQuery import MetadataQuery
-from ..metadata import Metadata, MetadataCategory
+from ..metadata import Metadata, MetadataCategory, MetadataQuery
 from .MetadataFactory import MetadataFactory
 
 
@@ -58,7 +57,7 @@ def create(
             endtime=UTCDateTime(endtime) if endtime else None,
             id=id,
             location=location,
-            metadata=input_metadata["metadata"],
+            metadata=input_metadata,
             metadata_valid=metadata_valid,
             network=network,
             starttime=UTCDateTime(starttime) if starttime else None,
@@ -78,7 +77,8 @@ def delete(
     metadata_dict = load_metadata(input_file=input_file)
     metadata = Metadata(**metadata_dict)
     deleted = MetadataFactory(url=url).delete_metadata(metadata=metadata)
-    print(deleted)
+    if not deleted:
+        sys.exit(1)
 
 
 @app.command()
@@ -124,7 +124,7 @@ def get(
             raise ValueError("More than one matching record")
         print(metadata[0].json())
         return
-    print([m.json() for m in metadata])
+    print("[" + ",".join([m.json() for m in metadata]) + "]")
 
 
 @app.command()

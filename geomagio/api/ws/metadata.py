@@ -3,8 +3,7 @@ from typing import List
 from fastapi import APIRouter
 from obspy import UTCDateTime
 
-from ...metadata import Metadata, MetadataCategory
-from ..secure.MetadataQuery import MetadataQuery
+from ...metadata import Metadata, MetadataCategory, MetadataQuery
 from ..db import metadata_table
 
 router = APIRouter()

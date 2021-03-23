@@ -19,11 +19,10 @@ from typing import List
 from fastapi import APIRouter, Body, Depends, Request, Response
 from obspy import UTCDateTime
 
-from ...metadata import Metadata, MetadataCategory
+from ...metadata import Metadata, MetadataCategory, MetadataQuery
+from ... import pydantic_utcdatetime
 from ..db import metadata_table
 from .login import require_user, User
-from .MetadataQuery import MetadataQuery
-from ... import pydantic_utcdatetime
 
 # routes for login/logout
 router = APIRouter()

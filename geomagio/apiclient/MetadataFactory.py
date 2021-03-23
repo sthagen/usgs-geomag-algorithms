@@ -5,8 +5,7 @@ from typing import List, Union
 from obspy import UTCDateTime
 from pydantic import parse_obj_as
 
-from ..api.secure.MetadataQuery import MetadataQuery
-from ..metadata import Metadata
+from ..metadata import Metadata, MetadataQuery
 
 
 class MetadataFactory(object):
@@ -19,7 +18,10 @@ class MetadataFactory(object):
     ):
         self.url = url
         self.token = token
-        self.header = {"Authorization": self.token} if token else None
+        self.header = self._get_headers()
+
+    def _get_headers(self):
+        return {"Authorization": self.token} if self.token else None
 
     def delete_metadata(self, metadata: Metadata) -> bool:
         response = requests.delete(url=f"{self.url}/{metadata.id}", headers=self.header)
@@ -28,18 +30,18 @@ class MetadataFactory(object):
         return False
 
     def get_metadata(self, query: MetadataQuery) -> List[Metadata]:
-        args = parse_params(query=query)
-        if "id" in args:
-            self.url = f"{self.url}/{args['id']}"
-            args = {}
-        response = requests.get(url=self.url, params=args, headers=self.header)
-        try:
-            metadata = parse_obj_as(Union[List[Metadata], Metadata], response.json())
-        except:
-            return []
+        if query.id:
+            response = self.get_metadata_by_id(id=query.id)
+        else:
+            args = parse_params(query=query)
+            response = requests.get(url=self.url, params=args, headers=self.header)
+        metadata = parse_obj_as(Union[List[Metadata], Metadata], response.json())
         if isinstance(metadata, Metadata):
             metadata = [metadata]
         return metadata
+
+    def get_metadata_by_id(self, id: int) -> requests.Response:
+        return requests.get(f"{self.url}/{id}", headers=self.header)
 
     def create_metadata(self, metadata: Metadata) -> Metadata:
         response = requests.post(
@@ -55,19 +57,15 @@ class MetadataFactory(object):
 
 
 def parse_params(query: MetadataQuery) -> str:
-    query = query.dict()
+    query = query.dict(exclude_none=True)
     args = {}
     for key in query.keys():
         element = query[key]
-        if element is not None:
-            # convert times to strings
-            if type(element) == UTCDateTime:
-                element = element.isoformat()
-            # get string value of metadata category
-            if key == "category":
-                element = element.value
-            elif key == "id":
-                return {"id": element}
-            args[key] = element
-
+        # convert times to strings
+        if isinstance(element, UTCDateTime):
+            element = element.isoformat()
+        # get string value of metadata category
+        if key == "category":
+            element = element.value
+        args[key] = element
     return args
