@@ -2,6 +2,7 @@ import json
 
 from obspy import UTCDateTime
 
+from geomagio.adjusted import AdjustedMatrix, Metric
 from geomagio.api.db import database, metadata_table
 from geomagio.api.ws.Observatory import OBSERVATORIES
 from geomagio.metadata import Metadata, MetadataCategory
@@ -144,6 +145,27 @@ for reading in readings:
             metadata_valid=reading.valid,
         )
     )
+
+
+adjusted_matrix = AdjustedMatrix(
+    matrix=[
+        [0.9796103131299191, 0.20090702926851434, 0.0, -18.30071487449033],
+        [-0.20090702926851361, 0.9796103131299198, 0.0, 406.9685381264491],
+        [0.0, 0.0, 1.0, 708.4810320770974],
+        [0.0, 0.0, 0.0, 1.0],
+    ],
+    pier_correction=-4.0,
+    metrics=[
+        Metric(element="X", absmean=0.5365143131738377, stddev=0.7246802312326883),
+        Metric(element="Y", absmean=1.3338248076759354, stddev=2.1390294659087816),
+        Metric(element="Z", absmean=0.7020521498941688, stddev=0.8991572596148847),
+        Metric(element="dF", absmean=0.47978562187806045, stddev=0.5128104930705225),
+    ],
+)
+
+test_metadata.append(
+    Metadata(station="FRD", network="NT", metadata=adjusted_matrix.dict())
+)
 
 
 async def load_test_metadata():
