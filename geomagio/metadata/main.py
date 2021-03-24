@@ -1,13 +1,48 @@
 import sys
 import json
 import os
+import textwrap
 from typing import Dict, Optional
 
 from obspy import UTCDateTime
 import typer
 
-from ..metadata import Metadata, MetadataCategory, MetadataQuery
+from .Metadata import Metadata
+from .MetadataCategory import MetadataCategory
 from .MetadataFactory import MetadataFactory
+from .MetadataQuery import MetadataQuery
+
+
+GEOMAG_API_HOST = os.getenv("GEOMAG_API_HOST", "geomag.usgs.gov")
+GEOMAG_API_URL = f"https://{GEOMAG_API_HOST}/ws/secure/metadata"
+if "127.0.0.1" in GEOMAG_API_URL:
+    GEOMAG_API_URL = GEOMAG_API_URL.replace("https://", "http://")
+
+
+ENVIRONMENT_VARIABLE_HELP = """Environment variables:
+
+      GITLAB_API_TOKEN
+
+        (Required) Personal access token with "read_api" scope. Create at
+        https://code.usgs.gov/profile/personal_access_tokens
+
+      GEOMAG_API_HOST
+
+        Default "geomag.usgs.gov"
+
+      REQUESTS_CA_BUNDLE
+
+        Use custom certificate bundle
+    """
+
+
+app = typer.Typer(
+    help=f"""
+    Command line interface for Metadata API
+
+    {ENVIRONMENT_VARIABLE_HELP}
+    """
+)
 
 
 def load_metadata(input_file: str) -> Optional[Dict]:
@@ -21,14 +56,22 @@ def load_metadata(input_file: str) -> Optional[Dict]:
     return data
 
 
-app = typer.Typer()
+def main():
+    """Command line interface for Metadata API.
+
+    Registered as "geomag-metadata" console script in setup.py.
+    """
+    app()
 
 
-@app.command()
+@app.command(
+    help=f"""
+    Create new metadata.
+
+    {ENVIRONMENT_VARIABLE_HELP}
+    """
+)
 def create(
-    url: str = "http://{}/ws/secure/metadata".format(
-        os.getenv("GEOMAG_API_HOST", "127.0.0.1:8000")
-    ),
     category: MetadataCategory = None,
     channel: str = None,
     created_after: str = None,
@@ -42,6 +85,7 @@ def create(
     network: str = None,
     starttime: str = None,
     station: str = None,
+    url: str = GEOMAG_API_URL,
     wrap: bool = True,
 ):
     input_metadata = load_metadata(input_file=input_file)
@@ -67,12 +111,16 @@ def create(
     print(metadata.json())
 
 
-@app.command()
+@app.command(
+    help=f"""
+    Delete an existing metadata.
+
+    {ENVIRONMENT_VARIABLE_HELP}
+    """
+)
 def delete(
     input_file: str,
-    url: str = "http://{}/ws/secure/metadata".format(
-        os.getenv("GEOMAG_API_HOST", "127.0.0.1:8000")
-    ),
+    url: str = GEOMAG_API_URL,
 ):
     metadata_dict = load_metadata(input_file=input_file)
     metadata = Metadata(**metadata_dict)
@@ -81,24 +129,28 @@ def delete(
         sys.exit(1)
 
 
-@app.command()
+@app.command(
+    help=f"""
+    Search existing metadata.
+
+    {ENVIRONMENT_VARIABLE_HELP}
+    """
+)
 def get(
-    url: str = "http://{}/ws/secure/metadata".format(
-        os.getenv("GEOMAG_API_HOST", "127.0.0.1:8000")
-    ),
     category: Optional[MetadataCategory] = None,
     channel: Optional[str] = None,
     created_after: Optional[str] = None,
     created_before: Optional[str] = None,
-    data_valid: Optional[bool] = True,
+    data_valid: Optional[bool] = None,
     endtime: Optional[str] = None,
+    getone: bool = False,
     id: Optional[int] = None,
     location: Optional[str] = None,
-    metadata_valid: Optional[bool] = True,
+    metadata_valid: Optional[bool] = None,
     network: Optional[str] = None,
     starttime: Optional[str] = None,
     station: Optional[str] = None,
-    getone: bool = False,
+    url: str = GEOMAG_API_URL,
 ):
     query = MetadataQuery(
         category=category,
@@ -115,30 +167,26 @@ def get(
         station=station,
     )
     metadata = MetadataFactory(url=url).get_metadata(query=query)
-    if not metadata:
-        print([])
-        return
-
     if getone:
-        if len(metadata) > 1:
-            raise ValueError("More than one matching record")
+        if len(metadata) != 1:
+            raise ValueError(f"{len(metadata)} matching records")
         print(metadata[0].json())
-        return
-    print("[" + ",".join([m.json() for m in metadata]) + "]")
+    else:
+        print("[" + ",\n".join([m.json() for m in metadata]) + "]")
 
 
-@app.command()
+@app.command(
+    help=f"""
+    Update an existing metadata.
+
+    {ENVIRONMENT_VARIABLE_HELP}
+    """
+)
 def update(
     input_file: str,
-    url: str = "http://{}/ws/secure/metadata".format(
-        os.getenv("GEOMAG_API_HOST", "127.0.0.1:8000")
-    ),
+    url: str = GEOMAG_API_URL,
 ):
     metadata_dict = load_metadata(input_file=input_file)
     metadata = Metadata(**metadata_dict)
     response = MetadataFactory(url=url).update_metadata(metadata=metadata)
     print(response.json())
-
-
-def main():
-    app()

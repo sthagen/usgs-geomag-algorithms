@@ -35,14 +35,18 @@ Usage:
 """
 import logging
 import os
-import requests
 from typing import Callable, List, Optional
 
 from authlib.integrations.starlette_client import OAuth
 from fastapi import APIRouter, Depends, HTTPException
+import httpx
 from pydantic import BaseModel
 from starlette.requests import Request
 from starlette.responses import RedirectResponse
+
+
+GITLAB_HOST = os.getenv("GITLAB_HOST", "code.usgs.gov")
+GITLAB_API_URL = os.getenv("GITLAB_API_URL", f"https://{GITLAB_HOST}/api/v4")
 
 
 class User(BaseModel):
@@ -64,45 +68,39 @@ async def current_user(request: Request) -> Optional[User]:
         user: Optional[User] = Depends(current_user)
 
     """
+    user = None
     if "user" in request.session:
-        return User(**request.session["user"])
-    if "apiuser" in request.session:
-        return User(**request.session["apiuser"])
-    if "Authorization" in request.headers:
-        user = get_api_user(token=request.headers["Authorization"])
+        user = User(**request.session["user"])
+    elif "Authorization" in request.headers:
+        user = await get_gitlab_user(token=request.headers["Authorization"])
         if user is not None:
-            request.session["apiuser"] = user.dict()
-            return user
-    return None
+            request.session["user"] = user.dict()
+    return user
 
 
-def get_api_user(token: str) -> Optional[User]:
-    url = os.getenv("GITLAB_API_URL")
+async def get_gitlab_user(token: str, url: str = GITLAB_API_URL) -> Optional[User]:
     header = {"PRIVATE-TOKEN": token}
     # request user information from gitlab api with access token
-    userinfo_response = requests.get(
-        f"{url}/user",
-        headers=header,
-    )
-    userinfo = userinfo_response.json()
+
     try:
-        user = User(
-            email=userinfo["email"],
-            sub=userinfo["id"],
-            name=userinfo["name"],
-            nickname=userinfo["username"],
-            picture=userinfo["avatar_url"],
-        )
-    except KeyError:
-        logging.info(f"Invalid token: {userinfo_response.status_code}")
+        # use httpx/async so this doesn't block other requests
+        async with httpx.AsyncClient() as client:
+            userinfo_response = await client.get(f"{url}/user", headers=header)
+            userinfo = userinfo_response.json()
+            user = User(
+                email=userinfo["email"],
+                sub=userinfo["id"],
+                name=userinfo["name"],
+                nickname=userinfo["username"],
+                picture=userinfo["avatar_url"],
+            )
+            # use valid token to retrieve user's groups
+            groups_response = await client.get(f"{url}/groups", headers=header)
+            user.groups = [g["full_path"] for g in groups_response.json()]
+            return user
+    except Exception:
+        logging.exception(f"Unable to get gitlab user")
         return None
-    # use valid token to retrieve user's groups
-    groups_response = requests.get(
-        f"{url}/groups",
-        headers=header,
-    )
-    user.groups = [g["full_path"] for g in groups_response.json()]
-    return user
 
 
 def require_user(
@@ -143,7 +141,9 @@ oauth.register(
     name="openid",
     client_id=os.getenv("OPENID_CLIENT_ID"),
     client_secret=os.getenv("OPENID_CLIENT_SECRET"),
-    server_metadata_url=os.getenv("OPENID_METADATA_URL"),
+    server_metadata_url=os.getenv(
+        "OPENID_METADATA_URL", f"https://{GITLAB_HOST}/.well-known/openid-configuration"
+    ),
     client_kwargs={"scope": "openid email profile"},
 )
 # routes for login/logout

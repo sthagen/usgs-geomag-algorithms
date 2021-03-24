@@ -1,6 +1,7 @@
 .coverage
 cov.xml
 .DS_Store
+.eggs
 node_modules
 *.pyc
 coverage.xml
