@@ -73,4 +73,4 @@ class MiniSeedInputClient(object):
         buf = io.BytesIO()
         stream.write(buf, format="MSEED")
         # send data
-        self.socket.sendall(buf.read())
+        self.socket.sendall(buf.getvalue())
