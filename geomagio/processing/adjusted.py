@@ -75,8 +75,8 @@ def generate_matrix(
                 station=observatory,
                 created_by="generate_matrix",
                 metadata=result.dict(),
-                starttime=starttime,
-                endtime=endtime,
+                starttime=result.starttime,
+                endtime=result.endtime,
                 network="NT",
                 category=MetadataCategory.ADJUSTED_MATRIX,
             )
@@ -84,7 +84,7 @@ def generate_matrix(
 
     if output_file:
         with open(output_file, "w") as file:
-            json.dump(result.dict(), file)
+            file.write(result.json())
 
     if not output_file and not output_metadata:
-        raise ValueError("Output method not provided")
+        print(result.json(indent=2))
