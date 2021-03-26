@@ -45,7 +45,7 @@ class AdjustedAlgorithm(Algorithm):
         """
         # Adjusted matrix defaults to identity matrix
         matrix_size = len([c for c in self.get_input_channels() if c != "F"]) + 1
-        matrix = np.eye(matrix_size)
+        matrix = np.eye(matrix_size).tolist()
         if self.statefile is None:
             self.matrix = AdjustedMatrix(matrix=matrix)
             return
@@ -61,7 +61,7 @@ class AdjustedAlgorithm(Algorithm):
             # read data from legacy format
             for row in range(matrix_size):
                 for col in range(matrix_size):
-                    matrix[row, col] = np.float64(data[f"M{row+1}{col+1}"])
+                    matrix[row][col] = np.float64(data[f"M{row+1}{col+1}"])
             pier_correction = np.float64(data["PC"])
             self.matrix = AdjustedMatrix(matrix=matrix, pier_correction=pier_correction)
         else:

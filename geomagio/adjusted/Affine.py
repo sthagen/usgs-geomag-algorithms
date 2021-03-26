@@ -121,7 +121,7 @@ class Affine(BaseModel):
             [reading.pier_correction for reading in readings], weights=weights
         )
         matrix = AdjustedMatrix(
-            matrix=M_composed,
+            matrix=M_composed.tolist(),
             pier_correction=pier_correction,
         )
         matrix.metrics = matrix.get_metrics(readings=readings)

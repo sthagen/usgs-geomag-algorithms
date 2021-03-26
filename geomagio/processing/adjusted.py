@@ -67,7 +67,6 @@ def generate_matrix(
         starttime=UTCDateTime(starttime),
         endtime=UTCDateTime(endtime),
     ).calculate(readings=readings)[0]
-    result.matrix = result.matrix.tolist()
 
     if output_metadata:
         MetadataFactory(url=metadata_url).create_metadata(
@@ -79,6 +78,7 @@ def generate_matrix(
                 endtime=result.endtime,
                 network="NT",
                 category=MetadataCategory.ADJUSTED_MATRIX,
+                comment=f"calculated from {readings_starttime} to {readings_endtime}",
             )
         )
 
