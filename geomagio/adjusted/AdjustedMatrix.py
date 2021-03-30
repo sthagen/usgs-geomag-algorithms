@@ -22,7 +22,7 @@ class AdjustedMatrix(BaseModel):
     Matrix is non-constrained otherwise
     """
 
-    matrix: Optional[Any] = None
+    matrix: Optional[List[List[float]]] = None
     pier_correction: float = 0
     metrics: Optional[List[Metric]] = None
     starttime: Optional[UTCDateTime] = None
