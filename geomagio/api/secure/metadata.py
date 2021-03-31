@@ -58,6 +58,7 @@ async def get_metadata(
     location: str = None,
     data_valid: bool = None,
     metadata_valid: bool = True,
+    reviewed: bool = None,
 ):
     query = MetadataQuery(
         category=category,
@@ -71,6 +72,7 @@ async def get_metadata(
         location=location,
         data_valid=data_valid,
         metadata_valid=metadata_valid,
+        reviewed=reviewed,
     )
     metas = await metadata_table.get_metadata(**query.datetime_dict(exclude={"id"}))
     return metas

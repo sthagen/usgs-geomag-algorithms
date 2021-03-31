@@ -24,9 +24,9 @@ metadata = Table(
         default=sqlalchemy_utc.utcnow(),
         index=True,
     ),
-    # reviewer
-    Column("reviewed_by", String(length=255), index=True, nullable=True),
-    Column("reviewed_time", sqlalchemy_utc.UtcDateTime, index=True, nullable=True),
+    # editor
+    Column("updated_by", String(length=255), index=True, nullable=True),
+    Column("updated_time", sqlalchemy_utc.UtcDateTime, index=True, nullable=True),
     # time range
     Column("starttime", sqlalchemy_utc.UtcDateTime, index=True, nullable=True),
     Column("endtime", sqlalchemy_utc.UtcDateTime, index=True, nullable=True),
@@ -43,6 +43,8 @@ metadata = Table(
     Column("data_valid", Boolean, default=True, index=True),
     # whether metadata is valid (based on review)
     Column("metadata_valid", Boolean, default=True, index=True),
+    # whether metadata has been reviewed
+    Column("reviewed", Boolean, default=True, index=True),
     # metadata json blob
     Column("metadata", JSON, nullable=True),
     # general comment
@@ -65,6 +67,7 @@ metadata = Table(
         # valid
         "metadata_valid",
         "data_valid",
+        "reviewed",
     ),
     Index(
         "index_category_time",
@@ -104,6 +107,7 @@ async def get_metadata(
     created_before: datetime = None,
     data_valid: bool = None,
     metadata_valid: bool = None,
+    reviewed: bool = None,
 ):
     query = metadata.select()
     if id:
@@ -134,12 +138,14 @@ async def get_metadata(
         query = query.where(metadata.c.data_valid == data_valid)
     if metadata_valid is not None:
         query = query.where(metadata.c.metadata_valid == metadata_valid)
+    if reviewed is not None:
+        query = query.where(metadata.c.reviewed == reviewed)
     rows = await database.fetch_all(query)
     return [Metadata(**row) for row in rows]
 
 
 async def update_metadata(meta: Metadata) -> None:
     query = metadata.update().where(metadata.c.id == meta.id)
-    values = meta.datetime_dict(exclude={"id"})
+    values = meta.datetime_dict(exclude={"id", "metadata_id"})
     query = query.values(**values)
     await database.execute(query)

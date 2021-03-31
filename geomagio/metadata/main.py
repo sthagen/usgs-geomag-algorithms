@@ -148,6 +148,7 @@ def get(
     location: Optional[str] = None,
     metadata_valid: Optional[bool] = None,
     network: Optional[str] = None,
+    reviewed: Optional[bool] = None,
     starttime: Optional[str] = None,
     station: Optional[str] = None,
     url: str = GEOMAG_API_URL,
@@ -163,6 +164,7 @@ def get(
         location=location,
         metadata_valid=metadata_valid,
         network=network,
+        reviewed=reviewed,
         starttime=UTCDateTime(starttime) if starttime else None,
         station=station,
     )

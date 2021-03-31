@@ -21,6 +21,7 @@ class MetadataQuery(BaseModel):
     location: str = None
     data_valid: Optional[bool] = None
     metadata_valid: Optional[bool] = None
+    reviewed: Optional[bool] = None
 
     def datetime_dict(self, **kwargs):
         values = self.dict(**kwargs)

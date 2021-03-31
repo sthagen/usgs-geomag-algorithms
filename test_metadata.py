@@ -137,7 +137,7 @@ for reading in readings:
             category=MetadataCategory.READING,
             created_by="test_metadata.py",
             network="NT",
-            reviewed_by=reviewer,
+            updated_by=reviewer,
             starttime=reading.time,
             endtime=reading.time,
             station=reading.metadata["station"],
@@ -164,7 +164,12 @@ adjusted_matrix = AdjustedMatrix(
 )
 
 test_metadata.append(
-    Metadata(station="FRD", network="NT", metadata=adjusted_matrix.dict())
+    Metadata(
+        category="adjusted-matrix",
+        station="FRD",
+        network="NT",
+        metadata=adjusted_matrix.dict(),
+    )
 )
 
 

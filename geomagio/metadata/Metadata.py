@@ -48,12 +48,14 @@ class Metadata(BaseModel):
 
     # database id
     id: int = None
+    # metadata history id referencing database id
+    metadata_id: int = None
     # author
     created_by: str = None
     created_time: UTCDateTime = None
-    # reviewer
-    reviewed_by: str = None
-    reviewed_time: UTCDateTime = None
+    # editor
+    updated_by: str = None
+    updated_time: UTCDateTime = None
     # time range
     starttime: UTCDateTime = None
     endtime: UTCDateTime = None
@@ -70,6 +72,8 @@ class Metadata(BaseModel):
     data_valid: bool = True
     # whether metadata is valid (based on review)
     metadata_valid: bool = True
+    # whether metadata has been reviewed
+    reviewed: bool = False
     # metadata json blob
     metadata: Dict = None
     # general comment
@@ -79,7 +83,7 @@ class Metadata(BaseModel):
 
     def datetime_dict(self, **kwargs):
         values = self.dict(**kwargs)
-        for key in ["created_time", "reviewed_time", "starttime", "endtime"]:
+        for key in ["created_time", "updated_time", "starttime", "endtime"]:
             if key in values and values[key] is not None:
                 values[key] = values[key].datetime.replace(tzinfo=timezone.utc)
         return values
