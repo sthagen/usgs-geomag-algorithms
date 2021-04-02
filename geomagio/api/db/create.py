@@ -3,6 +3,7 @@ import sqlalchemy
 from .common import database, sqlalchemy_metadata
 
 # register models with sqlalchemy_metadata by importing
+from .metadata_history import metadata_history
 from .metadata_table import metadata
 from .session_table import session
 

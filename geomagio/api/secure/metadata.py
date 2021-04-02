@@ -21,7 +21,7 @@ from obspy import UTCDateTime
 
 from ...metadata import Metadata, MetadataCategory, MetadataQuery
 from ... import pydantic_utcdatetime
-from ..db import metadata_table
+from ..db import metadata_history, metadata_table
 from .login import require_user, User
 
 # routes for login/logout
@@ -43,6 +43,14 @@ async def delete_metadata(
     id: int, user: User = Depends(require_user([os.getenv("ADMIN_GROUP", "admin")]))
 ):
     await metadata_table.delete_metadata(id)
+
+
+@router.get("/metadata/{id}/history", response_model=List[Metadata])
+async def get_history_by_metadata_id(
+    metadata_id: int,
+    user: User = Depends(require_user([os.getenv("REVIEWER_GROUP", "reviewer")])),
+):
+    return await metadata_history.get_metadata(metadata_id=metadata_id)
 
 
 @router.get("/metadata", response_model=List[Metadata])
@@ -93,6 +101,9 @@ async def update_metadata(
     metadata: Metadata = Body(...),
     user: User = Depends(require_user([os.getenv("REVIEWER_GROUP", "reviewer")])),
 ):
+    original_metadata = await get_metadata_by_id(metadata.id)
+    await metadata_history.create_metadata(original_metadata)
+    metadata.updated_by = user.nickname
+    metadata.updated_time = UTCDateTime()
     await metadata_table.update_metadata(metadata)
-    # should be same, but read from database
     return await get_metadata_by_id(metadata.id)
