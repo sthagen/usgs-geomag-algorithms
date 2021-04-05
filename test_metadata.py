@@ -3,7 +3,7 @@ import json
 from obspy import UTCDateTime
 
 from geomagio.adjusted import AdjustedMatrix, Metric
-from geomagio.api.db import database, metadata_table
+from geomagio.api.db import database, MetadataDatabaseFactory
 from geomagio.api.ws.Observatory import OBSERVATORIES
 from geomagio.metadata import Metadata, MetadataCategory
 from geomagio.residual import SpreadsheetAbsolutesFactory, WebAbsolutesFactory
@@ -176,7 +176,7 @@ test_metadata.append(
 async def load_test_metadata():
     await database.connect()
     for meta in test_metadata:
-        await metadata_table.create_metadata(meta)
+        await MetadataDatabaseFactory().create_metadata(meta)
     await database.disconnect()
 
 

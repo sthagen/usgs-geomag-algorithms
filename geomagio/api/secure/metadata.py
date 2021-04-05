@@ -21,7 +21,7 @@ from obspy import UTCDateTime
 
 from ...metadata import Metadata, MetadataCategory, MetadataQuery
 from ... import pydantic_utcdatetime
-from ..db import metadata_history, metadata_table
+from ..db import MetadataDatabaseFactory
 from .login import require_user, User
 
 # routes for login/logout
@@ -34,7 +34,7 @@ async def create_metadata(
     metadata: Metadata,
     user: User = Depends(require_user()),
 ):
-    metadata = await metadata_table.create_metadata(metadata)
+    metadata = await MetadataDatabaseFactory().create_metadata(metadata)
     return Response(metadata.json(), status_code=201, media_type="application/json")
 
 
@@ -42,15 +42,14 @@ async def create_metadata(
 async def delete_metadata(
     id: int, user: User = Depends(require_user([os.getenv("ADMIN_GROUP", "admin")]))
 ):
-    await metadata_table.delete_metadata(id)
+    await MetadataDatabaseFactory().delete_metadata(id)
 
 
 @router.get("/metadata/{id}/history", response_model=List[Metadata])
-async def get_history_by_metadata_id(
-    metadata_id: int,
-    user: User = Depends(require_user([os.getenv("REVIEWER_GROUP", "reviewer")])),
+async def get_metadata_history(
+    id: int,
 ):
-    return await metadata_history.get_metadata(metadata_id=metadata_id)
+    return await MetadataDatabaseFactory().get_metadata_by_id(id=id, table="history")
 
 
 @router.get("/metadata", response_model=List[Metadata])
@@ -82,17 +81,15 @@ async def get_metadata(
         metadata_valid=metadata_valid,
         reviewed=reviewed,
     )
-    metas = await metadata_table.get_metadata(**query.datetime_dict(exclude={"id"}))
+    metas = await MetadataDatabaseFactory().get_metadata(
+        **query.datetime_dict(exclude={"id"})
+    )
     return metas
 
 
 @router.get("/metadata/{id}", response_model=Metadata)
 async def get_metadata_by_id(id: int):
-    meta = await metadata_table.get_metadata(id=id)
-    if len(meta) != 1:
-        return Response(status_code=404)
-    else:
-        return meta[0]
+    return await MetadataDatabaseFactory().get_metadata_by_id(id=id)
 
 
 @router.put("/metadata/{id}", response_model=Metadata)
@@ -101,9 +98,7 @@ async def update_metadata(
     metadata: Metadata = Body(...),
     user: User = Depends(require_user([os.getenv("REVIEWER_GROUP", "reviewer")])),
 ):
-    original_metadata = await get_metadata_by_id(metadata.id)
-    await metadata_history.create_metadata(original_metadata)
-    metadata.updated_by = user.nickname
-    metadata.updated_time = UTCDateTime()
-    await metadata_table.update_metadata(metadata)
-    return await get_metadata_by_id(metadata.id)
+    return await MetadataDatabaseFactory().update_metadata(
+        meta=metadata,
+        username=user.nickname,
+    )

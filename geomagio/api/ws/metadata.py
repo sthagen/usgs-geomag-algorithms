@@ -4,7 +4,7 @@ from fastapi import APIRouter
 from obspy import UTCDateTime
 
 from ...metadata import Metadata, MetadataCategory, MetadataQuery
-from ..db import metadata_table
+from ..db import MetadataDatabaseFactory
 
 router = APIRouter()
 
@@ -34,5 +34,7 @@ async def get_metadata(
         metadata_valid=metadata_valid,
         reviewed=reviewed,
     )
-    metas = await metadata_table.get_metadata(**query.datetime_dict(exclude={"id"}))
+    metas = await MetadataDatabaseFactory().get_metadata(
+        **query.datetime_dict(exclude={"id"})
+    )
     return metas

@@ -1,7 +1,7 @@
 import datetime
 import enum
 import os
-from typing import Dict, List, Optional, Union
+from typing import Dict, List, Union
 
 from obspy import UTCDateTime
 from pydantic import BaseModel, root_validator, validator

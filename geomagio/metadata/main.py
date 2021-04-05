@@ -1,7 +1,6 @@
 import sys
 import json
 import os
-import textwrap
 from typing import Dict, Optional
 
 from obspy import UTCDateTime
