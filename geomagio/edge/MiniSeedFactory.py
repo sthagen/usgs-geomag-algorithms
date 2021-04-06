@@ -664,7 +664,7 @@ class MiniSeedFactory(TimeseriesFactory):
         to_write = timeseries.select(channel=channel)
         to_write = TimeseriesUtility.mask_stream(to_write)
         to_write = to_write.split()
-        to_write = TimeseriesUtility.unmask_stream(to_write)
+        to_write = TimeseriesUtility.unmask_stream(to_write, float_type=numpy.float32)
         # relabel channels from internal to edge conventions
         station = self._get_edge_station(observatory, channel, type, interval)
         location = self._get_edge_location(observatory, channel, type, interval)
