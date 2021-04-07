@@ -34,7 +34,7 @@ async def create_metadata(
     metadata: Metadata,
     user: User = Depends(require_user()),
 ):
-    metadata = await MetadataDatabaseFactory().create_metadata(metadata)
+    metadata = await MetadataDatabaseFactory().create_metadata(meta=metadata)
     return Response(metadata.json(), status_code=201, media_type="application/json")
 
 
@@ -42,14 +42,11 @@ async def create_metadata(
 async def delete_metadata(
     id: int, user: User = Depends(require_user([os.getenv("ADMIN_GROUP", "admin")]))
 ):
-    await MetadataDatabaseFactory().delete_metadata(id)
-
-
-@router.get("/metadata/{id}/history", response_model=List[Metadata])
-async def get_metadata_history(
-    id: int,
-):
-    return await MetadataDatabaseFactory().get_metadata_by_id(id=id, table="history")
+    database_factory = MetadataDatabaseFactory()
+    metadata = await database_factory.get_metadata_by_id(id=id)
+    await database_factory.update_metadata(
+        meta=metadata, username=user.nickname, status="deleted"
+    )
 
 
 @router.get("/metadata", response_model=List[Metadata])
@@ -66,6 +63,7 @@ async def get_metadata(
     data_valid: bool = None,
     metadata_valid: bool = True,
     reviewed: bool = None,
+    status: str = None,
 ):
     query = MetadataQuery(
         category=category,
@@ -80,9 +78,10 @@ async def get_metadata(
         data_valid=data_valid,
         metadata_valid=metadata_valid,
         reviewed=reviewed,
+        status=status,
     )
     metas = await MetadataDatabaseFactory().get_metadata(
-        **query.datetime_dict(exclude={"id"})
+        **query.datetime_dict(exclude={"id", "metadata_id"})
     )
     return metas
 
@@ -92,6 +91,15 @@ async def get_metadata_by_id(id: int):
     return await MetadataDatabaseFactory().get_metadata_by_id(id=id)
 
 
+@router.get("/metadata/{metadata_id}/history", response_model=List[Metadata])
+async def get_metadata_history(
+    metadata_id: int,
+):
+    return await MetadataDatabaseFactory().get_metadata_history(
+        metadata_id=metadata_id,
+    )
+
+
 @router.put("/metadata/{id}", response_model=Metadata)
 async def update_metadata(
     id: int,
@@ -99,6 +107,5 @@ async def update_metadata(
     user: User = Depends(require_user([os.getenv("REVIEWER_GROUP", "reviewer")])),
 ):
     return await MetadataDatabaseFactory().update_metadata(
-        meta=metadata,
-        username=user.nickname,
+        meta=metadata, username=user.nickname
     )

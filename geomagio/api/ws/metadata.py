@@ -21,6 +21,7 @@ async def get_metadata(
     data_valid: bool = None,
     metadata_valid: bool = True,
     reviewed: bool = None,
+    status: str = None,
 ):
     query = MetadataQuery(
         category=category,
@@ -33,6 +34,7 @@ async def get_metadata(
         data_valid=data_valid,
         metadata_valid=metadata_valid,
         reviewed=reviewed,
+        status=status,
     )
     metas = await MetadataDatabaseFactory().get_metadata(
         **query.datetime_dict(exclude={"id"})

@@ -148,6 +148,7 @@ def get(
     metadata_valid: Optional[bool] = None,
     network: Optional[str] = None,
     reviewed: Optional[bool] = None,
+    status: Optional[str] = None,
     starttime: Optional[str] = None,
     station: Optional[str] = None,
     url: str = GEOMAG_API_URL,
@@ -166,6 +167,7 @@ def get(
         reviewed=reviewed,
         starttime=UTCDateTime(starttime) if starttime else None,
         station=station,
+        status=status,
     )
     metadata = MetadataFactory(url=url).get_metadata(query=query)
     if getone:

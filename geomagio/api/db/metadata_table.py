@@ -42,6 +42,8 @@ metadata = Table(
     Column("metadata_valid", Boolean, default=True, index=True),
     # whether metadata has been reviewed
     Column("reviewed", Boolean, default=True, index=True),
+    # deletion status indicator
+    Column("status", String(length=255), nullable=True),
     # metadata json blob
     Column("metadata", JSON, nullable=True),
     # general comment
@@ -65,6 +67,7 @@ metadata = Table(
         "metadata_valid",
         "data_valid",
         "reviewed",
+        "status",
     ),
     Index(
         "index_category_time",

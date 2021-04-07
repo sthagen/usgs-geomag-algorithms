@@ -1,8 +1,6 @@
 from datetime import datetime
-from enum import Enum
-from typing import List, Union
+from typing import List
 
-from fastapi import Response
 from obspy import UTCDateTime
 from sqlalchemy import or_, Table
 
@@ -12,11 +10,6 @@ from .metadata_history_table import metadata_history
 from .metadata_table import metadata
 
 
-class TableType(str, Enum):
-    METADATA = "metadata"
-    HISTORY = "history"
-
-
 class MetadataDatabaseFactory(object):
     def __init__(
         self, table: Table = metadata, history_table: Table = metadata_history
@@ -24,38 +17,20 @@ class MetadataDatabaseFactory(object):
         self.table = table
         self.history_table = history_table
 
-    async def create_metadata(
-        self, meta: Metadata, table: TableType = TableType.METADATA
-    ) -> Metadata:
-        exclude = {"id"}
-        if table is TableType.HISTORY:
-            query = self.history_table.insert()
-            meta.metadata_id = meta.id
-        else:
-            query = self.table.insert()
-            exclude.add("metadata_id")
-        values = meta.datetime_dict(exclude=exclude, exclude_none=True)
+    async def create_metadata(self, meta: Metadata) -> Metadata:
+        query = metadata.insert()
+        values = meta.datetime_dict(exclude={"id", "metadata_id"}, exclude_none=True)
         query = query.values(**values)
         meta.id = await database.execute(query)
         return meta
 
-    async def delete_metadata(self, id: int) -> None:
-        query = self.table.delete().where(self.table.c.id == id)
-        await database.execute(query)
-
-    async def get_metadata_by_id(
-        self, id: int, table: TableType = TableType.METADATA
-    ) -> Union[Metadata, List[Metadata]]:
-        if table == TableType.HISTORY:
-            query = self.history_table.select()
-            query = query.where(self.history_table.c.metadata_id == id)
-            rows = await database.fetch_all(query)
-            return [Metadata(**row) for row in rows]
-        meta = await self.get_metadata(id=id)
-        if len(meta) != 1:
-            return Response(status_code=404)
-        else:
-            return meta[0]
+    async def create_metadata_history(self, meta: Metadata) -> Metadata:
+        query = self.history_table.insert()
+        meta.metadata_id = meta.id
+        values = meta.datetime_dict(exclude={"id"}, exclude_none=True)
+        query = query.values(**values)
+        meta.id = await database.execute(query)
+        return meta
 
     async def get_metadata(
         self,
@@ -73,7 +48,8 @@ class MetadataDatabaseFactory(object):
         data_valid: bool = None,
         metadata_valid: bool = None,
         reviewed: bool = None,
-    ) -> List[Metadata]:
+        status: str = None,
+    ):
         table = self.table
         query = table.select()
         if id:
@@ -90,11 +66,17 @@ class MetadataDatabaseFactory(object):
             query = query.where(table.c.location.like(location))
         if starttime:
             query = query.where(
-                or_(table.c.endtime == None, table.c.endtime > starttime)
+                or_(
+                    table.c.endtime == None,
+                    table.c.endtime > starttime,
+                )
             )
         if endtime:
             query = query.where(
-                or_(table.c.starttime == None, table.c.starttime < endtime)
+                or_(
+                    table.c.starttime == None,
+                    table.c.starttime < endtime,
+                )
             )
         if created_after:
             query = query.where(table.c.created_time > created_after)
@@ -106,21 +88,39 @@ class MetadataDatabaseFactory(object):
             query = query.where(table.c.metadata_valid == metadata_valid)
         if reviewed is not None:
             query = query.where(table.c.reviewed == reviewed)
+        if status is not None:
+            query = query.where(table.c.status == status)
         rows = await database.fetch_all(query)
         return [Metadata(**row) for row in rows]
 
+    async def get_metadata_by_id(self, id: int):
+        meta = await self.get_metadata(id=id)
+        if len(meta) != 1:
+            raise ValueError(f"{len(meta)} records found")
+        return meta[0]
+
+    async def get_metadata_history(self, metadata_id: int) -> List[Metadata]:
+        query = self.history_table.select()
+        query = query.where(self.history_table.c.metadata_id == metadata_id)
+        rows = await database.fetch_all(query)
+        metadata = [Metadata(**row) for row in rows]
+        current_metadata = await self.get_metadata_by_id(id=metadata_id)
+        metadata.append(current_metadata)
+        # return records in order of age
+        metadata.reverse()
+        return metadata
+
     async def update_metadata(
-        self,
-        meta: Metadata,
-        username: str,
+        self, meta: Metadata, username: str, status: str = None
     ) -> Metadata:
-        original_metadata = await self.get_metadata_by_id(id=meta.id)
-        await self.create_metadata(meta=original_metadata, table=TableType.HISTORY)
-        meta.updated_by = username
-        meta.updated_time = UTCDateTime()
-        query = self.table.update().where(self.table.c.id == meta.id)
-        values = meta.datetime_dict(exclude={"id", "metadata_id"})
-        query = query.values(**values)
-        await database.execute(query)
-        updated_metadata = await self.get_metadata_by_id(id=meta.id)
-        return updated_metadata
+        async with database.transaction() as transaction:
+            original_metadata = await self.get_metadata_by_id(id=meta.id)
+            await self.create_metadata_history(meta=original_metadata)
+            meta.updated_by = username
+            meta.updated_time = UTCDateTime()
+            meta.status = status or meta.status
+            query = self.table.update().where(self.table.c.id == meta.id)
+            values = meta.datetime_dict(exclude={"id", "metadata_id"})
+            query = query.values(**values)
+            await database.execute(query)
+        return await self.get_metadata_by_id(id=meta.id)
