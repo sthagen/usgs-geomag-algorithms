@@ -16,6 +16,8 @@ class MiniSeedInputClient(object):
         MiniSeedServer hostname
     port: int
         MiniSeedServer port
+    encoding: str
+        Floating point precision for output data
     """
 
     def __init__(self, host, port=2061, encoding="FLOAT32"):
