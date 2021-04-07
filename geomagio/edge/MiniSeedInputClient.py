@@ -16,11 +16,14 @@ class MiniSeedInputClient(object):
         MiniSeedServer hostname
     port: int
         MiniSeedServer port
+    encoding: str
+        Floating point precision for output data
     """
 
-    def __init__(self, host, port=2061):
+    def __init__(self, host, port=2061, encoding="FLOAT32"):
         self.host = host
         self.port = port
+        self.encoding = encoding
         self.socket = None
 
     def close(self):
@@ -71,6 +74,6 @@ class MiniSeedInputClient(object):
             self.connect()
         # convert stream to miniseed
         buf = io.BytesIO()
-        stream.write(buf, format="MSEED", reclen=512)
+        stream.write(buf, encoding=self.encoding, format="MSEED", reclen=512)
         # send data
         self.socket.sendall(buf.getvalue())
