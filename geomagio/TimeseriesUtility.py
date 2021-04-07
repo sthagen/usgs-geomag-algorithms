@@ -395,15 +395,13 @@ def mask_stream(stream):
     return masked
 
 
-def unmask_stream(stream, float_type=numpy.float64):
+def unmask_stream(stream):
     """Convert stream traces to unmasked arrays.
 
     Parameters
     ----------
     stream : obspy.core.Stream
         stream to unmask
-    float_type: type
-        floating point precision for stream data
 
     Returns
     -------
@@ -416,7 +414,7 @@ def unmask_stream(stream, float_type=numpy.float64):
         unmasked += obspy.core.Trace(
             trace.data.filled(fill_value=numpy.nan)
             if isinstance(trace.data, numpy.ma.MaskedArray)
-            else trace.data.astype(float_type),
+            else trace.data,
             trace.stats,
         )
     return unmasked
