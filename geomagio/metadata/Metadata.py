@@ -72,8 +72,6 @@ class Metadata(BaseModel):
     data_valid: bool = True
     # whether metadata is valid (based on review)
     metadata_valid: bool = True
-    # whether metadata has been reviewed
-    reviewed: bool = False
     # metadata json blob
     metadata: Dict = None
     # general comment

@@ -176,7 +176,7 @@ test_metadata.append(
 async def load_test_metadata():
     await database.connect()
     for meta in test_metadata:
-        await MetadataDatabaseFactory().create_metadata(meta)
+        await MetadataDatabaseFactory(database=database).create_metadata(meta)
     await database.disconnect()
 
 
