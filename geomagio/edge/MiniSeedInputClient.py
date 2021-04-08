@@ -20,7 +20,7 @@ class MiniSeedInputClient(object):
         Floating point precision for output data
     """
 
-    def __init__(self, host, port=2061, encoding="FLOAT32"):
+    def __init__(self, host, port=2061, encoding="float32"):
         self.host = host
         self.port = port
         self.encoding = encoding
@@ -74,6 +74,13 @@ class MiniSeedInputClient(object):
             self.connect()
         # convert stream to miniseed
         buf = io.BytesIO()
+        stream = self._pre_process(stream)
         stream.write(buf, encoding=self.encoding, format="MSEED", reclen=512)
         # send data
         self.socket.sendall(buf.getvalue())
+
+    def _pre_process(self, stream):
+        for trace in stream:
+            if trace.data.dtype != self.encoding:
+                trace.data = trace.data.astype(self.encoding)
+        return stream
