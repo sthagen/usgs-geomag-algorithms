@@ -3,6 +3,8 @@ import io
 import socket
 import sys
 
+from ..TimeseriesUtility import split_streams_by_interval
+
 
 class MiniSeedInputClient(object):
     """Client to write MiniSeed formatted data to Edge.
@@ -74,12 +76,43 @@ class MiniSeedInputClient(object):
             self.connect()
         # convert stream to miniseed
         buf = io.BytesIO()
-        stream = self._pre_process(stream)
-        stream.write(buf, encoding=self.encoding, format="MSEED", reclen=512)
+        streams = self._pre_process(stream)
+        for stream in streams:
+            stream.write(buf, format="MSEED", reclen=512)
         # send data
         self.socket.sendall(buf.getvalue())
 
     def _pre_process(self, stream):
+        """Encodes and splits streams at daily intervals
+
+        Paramters:
+        ----------
+        stream: obspy.core.stream
+            stream of input data
+
+        Returns:
+        --------
+        streams: List[obspy.core.stream]
+            list of encoded streams split at daily intervals
+        """
+        stream = self.__encode_stream(stream)
+        streams = split_streams_by_interval(stream, interval=86400)
+        return streams
+
+    def __encode_stream(self, stream):
+        """Ensures that factory encoding matches output data encoding
+
+        Parameters:
+        -----------
+        stream: obspy.core.Stream
+            stream of input data
+
+        Returns:
+        --------
+        stream: obspy.core.Stream
+            stream with matching data encoding to factory specification
+
+        """
         for trace in stream:
             if trace.data.dtype != self.encoding:
                 trace.data = trace.data.astype(self.encoding)

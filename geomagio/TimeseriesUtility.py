@@ -568,3 +568,48 @@ def round_usecs(time):
     if rounded_usecs != usecs:
         time = time.replace(microsecond=rounded_usecs)
     return time
+
+
+def split_streams_by_interval(stream, interval):
+    """Splits streams by interval
+
+    Parameters:
+    -----------
+    stream: obspy.core.Stream
+        stream of input data
+    interval: int
+        interval streams will be split by
+
+    Returns:
+    --------
+    out_streams: List[obspy.core.Stream]
+        list of streams split by interval
+
+    """
+    delta = stream[0].stats.delta
+    interval_start = stream[0].stats.starttime.timestamp
+    times = stream[0].times("timestamp")
+    interval_ends = times[times % interval == 0] - delta
+    if not interval_ends.any():
+        return [stream]
+    out_streams = []
+    for interval_end in interval_ends:
+        # should only occur with stream starttime occuring at midnight
+        if interval_end == interval_start - delta:
+            continue
+        stream_copy = stream.copy()
+        pad_timeseries(
+            timeseries=stream_copy,
+            starttime=obspy.core.UTCDateTime(interval_start),
+            endtime=obspy.core.UTCDateTime(interval_end),
+        )
+        out_streams.append(stream_copy)
+        interval_start = interval_end + delta
+    # last trim will extend from interval_start to the end of the original input stream
+    pad_timeseries(
+        stream,
+        starttime=obspy.core.UTCDateTime(interval_start),
+        endtime=stream[0].stats.endtime,
+    )
+    out_streams.append(stream)
+    return out_streams
