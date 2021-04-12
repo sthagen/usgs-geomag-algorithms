@@ -27,15 +27,6 @@ class MetadataFactory(object):
     def _get_headers(self):
         return {"Authorization": self.token} if self.token else None
 
-    def delete_metadata(self, metadata: Metadata) -> bool:
-        response = requests.delete(
-            url=f"{self.url}/{metadata.id}",
-            headers=self._get_headers(),
-        )
-        if response.status_code == 200:
-            return True
-        return False
-
     def get_metadata(self, query: MetadataQuery) -> List[Metadata]:
         if query.id:
             metadata = [self.get_metadata_by_id(id=query.id)]

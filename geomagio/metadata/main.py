@@ -1,7 +1,6 @@
 import sys
 import json
 import os
-import textwrap
 from typing import Dict, Optional
 
 from obspy import UTCDateTime
@@ -113,24 +112,6 @@ def create(
 
 @app.command(
     help=f"""
-    Delete an existing metadata.
-
-    {ENVIRONMENT_VARIABLE_HELP}
-    """
-)
-def delete(
-    input_file: str,
-    url: str = GEOMAG_API_URL,
-):
-    metadata_dict = load_metadata(input_file=input_file)
-    metadata = Metadata(**metadata_dict)
-    deleted = MetadataFactory(url=url).delete_metadata(metadata=metadata)
-    if not deleted:
-        sys.exit(1)
-
-
-@app.command(
-    help=f"""
     Search existing metadata.
 
     {ENVIRONMENT_VARIABLE_HELP}
@@ -148,6 +129,7 @@ def get(
     location: Optional[str] = None,
     metadata_valid: Optional[bool] = None,
     network: Optional[str] = None,
+    status: Optional[str] = None,
     starttime: Optional[str] = None,
     station: Optional[str] = None,
     url: str = GEOMAG_API_URL,
@@ -165,6 +147,7 @@ def get(
         network=network,
         starttime=UTCDateTime(starttime) if starttime else None,
         station=station,
+        status=status,
     )
     metadata = MetadataFactory(url=url).get_metadata(query=query)
     if getone:

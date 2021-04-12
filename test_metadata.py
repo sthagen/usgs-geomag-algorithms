@@ -3,7 +3,7 @@ import json
 from obspy import UTCDateTime
 
 from geomagio.adjusted import AdjustedMatrix, Metric
-from geomagio.api.db import database, metadata_table
+from geomagio.api.db import database, MetadataDatabaseFactory
 from geomagio.api.ws.Observatory import OBSERVATORIES
 from geomagio.metadata import Metadata, MetadataCategory
 from geomagio.residual import SpreadsheetAbsolutesFactory, WebAbsolutesFactory
@@ -137,7 +137,7 @@ for reading in readings:
             category=MetadataCategory.READING,
             created_by="test_metadata.py",
             network="NT",
-            reviewed_by=reviewer,
+            updated_by=reviewer,
             starttime=reading.time,
             endtime=reading.time,
             station=reading.metadata["station"],
@@ -164,14 +164,19 @@ adjusted_matrix = AdjustedMatrix(
 )
 
 test_metadata.append(
-    Metadata(station="FRD", network="NT", metadata=adjusted_matrix.dict())
+    Metadata(
+        category="adjusted-matrix",
+        station="FRD",
+        network="NT",
+        metadata=adjusted_matrix.dict(),
+    )
 )
 
 
 async def load_test_metadata():
     await database.connect()
     for meta in test_metadata:
-        await metadata_table.create_metadata(meta)
+        await MetadataDatabaseFactory(database=database).create_metadata(meta)
     await database.disconnect()
 
 
