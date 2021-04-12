@@ -85,25 +85,26 @@ class MetadataDatabaseFactory(object):
         return meta[0]
 
     async def get_metadata_history(self, metadata_id: int) -> List[Metadata]:
-        query = metadata_history.select()
-        query = query.where(metadata_history.c.metadata_id == metadata_id).order_by(
-            metadata_history.c.updated_time
-        )
-        rows = await self.database.fetch_all(query)
-        metadata = [Metadata(**row) for row in rows]
-        current_metadata = await self.get_metadata_by_id(id=metadata_id)
-        metadata.append(current_metadata)
-        # return records in order of age(newest first)
-        metadata.reverse()
-        return metadata
+        async with self.database.transaction() as transaction:
+            query = metadata_history.select()
+            query = query.where(metadata_history.c.metadata_id == metadata_id).order_by(
+                metadata_history.c.updated_time
+            )
+            rows = await self.database.fetch_all(query)
+            metadata = [Metadata(**row) for row in rows]
+            current_metadata = await self.get_metadata_by_id(id=metadata_id)
+            metadata.append(current_metadata)
+            # return records in order of age(newest first)
+            metadata.reverse()
+            return metadata
 
     async def update_metadata(self, meta: Metadata, updated_by: str) -> Metadata:
         async with self.database.transaction() as transaction:
             # write current record to metadata history table
             original_metadata = await self.get_metadata_by_id(id=meta.id)
-            query = metadata_history.insert()
             original_metadata.metadata_id = original_metadata.id
             values = original_metadata.datetime_dict(exclude={"id"}, exclude_none=True)
+            query = metadata_history.insert()
             query = query.values(**values)
             original_metadata.id = await self.database.execute(query)
             # update record in metadata table
@@ -113,4 +114,4 @@ class MetadataDatabaseFactory(object):
             values = meta.datetime_dict(exclude={"id", "metadata_id"})
             query = query.values(**values)
             await self.database.execute(query)
-        return await self.get_metadata_by_id(id=meta.id)
+            return await self.get_metadata_by_id(id=meta.id)
