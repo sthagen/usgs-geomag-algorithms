@@ -1,6 +1,6 @@
 from typing import List
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Query
 from obspy import UTCDateTime
 
 from ...metadata import Metadata, MetadataCategory, MetadataQuery
@@ -21,7 +21,7 @@ async def get_metadata(
     location: str = None,
     data_valid: bool = None,
     metadata_valid: bool = True,
-    status: str = None,
+    status: List[str] = Query(None),
 ):
     query = MetadataQuery(
         category=category,

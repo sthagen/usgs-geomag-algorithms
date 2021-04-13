@@ -1,7 +1,7 @@
 import sys
 import json
 import os
-from typing import Dict, Optional
+from typing import Dict, List, Optional
 
 from obspy import UTCDateTime
 import typer
@@ -84,6 +84,7 @@ def create(
     network: str = None,
     starttime: str = None,
     station: str = None,
+    status: str = None,
     url: str = GEOMAG_API_URL,
     wrap: bool = True,
 ):
@@ -105,6 +106,7 @@ def create(
             network=network,
             starttime=UTCDateTime(starttime) if starttime else None,
             station=station,
+            status=status or "new",
         )
     metadata = MetadataFactory(url=url).create_metadata(metadata=metadata)
     print(metadata.json())
@@ -129,7 +131,7 @@ def get(
     location: Optional[str] = None,
     metadata_valid: Optional[bool] = None,
     network: Optional[str] = None,
-    status: Optional[str] = None,
+    status: Optional[List[str]] = typer.Argument(None),
     starttime: Optional[str] = None,
     station: Optional[str] = None,
     url: str = GEOMAG_API_URL,

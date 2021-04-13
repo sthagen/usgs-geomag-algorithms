@@ -16,6 +16,7 @@ class MetadataDatabaseFactory(object):
 
     async def create_metadata(self, meta: Metadata) -> Metadata:
         query = metadata.insert()
+        meta.status = meta.status or "new"
         values = meta.datetime_dict(exclude={"id", "metadata_id"}, exclude_none=True)
         query = query.values(**values)
         meta.id = await self.database.execute(query)
@@ -36,7 +37,7 @@ class MetadataDatabaseFactory(object):
         created_before: datetime = None,
         data_valid: bool = None,
         metadata_valid: bool = None,
-        status: str = None,
+        status: List[str] = None,
     ):
         query = metadata.select()
         if id:
@@ -74,7 +75,7 @@ class MetadataDatabaseFactory(object):
         if metadata_valid is not None:
             query = query.where(metadata.c.metadata_valid == metadata_valid)
         if status is not None:
-            query = query.where(metadata.c.status == status)
+            query = query.where(metadata.c.status.in_(status))
         rows = await self.database.fetch_all(query)
         return [Metadata(**row) for row in rows]
 
