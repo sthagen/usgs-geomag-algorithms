@@ -1,10 +1,11 @@
 """Tests for MiniSeedFactory.py"""
+import io
 
 import numpy
 from numpy.testing import assert_equal
-from obspy.core import Stats, Stream, Trace, UTCDateTime
+from obspy.core import read, Stats, Stream, Trace, UTCDateTime
 from geomagio import TimeseriesUtility
-from geomagio.edge import MiniSeedFactory
+from geomagio.edge import MiniSeedFactory, MiniSeedInputClient
 
 
 def test__get_edge_network():
@@ -88,6 +89,28 @@ def test__put_timeseries():
     assert_equal(len(sent[1]), 5)
     assert_equal(sent[1].stats.starttime, trace1.stats.starttime + 5)
     assert_equal(sent[1].stats.endtime, trace1.stats.endtime)
+
+
+def test__pre_process():
+    """edge_test.MiniSeedFactory_test.test__pre_process()"""
+    # create 2 day long trace with additional midnight sample
+    trace1 = __create_trace(numpy.arange((86400 * 2) + 1), channel="H")
+    out_stream = Stream()
+    processed = MiniSeedInputClient(host=None, encoding="float32")._pre_process(
+        stream=Stream(trace1)
+    )
+    for trace in processed:
+        buf = io.BytesIO()
+        trace.write(buf, format="MSEED", reclen=512)
+        out_stream += read(buf)
+        buf.close()
+    assert len(out_stream) == 2
+    for trace in out_stream:
+        assert trace.data.dtype == "float32"
+        stats = trace.stats
+        assert stats.npts == 86400
+        assert stats.starttime.timestamp % 86400 == 0
+        assert stats.endtime.timestamp % 86400 != 0
 
 
 def test__set_metadata():

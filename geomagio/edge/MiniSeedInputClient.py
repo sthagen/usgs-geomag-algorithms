@@ -3,7 +3,9 @@ import io
 import socket
 import sys
 
-from ..TimeseriesUtility import split_streams_by_interval
+from obspy.core import Stream
+
+from ..TimeseriesUtility import encode_stream, split_stream
 
 
 class MiniSeedInputClient(object):
@@ -74,48 +76,28 @@ class MiniSeedInputClient(object):
         # connect if needed
         if self.socket is None:
             self.connect()
-        # convert stream to miniseed
-        buf = io.BytesIO()
-        streams = self._pre_process(stream)
-        for stream in streams:
-            stream.write(
-                buf, encoding=self.encoding.upper(), format="MSEED", reclen=512
-            )
-        # send data
-        self.socket.sendall(buf.getvalue())
+        processed = self._pre_process(stream=stream)
+        for trace in processed:
+            buf = io.BytesIO()
+            # convert stream to miniseed
+            trace.write(buf, format="MSEED", reclen=512)
+            # send data
+            self.socket.sendall(buf.getvalue())
+            buf.close()
 
-    def _pre_process(self, stream):
+    def _pre_process(self, stream: Stream) -> Stream:
         """Encodes and splits streams at daily intervals
 
         Paramters:
         ----------
-        stream: obspy.core.stream
+        stream: Stream
             stream of input data
 
         Returns:
         --------
-        streams: List[obspy.core.stream]
-            list of encoded streams split at daily intervals
+        stream: Stream
+            list of encoded trace split at daily intervals
         """
-        stream = self.__encode_stream(stream)
-        streams = split_streams_by_interval(stream, interval=86400)
-        return streams
-
-    def __encode_stream(self, stream):
-        """Ensures that factory encoding matches output data encoding
-
-        Parameters:
-        -----------
-        stream: obspy.core.Stream
-            stream of input data
-
-        Returns:
-        --------
-        stream: obspy.core.Stream
-            stream with matching data encoding to factory specification
-
-        """
-        for trace in stream:
-            if trace.data.dtype != self.encoding:
-                trace.data = trace.data.astype(self.encoding)
+        stream = encode_stream(stream=stream, encoding=self.encoding)
+        stream = split_stream(stream=stream, size=86400)
         return stream
