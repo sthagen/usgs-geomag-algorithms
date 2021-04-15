@@ -2,6 +2,11 @@ from __future__ import absolute_import, print_function
 import io
 import socket
 import sys
+from typing import BinaryIO
+
+from obspy.core import Stream
+
+from ..TimeseriesUtility import encode_stream, split_stream
 
 
 class MiniSeedInputClient(object):
@@ -20,7 +25,7 @@ class MiniSeedInputClient(object):
         Floating point precision for output data
     """
 
-    def __init__(self, host, port=2061, encoding="FLOAT32"):
+    def __init__(self, host, port=2061, encoding="float32"):
         self.host = host
         self.port = port
         self.encoding = encoding
@@ -66,14 +71,45 @@ class MiniSeedInputClient(object):
 
         Parameters
         ----------
-        stream: obspy.core.Stream
+        stream: Stream
             stream with trace(s) to send.
         """
         # connect if needed
         if self.socket is None:
             self.connect()
-        # convert stream to miniseed
         buf = io.BytesIO()
-        stream.write(buf, encoding=self.encoding, format="MSEED", reclen=512)
+        self._format_miniseed(stream=stream, buf=buf)
         # send data
         self.socket.sendall(buf.getvalue())
+
+    def _format_miniseed(self, stream: Stream, buf: BinaryIO) -> io.BytesIO:
+        """Processes and writes stream to buffer as miniseed
+
+        Parameters:
+        -----------
+        stream: Stream
+            stream with data to write
+        buf: BinaryIO
+            memory buffer for output data
+        """
+        processed = self._pre_process(stream=stream)
+        for trace in processed:
+            # convert stream to miniseed
+            trace.write(buf, format="MSEED", reclen=512)
+
+    def _pre_process(self, stream: Stream) -> Stream:
+        """Encodes and splits streams at daily intervals
+
+        Paramters:
+        ----------
+        stream: Stream
+            stream of input data
+
+        Returns:
+        --------
+        stream: Stream
+            list of encoded trace split at daily intervals
+        """
+        stream = encode_stream(stream=stream, encoding=self.encoding)
+        stream = split_stream(stream=stream, size=86400)
+        return stream

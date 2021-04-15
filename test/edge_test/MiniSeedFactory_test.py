@@ -1,10 +1,12 @@
 """Tests for MiniSeedFactory.py"""
+import io
 
 import numpy
 from numpy.testing import assert_equal
-from obspy.core import Stats, Stream, Trace, UTCDateTime
+from obspy.core import read, Stats, Stream, Trace, UTCDateTime
+
 from geomagio import TimeseriesUtility
-from geomagio.edge import MiniSeedFactory
+from geomagio.edge import MiniSeedFactory, MiniSeedInputClient
 
 
 def test__get_edge_network():
@@ -88,6 +90,35 @@ def test__put_timeseries():
     assert_equal(len(sent[1]), 5)
     assert_equal(sent[1].stats.starttime, trace1.stats.starttime + 5)
     assert_equal(sent[1].stats.endtime, trace1.stats.endtime)
+
+
+def test__pre_process():
+    """edge_test.MiniSeedFactory_test.test__pre_process()"""
+    trace = __create_trace(numpy.arange((86400 * 2) + 1), channel="H")
+    processed = MiniSeedInputClient(host=None)._pre_process(stream=Stream(trace))
+    assert len(processed) == 2
+    for trace in processed:
+        assert trace.data.dtype == "float32"
+        stats = trace.stats
+        assert stats.npts == 86400
+        assert stats.starttime.timestamp % 86400 == 0
+        assert stats.endtime.timestamp % 86400 != 0
+
+
+def test__format_miniseed():
+    """edge_test.MiniseedFactory_test.test__format_miniseed()"""
+    buf = io.BytesIO()
+    trace = __create_trace(numpy.arange((86400 * 2) + 1), channel="H")
+    MiniSeedInputClient(host=None)._format_miniseed(stream=Stream(trace), buf=buf)
+    block_size = 512
+    data = buf.getvalue()
+    n_blocks = int(len(data) / block_size)
+    assert n_blocks == 1516
+    # 759th block is start of second day(758 blocks per day for 1Hz data)
+    block_start = 758 * block_size
+    block = data[block_start : block_start + block_size]
+    out_stream = read(io.BytesIO(block))
+    assert out_stream[0].stats.starttime.timestamp % 86400 == 0
 
 
 def test__set_metadata():
