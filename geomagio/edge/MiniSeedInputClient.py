@@ -2,6 +2,7 @@ from __future__ import absolute_import, print_function
 import io
 import socket
 import sys
+from typing import BinaryIO
 
 from obspy.core import Stream
 
@@ -70,20 +71,31 @@ class MiniSeedInputClient(object):
 
         Parameters
         ----------
-        stream: obspy.core.Stream
+        stream: Stream
             stream with trace(s) to send.
         """
         # connect if needed
         if self.socket is None:
             self.connect()
+        buf = io.BytesIO()
+        self._format_miniseed(stream=stream, buf=buf)
+        # send data
+        self.socket.sendall(buf.getvalue())
+
+    def _format_miniseed(self, stream: Stream, buf: BinaryIO) -> io.BytesIO:
+        """Processes and writes stream to buffer as miniseed
+
+        Parameters:
+        -----------
+        stream: Stream
+            stream with data to write
+        buf: BinaryIO
+            memory buffer for output data
+        """
         processed = self._pre_process(stream=stream)
         for trace in processed:
-            buf = io.BytesIO()
             # convert stream to miniseed
             trace.write(buf, format="MSEED", reclen=512)
-            # send data
-            self.socket.sendall(buf.getvalue())
-            buf.close()
 
     def _pre_process(self, stream: Stream) -> Stream:
         """Encodes and splits streams at daily intervals
