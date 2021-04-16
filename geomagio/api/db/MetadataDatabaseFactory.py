@@ -99,6 +99,12 @@ class MetadataDatabaseFactory(object):
             metadata.reverse()
             return metadata
 
+    async def get_metadata_history_by_id(self, id: int) -> Metadata:
+        query = metadata_history.select()
+        query = query.where(metadata_history.c.id == id)
+        meta = await self.database.fetch_all(query)
+        return meta
+
     async def update_metadata(self, meta: Metadata, updated_by: str) -> Metadata:
         async with self.database.transaction() as transaction:
             # write current record to metadata history table

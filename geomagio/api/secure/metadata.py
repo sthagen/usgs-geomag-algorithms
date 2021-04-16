@@ -90,6 +90,16 @@ async def get_metadata_history(
     )
 
 
+@router.get("/metadata/history/{id}", response_model=Metadata)
+async def get_metadata_history_by_id(id: int):
+    metadata = await MetadataDatabaseFactory(
+        database=database
+    ).get_metadata_history_by_id(id=id)
+    if len(metadata) != 1:
+        return Response(status_code=400)
+    return metadata[0]
+
+
 @router.put("/metadata/{id}", response_model=Metadata)
 async def update_metadata(
     id: int,
