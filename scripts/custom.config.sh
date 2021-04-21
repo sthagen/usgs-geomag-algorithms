@@ -9,7 +9,7 @@ export DATA_HOST=${DATA_HOST:-cwbpub.cr.usgs.gov};
 export DATA_PORT=${DATA_PORT:-2060};
 export DATA_TYPE=${DATA_TYPE:-edge};
 
-# Secure Webservice Environment Variables
+# Web Service Environment Variables
 export DATABASE_URL=${DATABASE_URL:-""}
 export OPENID_CLIENT_ID=${OPENID_CLIENT_ID:-""}
 export OPENID_CLIENT_SECRET=${OPENID_CLIENT_SECRET:-""}

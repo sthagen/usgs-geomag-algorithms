@@ -133,17 +133,6 @@ variables:
     APP_DEPLOY_DIR: "/geomag/geomag-algorithms"
     REQUIRED_PREFIX: "/geomag"
 
-.secure:
-  variables:
-    DATABASE_URL: ${DATABASE_URL}
-    OPENID_CLIENT_ID: ${OPENID_CLIENT_ID}
-    OPENID_CLIENT_SECRET: ${OPENID_CLIENT_SECRET}
-    OPENID_METADATA_URL: ${OPENID_METADATA_URL}
-    SECRET_KEY: ${SECRET_KEY}
-    SECRET_SALT: ${SECRET_SALT}
-    ADMIN_GROUP: ${ADMIN_GROUP}
-    REVIEWER_GROUP: ${REVIEWER_GROUP}
-
 
 
 .staging:
@@ -228,18 +217,6 @@ Mage01 Library:
   variables:
     APP_NAME: geomag-algorithms
 
-Mage01 Secure Web Service:
-  extends:
-    - .deploy
-    - .staging
-    - .secure
-  tags:
-    - deploy
-    - swarm
-    - mage01
-  variables:
-    APP_NAME: geomag-algorithms
-
 Mage01 Web Service:
   extends:
     - .deploy
@@ -250,23 +227,19 @@ Mage01 Web Service:
     - mage01
   variables:
     APP_NAME: geomag-algorithms
+    DATABASE_URL: ${DATABASE_URL}
+    OPENID_CLIENT_ID: ${OPENID_CLIENT_ID}
+    OPENID_CLIENT_SECRET: ${OPENID_CLIENT_SECRET}
+    OPENID_METADATA_URL: ${OPENID_METADATA_URL}
+    SECRET_KEY: ${SECRET_KEY}
+    SECRET_SALT: ${SECRET_SALT}
+    ADMIN_GROUP: ${ADMIN_GROUP}
+    REVIEWER_GROUP: ${REVIEWER_GROUP}
 
 Mage02 Library:
   extends:
     - .deploy-library
     - .production
-  tags:
-    - deploy
-    - swarm
-    - mage02
-  variables:
-    APP_NAME: geomag-algorithms
-
-Mage02 Secure Web Service:
-  extends:
-    - .deploy
-    - .production
-    - .secure
   tags:
     - deploy
     - swarm
@@ -284,18 +257,14 @@ Mage02 Web Service:
     - mage02
   variables:
     APP_NAME: geomag-algorithms
-
-Production01 Secure Web Service:
-  extends:
-    - .deploy
-    - .production
-    - .secure
-  tags:
-    - deploy
-    - swarm
-    - production01
-  variables:
-    APP_NAME: geomag-algorithms
+    DATABASE_URL: ${DATABASE_URL}
+    OPENID_CLIENT_ID: ${OPENID_CLIENT_ID}
+    OPENID_CLIENT_SECRET: ${OPENID_CLIENT_SECRET}
+    OPENID_METADATA_URL: ${OPENID_METADATA_URL}
+    SECRET_KEY: ${SECRET_KEY}
+    SECRET_SALT: ${SECRET_SALT}
+    ADMIN_GROUP: ${ADMIN_GROUP}
+    REVIEWER_GROUP: ${REVIEWER_GROUP}
 
 Production01 Web Service:
   extends:
@@ -307,18 +276,14 @@ Production01 Web Service:
     - production01
   variables:
     APP_NAME: geomag-algorithms
-
-Production02 Secure Web Service:
-  extends:
-    - .deploy
-    - .production
-    - .secure
-  tags:
-    - deploy
-    - swarm
-    - production02
-  variables:
-    APP_NAME: geomag-algorithms
+    DATABASE_URL: ${DATABASE_URL}
+    OPENID_CLIENT_ID: ${OPENID_CLIENT_ID}
+    OPENID_CLIENT_SECRET: ${OPENID_CLIENT_SECRET}
+    OPENID_METADATA_URL: ${OPENID_METADATA_URL}
+    SECRET_KEY: ${SECRET_KEY}
+    SECRET_SALT: ${SECRET_SALT}
+    ADMIN_GROUP: ${ADMIN_GROUP}
+    REVIEWER_GROUP: ${REVIEWER_GROUP}
 
 Production02 Web Service:
   extends:
@@ -330,18 +295,14 @@ Production02 Web Service:
     - production02
   variables:
     APP_NAME: geomag-algorithms
-
-Staging01 Secure Web Service:
-  extends:
-    - .deploy
-    - .staging
-    - .secure
-  tags:
-    - deploy
-    - swarm
-    - staging01
-  variables:
-    APP_NAME: geomag-algorithms
+    DATABASE_URL: ${DATABASE_URL}
+    OPENID_CLIENT_ID: ${OPENID_CLIENT_ID}
+    OPENID_CLIENT_SECRET: ${OPENID_CLIENT_SECRET}
+    OPENID_METADATA_URL: ${OPENID_METADATA_URL}
+    SECRET_KEY: ${SECRET_KEY}
+    SECRET_SALT: ${SECRET_SALT}
+    ADMIN_GROUP: ${ADMIN_GROUP}
+    REVIEWER_GROUP: ${REVIEWER_GROUP}
 
 Staging01 Web Service:
   extends:
@@ -353,18 +314,14 @@ Staging01 Web Service:
     - staging01
   variables:
     APP_NAME: geomag-algorithms
-
-Staging02 Secure Web Service:
-  extends:
-    - .deploy
-    - .staging
-    - .secure
-  tags:
-    - deploy
-    - swarm
-    - staging02
-  variables:
-    APP_NAME: geomag-algorithms
+    DATABASE_URL: ${DATABASE_URL}
+    OPENID_CLIENT_ID: ${OPENID_CLIENT_ID}
+    OPENID_CLIENT_SECRET: ${OPENID_CLIENT_SECRET}
+    OPENID_METADATA_URL: ${OPENID_METADATA_URL}
+    SECRET_KEY: ${SECRET_KEY}
+    SECRET_SALT: ${SECRET_SALT}
+    ADMIN_GROUP: ${ADMIN_GROUP}
+    REVIEWER_GROUP: ${REVIEWER_GROUP}
 
 Staging02 Web Service:
   extends:
@@ -376,3 +333,11 @@ Staging02 Web Service:
     - staging02
   variables:
     APP_NAME: geomag-algorithms
+    DATABASE_URL: ${DATABASE_URL}
+    OPENID_CLIENT_ID: ${OPENID_CLIENT_ID}
+    OPENID_CLIENT_SECRET: ${OPENID_CLIENT_SECRET}
+    OPENID_METADATA_URL: ${OPENID_METADATA_URL}
+    SECRET_KEY: ${SECRET_KEY}
+    SECRET_SALT: ${SECRET_SALT}
+    ADMIN_GROUP: ${ADMIN_GROUP}
+    REVIEWER_GROUP: ${REVIEWER_GROUP}
