@@ -16,7 +16,7 @@ Configuration:
 import os
 from typing import List
 
-from fastapi import APIRouter, Body, Depends, Request, Response
+from fastapi import APIRouter, Body, Depends, Request, Response, Query
 from obspy import UTCDateTime
 
 from ...metadata import Metadata, MetadataCategory, MetadataQuery
@@ -54,7 +54,7 @@ async def get_metadata(
     location: str = None,
     data_valid: bool = None,
     metadata_valid: bool = True,
-    status: str = None,
+    status: List[str] = Query(None),
 ):
     query = MetadataQuery(
         category=category,
@@ -88,6 +88,16 @@ async def get_metadata_history(
     return await MetadataDatabaseFactory(database=database).get_metadata_history(
         metadata_id=metadata_id,
     )
+
+
+@router.get("/metadata/history/{id}", response_model=Metadata)
+async def get_metadata_history_by_id(id: int):
+    metadata = await MetadataDatabaseFactory(
+        database=database
+    ).get_metadata_history_by_id(id=id)
+    if metadata is None:
+        return Response(status_code=400)
+    return metadata
 
 
 @router.put("/metadata/{id}", response_model=Metadata)

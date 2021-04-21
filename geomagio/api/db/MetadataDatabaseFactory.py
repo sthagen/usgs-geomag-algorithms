@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import List
+from typing import List, Optional
 
 from databases import Database
 from obspy import UTCDateTime
@@ -16,6 +16,7 @@ class MetadataDatabaseFactory(object):
 
     async def create_metadata(self, meta: Metadata) -> Metadata:
         query = metadata.insert()
+        meta.status = meta.status or "new"
         values = meta.datetime_dict(exclude={"id", "metadata_id"}, exclude_none=True)
         query = query.values(**values)
         meta.id = await self.database.execute(query)
@@ -36,7 +37,7 @@ class MetadataDatabaseFactory(object):
         created_before: datetime = None,
         data_valid: bool = None,
         metadata_valid: bool = None,
-        status: str = None,
+        status: List[str] = None,
     ):
         query = metadata.select()
         if id:
@@ -74,7 +75,7 @@ class MetadataDatabaseFactory(object):
         if metadata_valid is not None:
             query = query.where(metadata.c.metadata_valid == metadata_valid)
         if status is not None:
-            query = query.where(metadata.c.status == status)
+            query = query.where(metadata.c.status.in_(status))
         rows = await self.database.fetch_all(query)
         return [Metadata(**row) for row in rows]
 
@@ -97,6 +98,14 @@ class MetadataDatabaseFactory(object):
             # return records in order of age(newest first)
             metadata.reverse()
             return metadata
+
+    async def get_metadata_history_by_id(self, id: int) -> Optional[Metadata]:
+        query = metadata_history.select()
+        query = query.where(metadata_history.c.id == id)
+        meta = await self.database.fetch_one(query)
+        if meta is None:
+            return meta
+        return Metadata(**meta)
 
     async def update_metadata(self, meta: Metadata, updated_by: str) -> Metadata:
         async with self.database.transaction() as transaction:

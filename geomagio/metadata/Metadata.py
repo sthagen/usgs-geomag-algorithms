@@ -78,7 +78,7 @@ class Metadata(BaseModel):
     comment: str = None
     # review specific comment
     review_comment: str = None
-    # deletion status indicator
+    # metadata status indicator
     status: str = None
 
     def datetime_dict(self, **kwargs):
