@@ -95,9 +95,9 @@ async def get_metadata_history_by_id(id: int):
     metadata = await MetadataDatabaseFactory(
         database=database
     ).get_metadata_history_by_id(id=id)
-    if len(metadata) != 1:
+    if metadata is None:
         return Response(status_code=400)
-    return metadata[0]
+    return metadata
 
 
 @router.put("/metadata/{id}", response_model=Metadata)

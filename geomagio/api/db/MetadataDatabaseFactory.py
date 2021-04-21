@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import List
+from typing import List, Optional
 
 from databases import Database
 from obspy import UTCDateTime
@@ -99,11 +99,13 @@ class MetadataDatabaseFactory(object):
             metadata.reverse()
             return metadata
 
-    async def get_metadata_history_by_id(self, id: int) -> Metadata:
+    async def get_metadata_history_by_id(self, id: int) -> Optional[Metadata]:
         query = metadata_history.select()
         query = query.where(metadata_history.c.id == id)
-        meta = await self.database.fetch_all(query)
-        return meta
+        meta = await self.database.fetch_one(query)
+        if meta is None:
+            return meta
+        return Metadata(**meta)
 
     async def update_metadata(self, meta: Metadata, updated_by: str) -> Metadata:
         async with self.database.transaction() as transaction:
