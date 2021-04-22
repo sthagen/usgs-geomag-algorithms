@@ -108,6 +108,15 @@ variables:
   tags:
     - deploy
     - swarm
+  variables:
+    DATABASE_URL: ${DATABASE_URL}
+    OPENID_CLIENT_ID: ${OPENID_CLIENT_ID}
+    OPENID_CLIENT_SECRET: ${OPENID_CLIENT_SECRET}
+    OPENID_METADATA_URL: ${OPENID_METADATA_URL}
+    SECRET_KEY: ${SECRET_KEY}
+    SECRET_SALT: ${SECRET_SALT}
+    ADMIN_GROUP: ${ADMIN_GROUP}
+    REVIEWER_GROUP: ${REVIEWER_GROUP}
 
 .deploy-library:
   cache: {}
@@ -132,6 +141,8 @@ variables:
   variables:
     APP_DEPLOY_DIR: "/geomag/geomag-algorithms"
     REQUIRED_PREFIX: "/geomag"
+
+
 
 .staging:
   only:
