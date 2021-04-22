@@ -17,7 +17,6 @@ numpy = "*"
 scipy = "*"
 obspy = "*"
 pycurl = "*"
-
 # web service dependencies
 authlib = "*"
 cryptography = "==3.3.2"
@@ -35,6 +34,7 @@ typer = "*"
 typing = "*"
 typing-extensions = "*"
 uvicorn = {extras=["standard"], version="*"}
+alembic = "*"
 
 [pipenv]
 allow_prereleases = true
