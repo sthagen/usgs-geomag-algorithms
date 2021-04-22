@@ -96,7 +96,7 @@ async def get_metadata_history_by_id(id: int):
         database=database
     ).get_metadata_history_by_id(id=id)
     if metadata is None:
-        return Response(status_code=400)
+        return Response(status_code=404)
     return metadata
 
 
