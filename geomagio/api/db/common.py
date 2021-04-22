@@ -39,7 +39,9 @@ from sqlalchemy import MetaData
 
 
 # database connection
-database = Database(os.getenv("DATABASE_URL", "sqlite:///./api_database.db"))
+database_url = os.getenv("DATABASE_URL", None)
+database_url = database_url or "sqlite:///./api_database.db"
+database = Database(database_url)
 
 # metadata used to manage database schema
 sqlalchemy_metadata = MetaData()
