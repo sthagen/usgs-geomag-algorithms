@@ -291,14 +291,3 @@ Staging01 Web Service:
     - staging01
   variables:
     APP_NAME: geomag-algorithms
-
-Staging02 Web Service:
-  extends:
-    - .deploy
-    - .staging
-  tags:
-    - deploy
-    - swarm
-    - staging02
-  variables:
-    APP_NAME: geomag-algorithms
