@@ -175,6 +175,9 @@ async def authorize(request: Request):
 async def login(request: Request):
     """Redirect to OpenID provider."""
     redirect_uri = request.url_for("authorize")
+    if "127.0.0.1" not in redirect_uri:
+        # 127.0.0.1 used for local dev, all others use https
+        redirect_uri = redirect_uri.replace("http://", "https://")
     # save original location
     if "Referer" in request.headers:
         request.session["after_authorize_redirect"] = request.headers["Referer"]
