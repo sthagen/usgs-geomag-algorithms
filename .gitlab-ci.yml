@@ -247,6 +247,8 @@ Mage02 Library:
     - mage02
   variables:
     APP_NAME: geomag-algorithms
+    # database only used on staging/production
+    DATABASE_URL: "sqlite:///./api_database.db"
 
 Mage02 Web Service:
   extends:
@@ -258,6 +260,8 @@ Mage02 Web Service:
     - mage02
   variables:
     APP_NAME: geomag-algorithms
+    # database only used on staging/production
+    DATABASE_URL: "sqlite:///./api_database.db"
 
 Production01 Web Service:
   extends:
