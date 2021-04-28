@@ -1,26 +1,39 @@
 # Running the Metadata Webservice Locally
 
-## Run postgres in a container (for local development)
+## Run mysql in a container (for local development)
 
 ```
-docker run --rm -it -p 5432:5432 -e POSTGRES_PASSWORD=postgres postgres:10
+docker run --rm --name mysql-db -e MYSQL_ROOT_PASSWORD=password -p 3306:3306 mysql:5.7
 ```
 
-This exposes port 5432 so python can connect locally. When running the webservice in a container, container links should be used so the container can access the database container.
+This exposes port 3306 so python can connect locally. When running the webservice in a container, container links should be used so the container can access the database container.
 
 ## Set up schema in database
 
 > This is only needed the first time the database is created. Volume mounts can make this more persistent.
 
 ```
-export DATABASE_URL="postgresql://postgres@localhost/postgres?password=postgres"
-pipenv run python .\create_db.py
+export DATABASE_URL=mysql://root:password@localhost/geomag_operations
+```
+
+### Create mysql database
+```
+docker exec -it mysql-db mysql -uroot -ppassword
+```
+> Inside mysql container:
+```
+CREATE DATABASE geomag_operations;
+exit
+```
+
+```
+pipenv run alembic upgrade head
 ```
 
 ### Add some testing data (depends on DATABASE_URL environment set above).
 
 ```
-pipenv run python .\test_metadata.py
+pipenv run python test_metadata.py
 ```
 
 ## Set up OpenID application in code.usgs.gov.
@@ -44,7 +57,7 @@ pipenv run python .\test_metadata.py
 - Export variables used for authentication:
 
 ```
-export DATABASE_URL="postgresql://postgres@localhost/postgres?password=postgres"
+export DATABASE_URL=mysql://root:password@localhost/geomag_operations
 export OPENID_CLIENT_ID={Application ID}
 export OPENID_CLIENT_SECRET={Secret}
 export OPENID_METADATA_URL=https://code.usgs.gov/.well-known/openid-configuration

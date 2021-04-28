@@ -32,7 +32,7 @@ DB_HOST=$(get_ehp_server_ini 'restricted_database=');
 DB_NAME=geomag_operations
 DB_USER=$(get_ehp_server_ini 'mysql_web_absolutes_user=');
 DB_PASS=$(get_ehp_server_ini 'mysql_web_absolutes_password=');
-export DATABASE_URL="mysql:${DB_USER}@${DB_HOST}/${DB_NAME}?password=${DB_PASS}";
+export DATABASE_URL="mysql://${DB_USER}:${DB_PASS}@${DB_HOST}/${DB_NAME}";
 
 export OPENID_CLIENT_ID=${OPENID_CLIENT_ID:-""}
 export OPENID_CLIENT_SECRET=${OPENID_CLIENT_SECRET:-""}

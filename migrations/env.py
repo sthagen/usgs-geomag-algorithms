@@ -11,6 +11,8 @@ config = context.config
 fileConfig(config.config_file_name)
 database_url = os.getenv("DATABASE_URL", None)
 database_url = database_url or "sqlite:///./api_database.db"
+database_url = database_url.replace("mysql://", "mysql+pymysql://")
+database_url = database_url.replace("%", "%%")
 config.set_main_option("sqlalchemy.url", database_url)
 target_metadata = sqlalchemy_metadata
 
