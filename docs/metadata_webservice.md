@@ -27,13 +27,13 @@ exit
 ```
 
 ```
-pipenv alembic upgrade head
+pipenv run alembic upgrade head
 ```
 
 ### Add some testing data (depends on DATABASE_URL environment set above).
 
 ```
-pipenv run python .\test_metadata.py
+pipenv run python test_metadata.py
 ```
 
 ## Set up OpenID application in code.usgs.gov.
