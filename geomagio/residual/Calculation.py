@@ -28,10 +28,11 @@ def calculate(reading: Reading, adjust_reference: bool = True) -> Reading:
     NOTE: rest of reading object is shallow copy.
     """
     # reference measurement, used to adjust absolutes
-    try:
-        reference = adjust_reference and reading[mt.WEST_DOWN][0] or None
-    except:
-        raise ValueError(f"Missing {mt.WEST_DOWN.value} measurement")
+    missing_types = get_missing_measurement_types(reading=reading)
+    if len(missing_types) != 0:
+        missing_types = ", ".join(t.value for t in missing_types)
+        raise ValueError(f"Missing {missing_types} measurements in input reading")
+    reference = adjust_reference and reading[mt.WEST_DOWN][0] or None
     # calculate inclination
     inclination, f, i_mean = calculate_I(
         hemisphere=reading.hemisphere, measurements=reading.measurements
@@ -281,3 +282,16 @@ def calculate_scale_value(
     residual_change = m2.residual - m1.residual
     scale_value = corrected_f * field_change / np.abs(residual_change)
     return scale_value
+
+
+def get_missing_measurement_types(reading: Reading) -> List[str]:
+    measurement_types = [m.measurement_type for m in reading.measurements]
+    missing_types = []
+    missing_types.extend(
+        [type for type in DECLINATION_TYPES if type not in measurement_types]
+    )
+    missing_types.extend(
+        [type for type in INCLINATION_TYPES if type not in measurement_types]
+    )
+    missing_types.extend([type for type in MARK_TYPES if type not in measurement_types])
+    return missing_types

@@ -8,9 +8,7 @@ from ...algorithm import DbDtAlgorithm
 from ...residual import (
     calculate,
     Reading,
-    DECLINATION_TYPES,
-    INCLINATION_TYPES,
-    MARK_TYPES,
+    get_missing_measurement_types,
 )
 from .DataApiQuery import DataApiQuery
 from .data import format_timeseries, get_data_factory, get_data_query, get_timeseries
@@ -46,16 +44,3 @@ def calculate_residual(reading: Reading, adjust_reference: bool = True):
             detail=f"Missing {missing_types} measurements in input reading",
         )
     return calculate(reading=reading, adjust_reference=adjust_reference)
-
-
-def get_missing_measurement_types(reading: Reading) -> List[str]:
-    measurement_types = [m.measurement_type for m in reading.measurements]
-    missing_types = []
-    missing_types.extend(
-        [type for type in DECLINATION_TYPES if type not in measurement_types]
-    )
-    missing_types.extend(
-        [type for type in INCLINATION_TYPES if type not in measurement_types]
-    )
-    missing_types.extend([type for type in MARK_TYPES if type not in measurement_types])
-    return missing_types

@@ -52,10 +52,6 @@ def average_measurement(
     """
     if types:
         measurements = [m for m in measurements if m.measurement_type in types]
-    if len(measurements) == 0:
-        # no measurements to average
-        missing_types = ", ".join(t.value for t in types)
-        raise ValueError(f"Missing {missing_types} measurements")
     starttime = safe_min([m.time.timestamp for m in measurements if m.time])
     endtime = safe_max([m.time.timestamp for m in measurements if m.time])
     measurement = AverageMeasurement(
