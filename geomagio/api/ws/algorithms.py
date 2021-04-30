@@ -1,5 +1,3 @@
-from typing import List
-
 from fastapi import APIRouter, Depends, HTTPException
 from starlette.responses import Response
 
@@ -8,7 +6,6 @@ from ...algorithm import DbDtAlgorithm
 from ...residual import (
     calculate,
     Reading,
-    get_missing_measurement_types,
 )
 from .DataApiQuery import DataApiQuery
 from .data import format_timeseries, get_data_factory, get_data_query, get_timeseries
@@ -36,7 +33,7 @@ def get_dbdt(
 
 @router.post("/algorithms/residual", response_model=Reading)
 def calculate_residual(reading: Reading, adjust_reference: bool = True):
-    missing_types = get_missing_measurement_types(reading=reading)
+    missing_types = reading.get_missing_measurement_types()
     if len(missing_types) != 0:
         missing_types = ", ".join(t.value for t in missing_types)
         raise HTTPException(

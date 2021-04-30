@@ -9,7 +9,6 @@ from .Calculation import (
     calculate_HZ_absolutes,
     calculate_I,
     calculate_scale_value,
-    get_missing_measurement_types,
 )
 from .CalFileFactory import CalFileFactory
 from .Measurement import Measurement, AverageMeasurement, average_measurement
@@ -36,7 +35,6 @@ __all__ = [
     "calculate_I",
     "calculate_scale_value",
     "DECLINATION_TYPES",
-    "get_missing_measurement_types",
     "INCLINATION_TYPES",
     "MARK_TYPES",
     "Measurement",
