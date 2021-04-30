@@ -28,7 +28,10 @@ def calculate(reading: Reading, adjust_reference: bool = True) -> Reading:
     NOTE: rest of reading object is shallow copy.
     """
     # reference measurement, used to adjust absolutes
-    reference = reading[mt.WEST_DOWN][0]
+    try:
+        reference = adjust_reference and reading[mt.WEST_DOWN][0] or None
+    except:
+        raise ValueError(f"Missing {mt.WEST_DOWN.value} measurement")
     # calculate inclination
     inclination, f, i_mean = calculate_I(
         hemisphere=reading.hemisphere, measurements=reading.measurements
@@ -39,13 +42,13 @@ def calculate(reading: Reading, adjust_reference: bool = True) -> Reading:
         corrected_f=corrected_f,
         inclination=inclination,
         mean=i_mean,
-        reference=adjust_reference and reference or None,
+        reference=reference,
     )
     absoluteD, meridian = calculate_D_absolute(
         azimuth=reading.azimuth,
         h_baseline=absoluteH.baseline,
         measurements=reading.measurements,
-        reference=adjust_reference and reference or None,
+        reference=reference,
     )
     # populate diagnostics object with averaged measurements
     diagnostics = Diagnostics(
