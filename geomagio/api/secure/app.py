@@ -52,4 +52,5 @@ async def index(request: Request, user: User = Depends(current_user)):
 </body>
 </html>""",
         media_type="text/html",
+        headers={"Cache-control": "no-cache"},
     )
