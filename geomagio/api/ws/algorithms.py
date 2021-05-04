@@ -33,11 +33,7 @@ def get_dbdt(
 
 @router.post("/algorithms/residual", response_model=Reading)
 def calculate_residual(reading: Reading, adjust_reference: bool = True):
-    missing_types = reading.get_missing_measurement_types()
-    if len(missing_types) != 0:
-        missing_types = ", ".join(t.value for t in missing_types)
-        raise HTTPException(
-            status_code=400,
-            detail=f"Missing {missing_types} measurements in input reading",
-        )
-    return calculate(reading=reading, adjust_reference=adjust_reference)
+    try:
+        return calculate(reading=reading, adjust_reference=adjust_reference)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))

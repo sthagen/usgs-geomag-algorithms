@@ -8,10 +8,14 @@ from pydantic import BaseModel
 from .. import TimeseriesUtility
 from ..TimeseriesFactory import TimeseriesFactory
 from .Absolute import Absolute
-from .Calculation import DECLINATION_TYPES, INCLINATION_TYPES, MARK_TYPES
 from .Measurement import Measurement, average_measurement
 from .Diagnostics import Diagnostics
-from .MeasurementType import MeasurementType
+from .MeasurementType import (
+    MeasurementType,
+    DECLINATION_TYPES,
+    INCLINATION_TYPES,
+    MARK_TYPES,
+)
 
 
 class Reading(BaseModel):
