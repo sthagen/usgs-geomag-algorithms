@@ -10,7 +10,12 @@ from ..TimeseriesFactory import TimeseriesFactory
 from .Absolute import Absolute
 from .Measurement import Measurement, average_measurement
 from .Diagnostics import Diagnostics
-from .MeasurementType import MeasurementType
+from .MeasurementType import (
+    MeasurementType,
+    DECLINATION_TYPES,
+    INCLINATION_TYPES,
+    MARK_TYPES,
+)
 
 
 class Reading(BaseModel):
@@ -51,6 +56,12 @@ class Reading(BaseModel):
             if absolute.element == element:
                 return absolute
         return None
+
+    def get_missing_measurement_types(self) -> List[str]:
+        measurement_types = [m.measurement_type for m in self.measurements]
+        all_types = DECLINATION_TYPES + INCLINATION_TYPES + MARK_TYPES
+        missing = [t for t in all_types if t not in measurement_types]
+        return missing
 
     def load_ordinates(
         self,
