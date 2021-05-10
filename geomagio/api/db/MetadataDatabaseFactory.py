@@ -3,7 +3,7 @@ from typing import List, Optional
 
 from databases import Database
 from obspy import UTCDateTime
-from sqlalchemy import or_
+from sqlalchemy import or_, Table
 
 from ...metadata import Metadata, MetadataCategory
 from .metadata_history_table import metadata_history
@@ -36,9 +36,10 @@ class MetadataDatabaseFactory(object):
         created_after: datetime = None,
         created_before: datetime = None,
         data_valid: bool = None,
+        metadata: Table = metadata,
         metadata_valid: bool = None,
         status: List[str] = None,
-    ):
+    ) -> List[Metadata]:
         query = metadata.select()
         if id:
             query = query.where(metadata.c.id == id)
@@ -85,7 +86,51 @@ class MetadataDatabaseFactory(object):
             raise ValueError(f"{len(meta)} records found")
         return meta[0]
 
-    async def get_metadata_history(self, metadata_id: int) -> List[Metadata]:
+    async def get_metadata_history(
+        self,
+        *,  # make all params keyword
+        id: int = None,
+        network: str = None,
+        station: str = None,
+        channel: str = None,
+        location: str = None,
+        category: MetadataCategory = None,
+        starttime: datetime = None,
+        endtime: datetime = None,
+        created_after: datetime = None,
+        created_before: datetime = None,
+        data_valid: bool = None,
+        metadata_valid: bool = None,
+        status: List[str] = None,
+    ) -> List[Metadata]:
+        return await self.get_metadata(
+            id=id,
+            network=network,
+            station=station,
+            channel=channel,
+            location=location,
+            category=category,
+            starttime=starttime,
+            endtime=endtime,
+            created_after=created_after,
+            created_before=created_before,
+            data_valid=data_valid,
+            metadata=metadata_history,
+            metadata_valid=metadata_valid,
+            status=status,
+        )
+
+    async def get_metadata_history_by_id(self, id: int) -> Optional[Metadata]:
+        query = metadata_history.select()
+        query = query.where(metadata_history.c.id == id)
+        meta = await self.database.fetch_one(query)
+        if meta is None:
+            return meta
+        return Metadata(**meta)
+
+    async def get_metadata_history_by_metadata_id(
+        self, metadata_id: int
+    ) -> List[Metadata]:
         async with self.database.transaction() as transaction:
             query = metadata_history.select()
             query = query.where(metadata_history.c.metadata_id == metadata_id).order_by(
@@ -98,14 +143,6 @@ class MetadataDatabaseFactory(object):
             # return records in order of age(newest first)
             metadata.reverse()
             return metadata
-
-    async def get_metadata_history_by_id(self, id: int) -> Optional[Metadata]:
-        query = metadata_history.select()
-        query = query.where(metadata_history.c.id == id)
-        meta = await self.database.fetch_one(query)
-        if meta is None:
-            return meta
-        return Metadata(**meta)
 
     async def update_metadata(self, meta: Metadata, updated_by: str) -> Metadata:
         async with self.database.transaction() as transaction:

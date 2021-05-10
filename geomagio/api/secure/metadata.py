@@ -29,20 +29,7 @@ from .login import require_user, User
 router = APIRouter()
 
 
-@router.post("/metadata", response_model=Metadata)
-async def create_metadata(
-    request: Request,
-    metadata: Metadata,
-    user: User = Depends(require_user()),
-):
-    metadata = await MetadataDatabaseFactory(database=database).create_metadata(
-        meta=metadata
-    )
-    return Response(metadata.json(), status_code=201, media_type="application/json")
-
-
-@router.get("/metadata", response_model=List[Metadata])
-async def get_metadata(
+def get_metadata_query(
     category: MetadataCategory = None,
     starttime: UTCDateTime = None,
     endtime: UTCDateTime = None,
@@ -55,8 +42,8 @@ async def get_metadata(
     data_valid: bool = None,
     metadata_valid: bool = True,
     status: List[str] = Query(None),
-):
-    query = MetadataQuery(
+) -> MetadataQuery:
+    return MetadataQuery(
         category=category,
         starttime=starttime,
         endtime=endtime,
@@ -70,7 +57,31 @@ async def get_metadata(
         metadata_valid=metadata_valid,
         status=status,
     )
+
+
+@router.post("/metadata", response_model=Metadata)
+async def create_metadata(
+    request: Request,
+    metadata: Metadata,
+    user: User = Depends(require_user()),
+):
+    metadata = await MetadataDatabaseFactory(database=database).create_metadata(
+        meta=metadata
+    )
+    return Response(metadata.json(), status_code=201, media_type="application/json")
+
+
+@router.get("/metadata", response_model=List[Metadata])
+async def get_metadata(query: MetadataQuery = Depends(get_metadata_query)):
     metas = await MetadataDatabaseFactory(database=database).get_metadata(
+        **query.datetime_dict(exclude={"id", "metadata_id"})
+    )
+    return metas
+
+
+@router.get("/metadata/history", response_model=List[Metadata])
+async def get_metadata_history(query: MetadataQuery = Depends(get_metadata_query)):
+    metas = await MetadataDatabaseFactory(database=database).get_metadata_history(
         **query.datetime_dict(exclude={"id", "metadata_id"})
     )
     return metas
@@ -82,10 +93,12 @@ async def get_metadata_by_id(id: int):
 
 
 @router.get("/metadata/{metadata_id}/history", response_model=List[Metadata])
-async def get_metadata_history(
+async def get_metadata_history_by_metadata_id(
     metadata_id: int,
 ):
-    return await MetadataDatabaseFactory(database=database).get_metadata_history(
+    return await MetadataDatabaseFactory(
+        database=database
+    ).get_metadata_history_by_metadata_id(
         metadata_id=metadata_id,
     )
 
