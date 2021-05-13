@@ -42,6 +42,15 @@ class SNCL(BaseModel):
     location: str
     data_format: str = "miniseed"
 
+    def parse_sncl(self) -> Dict:
+        return {
+            "station": self.station,
+            "network": self.network,
+            "data_type": self.data_type,
+            "element": self.element,
+            "interval": self.interval,
+        }
+
     def dict(self, exclude: Set = {"data_format"}) -> dict:
         return super().dict(
             exclude=exclude,
