@@ -7,6 +7,8 @@ from .LocationCode import LocationCode
 from .MiniSeedFactory import MiniSeedFactory
 from .MiniSeedInputClient import MiniSeedInputClient
 from .RawInputClient import RawInputClient
+from .SNCL import SNCL
+from .SNCLFactory import SNCLFactory
 
 __all__ = [
     "EdgeFactory",
@@ -14,4 +16,8 @@ __all__ = [
     "MiniSeedFactory",
     "MiniSeedInputClient",
     "RawInputClient",
+    "LegacySNCL",
+    "LegacySNIDE",
+    "SNCL",
+    "SNCLFactory",
 ]
