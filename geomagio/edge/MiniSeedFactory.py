@@ -23,6 +23,7 @@ from ..TimeseriesFactory import TimeseriesFactory
 from ..TimeseriesFactoryException import TimeseriesFactoryException
 from ..ObservatoryMetadata import ObservatoryMetadata
 from .MiniSeedInputClient import MiniSeedInputClient
+from .SNCLFactory import SNCLFactory
 
 
 class MiniSeedFactory(TimeseriesFactory):
@@ -524,12 +525,11 @@ class MiniSeedFactory(TimeseriesFactory):
         obspy.core.trace
             timeseries trace of the requested channel data
         """
-        station = self._get_edge_station(observatory, channel, type, interval)
-        location = self._get_edge_location(observatory, channel, type, interval)
-        network = self._get_edge_network(observatory, channel, type, interval)
-        edge_channel = self._get_edge_channel(observatory, channel, type, interval)
+        sncl = SNCLFactory().get_sncl(
+            station=observatory, data_type=type, element=channel, interval=interval
+        )
         data = self.client.get_waveforms(
-            network, station, location, edge_channel, starttime, endtime
+            sncl.network, sncl.station, sncl.location, sncl.channel, starttime, endtime
         )
         data.merge()
         if data.count() == 0:
@@ -540,9 +540,9 @@ class MiniSeedFactory(TimeseriesFactory):
                 channel,
                 type,
                 interval,
-                network,
-                station,
-                location,
+                sncl.network,
+                sncl.station,
+                sncl.location,
             )
         self._set_metadata(data, observatory, channel, type, interval)
         return data
@@ -666,15 +666,14 @@ class MiniSeedFactory(TimeseriesFactory):
         to_write = to_write.split()
         to_write = TimeseriesUtility.unmask_stream(to_write)
         # relabel channels from internal to edge conventions
-        station = self._get_edge_station(observatory, channel, type, interval)
-        location = self._get_edge_location(observatory, channel, type, interval)
-        network = self._get_edge_network(observatory, channel, type, interval)
-        edge_channel = self._get_edge_channel(observatory, channel, type, interval)
+        sncl = SNCLFactory().get_sncl(
+            station=observatory, data_type=type, element=channel, interval=interval
+        )
         for trace in to_write:
-            trace.stats.station = station
-            trace.stats.location = location
-            trace.stats.network = network
-            trace.stats.channel = edge_channel
+            trace.stats.station = sncl.station
+            trace.stats.location = sncl.location
+            trace.stats.network = sncl.network
+            trace.stats.channel = sncl.channel
         # finally, send to edge
         self.write_client.send(to_write)
 

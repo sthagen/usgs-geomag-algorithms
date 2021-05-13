@@ -22,6 +22,7 @@ from ..TimeseriesFactory import TimeseriesFactory
 from ..TimeseriesFactoryException import TimeseriesFactoryException
 from ..ObservatoryMetadata import ObservatoryMetadata
 from .RawInputClient import RawInputClient
+from .SNCLFactory import SNCLFactory
 
 
 class EdgeFactory(TimeseriesFactory):
@@ -482,13 +483,17 @@ class EdgeFactory(TimeseriesFactory):
         obspy.core.trace
             timeseries trace of the requested channel data
         """
-        station = self._get_edge_station(observatory, channel, type, interval)
-        location = self._get_edge_location(observatory, channel, type, interval)
-        network = self._get_edge_network(observatory, channel, type, interval)
-        edge_channel = self._get_edge_channel(observatory, channel, type, interval)
+        sncl = SNCLFactory(data_format="legacy").get_sncl(
+            station=observatory, data_type=type, element=channel, interval=interval
+        )
         try:
             data = self.client.get_waveforms(
-                network, station, location, edge_channel, starttime, endtime
+                sncl.network,
+                sncl.station,
+                sncl.location,
+                sncl.channel,
+                starttime,
+                endtime,
             )
         except TypeError:
             # get_waveforms() fails if no data is returned from Edge
@@ -506,9 +511,9 @@ class EdgeFactory(TimeseriesFactory):
                 channel,
                 type,
                 interval,
-                network,
-                station,
-                location,
+                sncl.network,
+                sncl.station,
+                sncl.location,
             )
         self._set_metadata(data, observatory, channel, type, interval)
         return data
@@ -576,10 +581,9 @@ class EdgeFactory(TimeseriesFactory):
         -----
         RawInputClient seems to only work when sockets are
         """
-        station = self._get_edge_station(observatory, channel, type, interval)
-        location = self._get_edge_location(observatory, channel, type, interval)
-        network = self._get_edge_network(observatory, channel, type, interval)
-        edge_channel = self._get_edge_channel(observatory, channel, type, interval)
+        sncl = SNCLFactory(data_format="legacy").get_sncl(
+            station=observatory, data_type=type, element=channel, interval=interval
+        )
 
         now = obspy.core.UTCDateTime(datetime.utcnow())
         if ((now - endtime) > 864000) and (self.cwbport > 0):
@@ -590,7 +594,13 @@ class EdgeFactory(TimeseriesFactory):
             port = self.write_port
 
         ric = RawInputClient(
-            self.tag, host, port, station, edge_channel, location, network
+            self.tag,
+            host,
+            port,
+            sncl.station,
+            sncl.channel,
+            sncl.location,
+            sncl.network,
         )
 
         stream = self._convert_stream_to_masked(timeseries=timeseries, channel=channel)
