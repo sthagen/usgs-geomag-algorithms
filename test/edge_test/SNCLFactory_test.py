@@ -34,9 +34,14 @@ def test_get_channel():
     assert factory.get_channel(element="E-N", interval="minute") == "UQN"
     assert factory.get_channel(element="SQ", interval="minute") == "USQ"
     assert factory.get_channel(element="SV", interval="minute") == "USV"
+    assert factory.get_channel(element="UK1", interval="minute") == "UK1"
+    assert factory.get_channel(element="UK2", interval="minute") == "UK2"
+    assert factory.get_channel(element="UK3", interval="minute") == "UK3"
+    assert factory.get_channel(element="UK4", interval="minute") == "UK4"
     assert factory.get_channel(element="DIST", interval="minute") == "UDT"
     assert factory.get_channel(element="DST", interval="minute") == "UGD"
     assert factory.get_channel(element="U_Dist", interval="minute") == "UFU"
+    assert factory.get_channel(element="UK1.R0", interval="minute") == "UK1"
 
     # test legacy format
     factory = SNCLFactory(data_format="legacy")
@@ -49,9 +54,14 @@ def test_get_channel():
     assert factory.get_channel(element="E-N", interval="minute") == "MQN"
     assert factory.get_channel(element="SQ", interval="minute") == "MSQ"
     assert factory.get_channel(element="SV", interval="minute") == "MSV"
+    assert factory.get_channel(element="UK1", interval="minute") == "UK1"
+    assert factory.get_channel(element="UK2", interval="minute") == "UK2"
+    assert factory.get_channel(element="UK3", interval="minute") == "UK3"
+    assert factory.get_channel(element="UK4", interval="minute") == "UK4"
     assert factory.get_channel(element="DIST", interval="minute") == "MDT"
     assert factory.get_channel(element="DST", interval="minute") == "MGD"
     assert factory.get_channel(element="H_Dist", interval="minute") == "MVH"
+    assert factory.get_channel(element="UK1.R0", interval="minute") == "UK1"
 
 
 def test_get_location():

@@ -63,6 +63,7 @@ class SNCL(BaseModel):
 
     @property
     def data_type(self) -> str:
+        """Translates beginning of location code to data type"""
         location_start = self.location[0]
         if location_start == "R":
             return "variation"
@@ -76,12 +77,13 @@ class SNCL(BaseModel):
 
     @property
     def element(self) -> str:
-        element = self.__get_predefined_element()
-        element = element or self.__get_element()
-        return element
+        predefined_element = self.__check_predefined_element()
+        element = self.__get_element()
+        return predefined_element or element
 
     @property
     def interval(self) -> str:
+        """Translates beginning of channel to interval"""
         interval_conversions = INTERVAL_CONVERSIONS[self.data_format]
         interval_code_conversions = {
             interval_conversions[key]: key for key in interval_conversions.keys()
@@ -93,6 +95,7 @@ class SNCL(BaseModel):
             raise ValueError(f"Unexcepted interval code: {channel_start}")
 
     def __get_element(self):
+        """Translates channel/location to element"""
         element_start = self.channel[2]
         channel = self.channel
         channel_middle = channel[1]
@@ -115,7 +118,7 @@ class SNCL(BaseModel):
             element_end = ""
         return element_start + element_end
 
-    def __get_predefined_element(self) -> Optional[str]:
+    def __check_predefined_element(self) -> Optional[str]:
         channel = self.channel
         channel_end = channel[1:]
         if channel_end in CHANNEL_CONVERSIONS:

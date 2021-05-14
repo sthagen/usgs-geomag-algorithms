@@ -23,10 +23,12 @@ class SNCLFactory(object):
         )
 
     def get_channel(self, element: str, interval: str) -> str:
+        predefined_channel = self.__check_predefined_channel(
+            element=element, interval=interval
+        )
         channel_start = self.__get_channel_start(interval=interval)
-        channel_end = self.__get_predefined_channel(element=element)
-        channel_end = channel_end or self.__get_channel_end(element=element)
-        return channel_start + channel_end
+        channel_end = self.__get_channel_end(element=element)
+        return predefined_channel or (channel_start + channel_end)
 
     def get_location(self, element: str, data_type: str) -> str:
         location_start = self.__get_location_start(data_type=data_type)
@@ -39,11 +41,18 @@ class SNCLFactory(object):
         except:
             raise ValueError(f"Unexpected interval: {interval}")
 
-    def __get_predefined_channel(self, element: str) -> Optional[str]:
-        if len(element) == 3 and "-" not in element and element != "DST":
-            return element[1:]
-        elif element in ELEMENT_CONVERSIONS:
-            return ELEMENT_CONVERSIONS[element]
+    def __check_predefined_channel(self, element: str, interval: str) -> Optional[str]:
+        if element in ELEMENT_CONVERSIONS:
+            return (
+                self.__get_channel_start(interval=interval)
+                + ELEMENT_CONVERSIONS[element]
+            )
+        elif len(element) == 3:
+            return element
+        # chan.loc format
+        elif "." in element:
+            channel = element.split(".")[0]
+            return channel.strip()
         else:
             return None
 
@@ -61,6 +70,7 @@ class SNCLFactory(object):
         return channel_middle + channel_end
 
     def __get_location_start(self, data_type: str) -> str:
+        """Translates data type to beginning of location code"""
         if data_type == "variation":
             return "R"
         elif data_type == "adjusted":
@@ -72,6 +82,7 @@ class SNCLFactory(object):
         raise ValueError(f"Unexpected data type: {data_type}")
 
     def __get_location_end(self, element: str) -> str:
+        """Translates element suffix to end of location code"""
         if "_Sat" in element:
             return "1"
         if "_Dist" in element:
