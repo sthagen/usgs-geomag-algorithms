@@ -73,16 +73,14 @@ async def create_metadata(
 
 @router.get("/metadata", response_model=List[Metadata])
 async def get_metadata(query: MetadataQuery = Depends(get_metadata_query)):
-    metas = await MetadataDatabaseFactory(database=database).get_metadata(
-        **query.datetime_dict(exclude={"id", "metadata_id"})
-    )
+    metas = await MetadataDatabaseFactory(database=database).get_metadata(params=query)
     return metas
 
 
 @router.get("/metadata/history", response_model=List[Metadata])
 async def get_metadata_history(query: MetadataQuery = Depends(get_metadata_query)):
-    metas = await MetadataDatabaseFactory(database=database).get_metadata_history(
-        **query.datetime_dict(exclude={"id", "metadata_id"})
+    metas = await MetadataDatabaseFactory(database=database).get_metadata(
+        params=query, history=True
     )
     return metas
 
