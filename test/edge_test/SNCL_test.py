@@ -2,6 +2,7 @@ from geomagio.edge import SNCL
 
 
 def test_data_type():
+    """edge_test.SNCL_test.test_data_type()"""
     assert SNCL(station="BOU", channel="LFU", location="R0").data_type == "variation"
     assert SNCL(station="BOU", channel="LFU", location="A0").data_type == "adjusted"
     assert (
@@ -11,88 +12,8 @@ def test_data_type():
     assert SNCL(station="BOU", channel="LFU", location="D0").data_type == "definitive"
 
 
-def test_interval():
-    # miniseed format
-    assert (
-        SNCL(
-            station="BOU",
-            channel="BEU",
-            location="R0",
-        ).interval
-        == "tenhertz"
-    )
-    assert (
-        SNCL(
-            station="BOU",
-            channel="LEU",
-            location="R0",
-        ).interval
-        == "second"
-    )
-    assert (
-        SNCL(
-            station="BOU",
-            channel="UEU",
-            location="R0",
-        ).interval
-        == "minute"
-    )
-    assert (
-        SNCL(
-            station="BOU",
-            channel="REU",
-            location="R0",
-        ).interval
-        == "hour"
-    )
-    assert (
-        SNCL(
-            station="BOU",
-            channel="PEU",
-            location="R0",
-        ).interval
-        == "day"
-    )
-    # legacy format
-    assert (
-        SNCL(
-            station="BOU",
-            channel="SVH",
-            location="R0",
-            data_format="legacy",
-        ).interval
-        == "second"
-    )
-    assert (
-        SNCL(
-            station="BOU",
-            channel="MVH",
-            location="R0",
-            data_format="legacy",
-        ).interval
-        == "minute"
-    )
-    assert (
-        SNCL(
-            station="BOU",
-            channel="HVH",
-            location="R0",
-            data_format="legacy",
-        ).interval
-        == "hour"
-    )
-    assert (
-        SNCL(
-            station="BOU",
-            channel="DVH",
-            location="R0",
-            data_format="legacy",
-        ).interval
-        == "day"
-    )
-
-
 def test_element():
+    """edge_test.SNCL_test.test_element()"""
     assert (
         SNCL(
             station="BOU",
@@ -182,147 +103,64 @@ def test_element():
         == "U_Sat"
     )
 
+
+def test_get_sncl():
+    """edge_test.SNCL_test.test_get_sncl()"""
+    assert SNCL().get_sncl(
+        station="BOU", data_type="variation", interval="second", element="U"
+    ) == SNCL(station="BOU", network="NT", channel="LFU", location="R0")
+
+
+def test_interval():
+    """edge_test.SNCL_test.test_interval()"""
     assert (
         SNCL(
             station="BOU",
-            channel="MVD",
+            channel="BEU",
             location="R0",
-            data_format="legacy",
-        ).element
-        == "D"
+        ).interval
+        == "tenhertz"
     )
     assert (
         SNCL(
             station="BOU",
-            channel="MVU",
+            channel="LEU",
             location="R0",
-            data_format="legacy",
-        ).element
-        == "U"
+        ).interval
+        == "second"
     )
     assert (
         SNCL(
             station="BOU",
-            channel="MSF",
+            channel="UEU",
             location="R0",
-            data_format="legacy",
-        ).element
-        == "F"
+        ).interval
+        == "minute"
     )
     assert (
         SNCL(
             station="BOU",
-            channel="MVH",
+            channel="REU",
             location="R0",
-            data_format="legacy",
-        ).element
-        == "H"
+        ).interval
+        == "hour"
     )
     assert (
         SNCL(
             station="BOU",
-            channel="MX4",
+            channel="PEU",
             location="R0",
-            data_format="legacy",
-        ).element
-        == "Dst4"
+        ).interval
+        == "day"
     )
-    assert (
-        SNCL(
-            station="BOU",
-            channel="MX3",
-            location="R0",
-            data_format="legacy",
-        ).element
-        == "Dst3"
-    )
-    assert (
-        SNCL(
-            station="BOU",
-            channel="MQE",
-            location="R0",
-            data_format="legacy",
-        ).element
-        == "E-E"
-    )
-    assert (
-        SNCL(
-            station="BOU",
-            channel="MQN",
-            location="R0",
-            data_format="legacy",
-        ).element
-        == "E-N"
-    )
-    assert (
-        SNCL(
-            station="BOU",
-            channel="MEH",
-            location="R0",
-            data_format="legacy",
-        ).element
-        == "H_Volt"
-    )
-    assert (
-        SNCL(
-            station="BOU",
-            channel="MYH",
-            location="R0",
-            data_format="legacy",
-        ).element
-        == "H_Bin"
-    )
-    assert (
-        SNCL(
-            station="BOU",
-            channel="MVH",
-            location="R1",
-            data_format="legacy",
-        ).element
-        == "H_Sat"
-    )
-    assert (
-        SNCL(
-            station="BOU",
-            channel="MVH",
-            location="RD",
-            data_format="legacy",
-        ).element
-        == "H_Dist"
-    )
-    assert (
-        SNCL(
-            station="BOU",
-            channel="MVH",
-            location="RQ",
-            data_format="legacy",
-        ).element
-        == "H_SQ"
-    )
-    assert (
-        SNCL(
-            station="BOU",
-            channel="MVH",
-            location="RV",
-            data_format="legacy",
-        ).element
-        == "H_SV"
-    )
-    assert (
-        SNCL(
-            station="BOU",
-            channel="MDT",
-            location="RV",
-            data_format="legacy",
-        ).element
-        == "DIST"
-    )
-    assert (
-        SNCL(
-            station="BOU",
-            channel="MGD",
-            location="RV",
-            data_format="legacy",
-        ).element
-        == "DST"
-    )
+
+
+def test_parse_sncl():
+    """edge_test.SNCL_test.test_parse_sncl()"""
+    assert SNCL(station="BOU", channel="UFU", location="R0").parse_sncl() == {
+        "station": "BOU",
+        "network": "NT",
+        "data_type": "variation",
+        "element": "U",
+        "interval": "minute",
+    }

@@ -22,7 +22,7 @@ from ..TimeseriesFactory import TimeseriesFactory
 from ..TimeseriesFactoryException import TimeseriesFactoryException
 from ..ObservatoryMetadata import ObservatoryMetadata
 from .RawInputClient import RawInputClient
-from .SNCLFactory import SNCLFactory
+from .LegacySNCL import LegacySNCL
 
 
 class EdgeFactory(TimeseriesFactory):
@@ -301,8 +301,11 @@ class EdgeFactory(TimeseriesFactory):
         obspy.core.trace
             timeseries trace of the requested channel data
         """
-        sncl = SNCLFactory(data_format="legacy").get_sncl(
-            station=observatory, data_type=type, element=channel, interval=interval
+        sncl = LegacySNCL().get_sncl(
+            station=observatory,
+            data_type=type,
+            interval=interval,
+            element=channel,
         )
         try:
             data = self.client.get_waveforms(
@@ -399,8 +402,8 @@ class EdgeFactory(TimeseriesFactory):
         -----
         RawInputClient seems to only work when sockets are
         """
-        sncl = SNCLFactory(data_format="legacy").get_sncl(
-            station=observatory, data_type=type, element=channel, interval=interval
+        sncl = LegacySNCL().get_sncl(
+            station=observatory, data_type=type, interval=interval, element=channel
         )
 
         now = obspy.core.UTCDateTime(datetime.utcnow())

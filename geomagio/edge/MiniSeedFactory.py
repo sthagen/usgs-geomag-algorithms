@@ -23,7 +23,7 @@ from ..TimeseriesFactory import TimeseriesFactory
 from ..TimeseriesFactoryException import TimeseriesFactoryException
 from ..ObservatoryMetadata import ObservatoryMetadata
 from .MiniSeedInputClient import MiniSeedInputClient
-from .SNCLFactory import SNCLFactory
+from .SNCL import SNCL
 
 
 class MiniSeedFactory(TimeseriesFactory):
@@ -319,8 +319,8 @@ class MiniSeedFactory(TimeseriesFactory):
         obspy.core.trace
             timeseries trace of the requested channel data
         """
-        sncl = SNCLFactory().get_sncl(
-            station=observatory, data_type=type, element=channel, interval=interval
+        sncl = SNCL().get_sncl(
+            station=observatory, data_type=type, interval=interval, element=channel
         )
         data = self.client.get_waveforms(
             sncl.network, sncl.station, sncl.location, sncl.channel, starttime, endtime
@@ -460,8 +460,11 @@ class MiniSeedFactory(TimeseriesFactory):
         to_write = to_write.split()
         to_write = TimeseriesUtility.unmask_stream(to_write)
         # relabel channels from internal to edge conventions
-        sncl = SNCLFactory().get_sncl(
-            station=observatory, data_type=type, element=channel, interval=interval
+        sncl = SNCL().get_sncl(
+            station=observatory,
+            data_type=type,
+            interval=interval,
+            element=channel,
         )
         for trace in to_write:
             trace.stats.station = sncl.station

@@ -9,6 +9,7 @@ from .MiniSeedInputClient import MiniSeedInputClient
 from .RawInputClient import RawInputClient
 from .SNCL import SNCL
 from .SNCLFactory import SNCLFactory
+from .LegacySNCL import LegacySNCL
 
 __all__ = [
     "EdgeFactory",
@@ -20,4 +21,5 @@ __all__ = [
     "LegacySNIDE",
     "SNCL",
     "SNCLFactory",
+    "LegacySNCL",
 ]

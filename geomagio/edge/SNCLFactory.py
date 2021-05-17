@@ -1,25 +1,46 @@
-from typing import Optional
+from typing import Literal, Optional, Union
 
-from .SNCL import SNCL, INTERVAL_CONVERSIONS, ELEMENT_CONVERSIONS
+from .SNCL import SNCL, ELEMENT_CONVERSIONS as MINISEED_CONVERSIONS
+from .LegacySNCL import LegacySNCL, ELEMENT_CONVERSIONS as LEGACY_CONVERSIONS
+
+INTERVAL_CONVERSIONS = {
+    "miniseed": {
+        "tenhertz": "B",
+        "second": "L",
+        "minute": "U",
+        "hour": "R",
+        "day": "P",
+    },
+    "legacy": {
+        "second": "S",
+        "minute": "M",
+        "hour": "H",
+        "day": "D",
+    },
+}
 
 
 class SNCLFactory(object):
-    def __init__(self, data_format: str = "miniseed"):
+    def __init__(self, data_format: Literal["miniseed", "legacy"] = "miniseed"):
         self.data_format = data_format
 
     def get_sncl(
         self,
         station: str,
-        data_type: str,
-        element: str,
-        interval: str,
-        network: str = "NT",
-    ) -> SNCL:
-        return SNCL(
-            station=station,
-            network=network,
-            channel=self.get_channel(element=element, interval=interval),
-            location=self.get_location(element=element, data_type=data_type),
+        network: str,
+        channel: str,
+        location: str,
+    ) -> Union[SNCL, LegacySNCL]:
+        sncl_params = {
+            "station": station,
+            "network": network,
+            "channel": channel,
+            "location": location,
+        }
+        return (
+            SNCL(**sncl_params)
+            if self.data_format == "miniseed"
+            else LegacySNCL(**sncl_params)
         )
 
     def get_channel(self, element: str, interval: str) -> str:
@@ -36,16 +57,23 @@ class SNCLFactory(object):
         return location_start + location_end
 
     def __get_channel_start(self, interval: str) -> str:
+        interval_conversions = INTERVAL_CONVERSIONS[self.data_format]
         try:
-            return INTERVAL_CONVERSIONS[self.data_format][interval]
+            return interval_conversions[interval]
         except:
             raise ValueError(f"Unexpected interval: {interval}")
 
     def __check_predefined_channel(self, element: str, interval: str) -> Optional[str]:
-        if element in ELEMENT_CONVERSIONS:
+        channel_conversions = (
+            MINISEED_CONVERSIONS
+            if self.data_format == "miniseed"
+            else LEGACY_CONVERSIONS
+        )
+
+        if element in channel_conversions:
             return (
                 self.__get_channel_start(interval=interval)
-                + ELEMENT_CONVERSIONS[element]
+                + channel_conversions[element]
             )
         elif len(element) == 3:
             return element
@@ -85,10 +113,11 @@ class SNCLFactory(object):
         """Translates element suffix to end of location code"""
         if "_Sat" in element:
             return "1"
-        if "_Dist" in element:
-            return "D"
-        if "_SQ" in element:
-            return "Q"
-        if "_SV" in element:
-            return "V"
+        if self.data_format == "miniseed":
+            if "_Dist" in element:
+                return "D"
+            if "_SQ" in element:
+                return "Q"
+            if "_SV" in element:
+                return "V"
         return "0"
