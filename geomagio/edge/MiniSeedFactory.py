@@ -319,7 +319,7 @@ class MiniSeedFactory(TimeseriesFactory):
         obspy.core.trace
             timeseries trace of the requested channel data
         """
-        sncl = SNCL().get_sncl(
+        sncl = SNCL.get_sncl(
             station=observatory, data_type=type, interval=interval, element=channel
         )
         data = self.client.get_waveforms(
@@ -460,7 +460,7 @@ class MiniSeedFactory(TimeseriesFactory):
         to_write = to_write.split()
         to_write = TimeseriesUtility.unmask_stream(to_write)
         # relabel channels from internal to edge conventions
-        sncl = SNCL().get_sncl(
+        sncl = SNCL.get_sncl(
             station=observatory,
             data_type=type,
             interval=interval,

@@ -1,4 +1,3 @@
-from __future__ import annotations
 from typing import Dict, Optional
 
 from pydantic import BaseModel
@@ -18,26 +17,25 @@ CHANNEL_CONVERSIONS = {
 
 
 class SNCL(BaseModel):
-    station: str = None
+    station: str
     network: str = "NT"
-    channel: str = None
-    location: str = None
+    channel: str
+    location: str
 
+    @classmethod
     def get_sncl(
-        self,
-        station: str,
+        cls,
         data_type: str,
-        interval: str,
         element: str,
-    ) -> SNCL:
-        from .SNCLFactory import SNCLFactory
-
-        factory = SNCLFactory(data_format="miniseed")
+        interval: str,
+        station: str,
+        network: str = "NT",
+    ) -> "SNCL":
         return SNCL(
             station=station,
-            network=self.network,
-            channel=factory.get_channel(element=element, interval=interval),
-            location=factory.get_location(element=element, data_type=data_type),
+            network=network,
+            channel=get_channel(element=element, interval=interval),
+            location=get_location(element=element, data_type=data_type),
         )
 
     def parse_sncl(self) -> Dict:
@@ -115,3 +113,81 @@ class SNCL(BaseModel):
         if channel_end in CHANNEL_CONVERSIONS:
             return CHANNEL_CONVERSIONS[channel_end]
         return None
+
+
+def get_channel(element: str, interval: str) -> str:
+    predefined_channel = __check_predefined_channel(element=element, interval=interval)
+    channel_start = __get_channel_start(interval=interval)
+    channel_end = __get_channel_end(element=element)
+    return predefined_channel or (channel_start + channel_end)
+
+
+def get_location(element: str, data_type: str) -> str:
+    location_start = __get_location_start(data_type=data_type)
+    location_end = __get_location_end(element=element)
+    return location_start + location_end
+
+
+def __get_channel_start(interval: str) -> str:
+    if interval == "tenhertz":
+        return "B"
+    if interval == "second":
+        return "L"
+    elif interval == "minute":
+        return "U"
+    elif interval == "hour":
+        return "R"
+    elif interval == "day":
+        return "P"
+    raise ValueError(f" Unexcepted interval: {interval}")
+
+
+def __check_predefined_channel(element: str, interval: str) -> Optional[str]:
+    if element in ELEMENT_CONVERSIONS:
+        return __get_channel_start(interval=interval) + ELEMENT_CONVERSIONS[element]
+    elif len(element) == 3:
+        return element
+    # chan.loc format
+    elif "." in element:
+        channel = element.split(".")[0]
+        return channel.strip()
+    else:
+        return None
+
+
+def __get_channel_end(element: str) -> str:
+    channel_middle = "F"
+    if "_Volt" in element:
+        channel_middle = "E"
+    elif "_Bin" in element:
+        channel_middle = "Y"
+    elif "_Temp" in element:
+        channel_middle = "K"
+    channel_end = element.split("_")[0]
+    return channel_middle + channel_end
+
+
+def __get_location_start(data_type: str) -> str:
+    """Translates data type to beginning of location code"""
+    if data_type == "variation":
+        return "R"
+    elif data_type == "adjusted":
+        return "A"
+    elif data_type == "quasi-definitive":
+        return "Q"
+    elif data_type == "definitive":
+        return "D"
+    raise ValueError(f"Unexpected data type: {data_type}")
+
+
+def __get_location_end(element: str) -> str:
+    """Translates element suffix to end of location code"""
+    if "_Sat" in element:
+        return "1"
+    if "_Dist" in element:
+        return "D"
+    if "_SQ" in element:
+        return "Q"
+    if "_SV" in element:
+        return "V"
+    return "0"

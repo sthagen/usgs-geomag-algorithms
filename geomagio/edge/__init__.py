@@ -8,7 +8,6 @@ from .MiniSeedFactory import MiniSeedFactory
 from .MiniSeedInputClient import MiniSeedInputClient
 from .RawInputClient import RawInputClient
 from .SNCL import SNCL
-from .SNCLFactory import SNCLFactory
 from .LegacySNCL import LegacySNCL
 
 __all__ = [
@@ -18,8 +17,5 @@ __all__ = [
     "MiniSeedInputClient",
     "RawInputClient",
     "LegacySNCL",
-    "LegacySNIDE",
     "SNCL",
-    "SNCLFactory",
-    "LegacySNCL",
 ]

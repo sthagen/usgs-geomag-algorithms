@@ -1,4 +1,4 @@
-from geomagio.edge import SNCL
+from geomagio.edge.SNCL import SNCL, get_channel, get_location
 
 
 def test_data_type():
@@ -104,9 +104,39 @@ def test_element():
     )
 
 
+def test_get_channel():
+    """edge_test.SNCL_test.test_get_channel()"""
+    assert get_channel(element="U_Volt", interval="tenhertz") == "BEU"
+    assert get_channel(element="U_Bin", interval="tenhertz") == "BYU"
+    assert get_channel(element="D", interval="second") == "LFD"
+    assert get_channel(element="F", interval="minute") == "UFF"
+    assert get_channel(element="H", interval="hour") == "RFH"
+    assert get_channel(element="Dst4", interval="day") == "PX4"
+    assert get_channel(element="Dst3", interval="minute") == "UX3"
+    assert get_channel(element="E-E", interval="minute") == "UQE"
+    assert get_channel(element="E-N", interval="minute") == "UQN"
+    assert get_channel(element="UK1", interval="minute") == "UK1"
+    assert get_channel(element="U_Dist", interval="minute") == "UFU"
+    assert get_channel(element="U_SQ", interval="minute") == "UFU"
+    assert get_channel(element="U_SV", interval="minute") == "UFU"
+    assert get_channel(element="UK1.R0", interval="minute") == "UK1"
+
+
+def test_get_location():
+    """edge_test.SNCL_test.test_get_location()"""
+    assert get_location(element="D", data_type="variation") == "R0"
+    assert get_location(element="D", data_type="adjusted") == "A0"
+    assert get_location(element="D", data_type="quasi-definitive") == "Q0"
+    assert get_location(element="D", data_type="definitive") == "D0"
+    assert get_location(element="D_Sat", data_type="variation") == "R1"
+    assert get_location(element="D_Dist", data_type="variation") == "RD"
+    assert get_location(element="D_SQ", data_type="variation") == "RQ"
+    assert get_location(element="D_SV", data_type="variation") == "RV"
+
+
 def test_get_sncl():
     """edge_test.SNCL_test.test_get_sncl()"""
-    assert SNCL().get_sncl(
+    assert SNCL.get_sncl(
         station="BOU", data_type="variation", interval="second", element="U"
     ) == SNCL(station="BOU", network="NT", channel="LFU", location="R0")
 

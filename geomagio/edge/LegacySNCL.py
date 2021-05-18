@@ -1,7 +1,6 @@
-from __future__ import annotations
 from typing import Optional
 
-from .SNCL import SNCL
+from .SNCL import SNCL, __get_location_start
 
 ELEMENT_CONVERSIONS = {
     # e-field
@@ -19,21 +18,20 @@ CHANNEL_CONVERSIONS = {
 
 
 class LegacySNCL(SNCL):
+    @classmethod
     def get_sncl(
-        self,
-        station: str,
+        cls,
         data_type: str,
-        interval: str,
         element: str,
-    ) -> LegacySNCL:
-        from .SNCLFactory import SNCLFactory
-
-        factory = SNCLFactory(data_format="legacy")
+        interval: str,
+        station: str,
+        network: str = "NT",
+    ) -> "LegacySNCL":
         return LegacySNCL(
             station=station,
-            network=self.network,
-            channel=factory.get_channel(element=element, interval=interval),
-            location=factory.get_location(element=element, data_type=data_type),
+            network=network,
+            channel=get_channel(element=element, interval=interval),
+            location=get_location(element=element, data_type=data_type),
         )
 
     @property
@@ -79,3 +77,62 @@ class LegacySNCL(SNCL):
         if channel_end in CHANNEL_CONVERSIONS:
             return CHANNEL_CONVERSIONS[channel_end]
         return None
+
+
+def get_channel(element: str, interval: str) -> str:
+    predefined_channel = __check_predefined_channel(element=element, interval=interval)
+    channel_start = __get_channel_start(interval=interval)
+    channel_end = __get_channel_end(element=element)
+    return predefined_channel or (channel_start + channel_end)
+
+
+def get_location(element: str, data_type: str) -> str:
+    location_start = __get_location_start(data_type=data_type)
+    location_end = __get_location_end(element=element)
+    return location_start + location_end
+
+
+def __get_channel_start(interval: str) -> str:
+    if interval == "second":
+        return "S"
+    elif interval == "minute":
+        return "M"
+    elif interval == "hour":
+        return "H"
+    elif interval == "day":
+        return "D"
+    raise ValueError(f" Unexcepted interval: {interval}")
+
+
+def __check_predefined_channel(element: str, interval: str) -> Optional[str]:
+    if element in ELEMENT_CONVERSIONS:
+        return __get_channel_start(interval=interval) + ELEMENT_CONVERSIONS[element]
+    elif len(element) == 3:
+        return element
+    # chan.loc format
+    elif "." in element:
+        channel = element.split(".")[0]
+        return channel.strip()
+    else:
+        return None
+
+
+def __get_channel_end(element: str) -> str:
+    channel_middle = "V"
+    if "_Volt" in element:
+        channel_middle = "E"
+    elif "_Bin" in element:
+        channel_middle = "Y"
+    elif "_Temp" in element:
+        channel_middle = "K"
+    elif element in ["F", "G"]:
+        channel_middle = "S"
+    channel_end = element.split("_")[0]
+    return channel_middle + channel_end
+
+
+def __get_location_end(element: str) -> str:
+    """Translates element suffix to end of location code"""
+    if "_Sat" in element:
+        return "1"
+    return "0"
