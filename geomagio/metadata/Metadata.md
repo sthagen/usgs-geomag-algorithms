@@ -1,71 +1,64 @@
 # Metadata Webservice Model Parameters
-* **id**: Database id. Separates records
 
-* **metadata_id**: Database foreign key. Separates different versions of the same record
+## Metadata id:
+* **id**: Database id
 
-* **created_by**: Creator name
+* **metadata_id**: Indicates old version of metadata when set
 
-* **created_time**: Time record was created
+## User information:
 
-* **updated_by**: Editor/reviewer name
+* **created_by**: user who created record
 
-* **updated_time**: Time record was edited or reviewed at
+* **created_time**: time record was created
 
-* **starttime/endtime**: Meaning depends on metadata category(see starttime/endtime usage section)
+* **updated_by**: user that last changed record(empty when new)
 
-* **network**: Defaults to NT(geomagnetism edge network)
+* **updated_time**: time of last record change
 
-* **station**: 3-Letter station ID
+# Status:
+* **status**: 1 of 4 record statuses
+  * **new**: when a new record is created
+  * **updated**: when a new record is edited by an approved user
+  * **reviewed**: after a record is reviewed by an approved user
+  * **deleted**: archive a record that is invalid or incomplete
 
-* **channel**: 3-Letter edge channel
+* **metadata_valid**: Whether record is valid and should be used in processing
 
-* **location**: 2-Letter edge location code
+* **review_comment**: Comments from reviewer about why record is valid/invalid
 
-* **category**: 1 of 5 metadata categories(see category section)
-
-* **priority**: Integer identifying importance of record. High priority records receive a higher number
-
-* **data_valid**: Indicator of valid information outside of the metadata dictionary
-
-* **metadata_valid**: Indicator of valid information within the metadata dictionary
-
-* **metadata**: Dictionary holding specific information to each metadata category
-
-* **comment**: Comment section for creator or non-reviewer
-
-* **review_comment**: Comment section for reviewer
-
-* **status**: 1 of 3 record statuses(see status section)
-
-# starttime/endtime Usage
-* **observatory/instrument/adjusted-matrix**: Start and end times indicate time ranges where a record holds applicable information to an observatory(epoch)
-  * a new adjusted matrix has a starttime of its creation time
-  * a separate(newer) adjusted matrix has a starttime of its creation time. The previous matrix's endtime is set to this matrix's starttime
-* **reading/flag**: Start and end times indicate time ranges that are applicable to only the metadata record
-  * a flag that indicates the starttime and entime of a disturbance
-  * a reading that indicates the starttime and endtime of measurements taken by an observer
-# Categories
-* **reading**: field measurements and residual method calculations
+# Details:
+* **category**: 1 of 5 metadata types
+  * **reading**: field measurements and residual method calculations
 
     https://code.usgs.gov/ghsc/geomag/geomag-algorithms/-/blob/master/geomagio/residual/Reading.py
 
-* **adjusted-matrix**: adjusted matrices and performance metrics for use by the adjusted algorithm
+  * **adjusted-matrix**: adjusted matrices and performance metrics for use by the adjusted algorithm
 
-    https://code.usgs.gov/ghsc/geomag/geomag-algorithms/-/blob/master/geomagio/adjusted/AdjustedMatrix.py
+      https://code.usgs.gov/ghsc/geomag/geomag-algorithms/-/blob/master/geomagio/adjusted/AdjustedMatrix.py
 
-* **flag**: indicators of observatory outages or data issues(spikes, gaps, offsets, etc.)
+  * **flag**: indicators of observatory outages or data issues(spikes, gaps, offsets, etc.)
 
-* **observatory**: Information related to an observatory(agency name, station id, sensor orientation, etc.)
+  * **observatory**: Information related to an observatory(agency name, station id, sensor orientation, etc.)
 
-    https://code.usgs.gov/ghsc/geomag/geomag-algorithms/-/blob/master/geomagio/api/ws/Observatory.py
+      https://code.usgs.gov/ghsc/geomag/geomag-algorithms/-/blob/master/geomagio/api/ws/Observatory.py
 
-* **instrument**: holds information(serial numbers, volt/bin constants, etc.) pertaining to theodolites or magnetometers
+  * **instrument**: holds information(serial numbers, volt/bin constants, etc.) pertaining to theodolites or magnetometers
 
-    https://code.usgs.gov/ghsc/geomag/geomag-algorithms/-/blob/master/geomagio/Metadata.py
+* **comment**: Comments from users entering or editing metadata(non-review related)
 
-# Status
-* **new**: when a new record is created
-* **updated**: when a new record is edited by its creator or an approved user
-* **reviewed**: after a record is reviewed by an approved user
-* **deleted**: archive a record that is invalid or incomplete
+* **data_valid**: Whether referenced data is valid/invalid during a given time range
 
+* **metadata**: Information specific to each metadata category
+
+* **priority**: If multiple records reference the same time, higher priority takes precedence
+
+* **starttime/endtime**: time that metadata applies to(instrument/observatory/adjusted-matrix) or time metadata was collected at(flag/reading)
+
+# Reference Data:
+* **network**: Defaults to NT(geomagnetism edge network)
+
+* **station**: Station/observatory ID
+
+* **channel**: 3-Letter edge channel. When null, applies to entire station
+
+* **location**: 2-Letter edge location code. When null, applies to entire station
