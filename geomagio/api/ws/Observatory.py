@@ -126,6 +126,15 @@ OBSERVATORIES = [
         declination_base=215772,
     ),
     Observatory(
+        id="BXX",
+        elevation=1682,
+        latitude=40.137,
+        longitude=254.763,
+        name="Boulder Test(Coil Building)",
+        agency="USGS",
+        declination_base=5527,
+    ),
+    Observatory(
         id="CMO",
         elevation=197,
         latitude=64.874,
