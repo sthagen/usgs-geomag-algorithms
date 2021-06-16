@@ -63,9 +63,9 @@ class SNCL(BaseModel):
 
     @property
     def element(self) -> str:
-        predefined_element = self.__check_predefined_element()
-        element = self.__get_element()
-        return predefined_element or element
+        return _check_predefined_element(channel=self.channel) or _get_element(
+            channel=self.channel, location=self.location
+        )
 
     @property
     def interval(self) -> str:
@@ -83,52 +83,25 @@ class SNCL(BaseModel):
             return "day"
         raise ValueError(f"Unexcepted interval code: {channel_start}")
 
-    def __get_element(self):
-        """Translates channel/location to element"""
-        element_start = self.channel[2]
-        channel = self.channel
-        channel_middle = channel[1]
-        location_end = self.location[1]
-        if channel_middle == "E":
-            element_end = "_Volt"
-        elif channel_middle == "Y":
-            element_end = "_Bin"
-        elif channel_middle == "K":
-            element_end = "_Temp"
-        elif location_end == "1":
-            element_end = "_Sat"
-        elif location_end == "D":
-            element_end = "_Dist"
-        elif location_end == "Q":
-            element_end = "_SQ"
-        elif location_end == "V":
-            element_end = "_SV"
-        else:
-            element_end = ""
-        return element_start + element_end
-
-    def __check_predefined_element(self) -> Optional[str]:
-        channel = self.channel
-        channel_end = channel[1:]
-        if channel_end in CHANNEL_CONVERSIONS:
-            return CHANNEL_CONVERSIONS[channel_end]
-        return None
-
 
 def get_channel(element: str, interval: str) -> str:
-    predefined_channel = __check_predefined_channel(element=element, interval=interval)
-    channel_start = __get_channel_start(interval=interval)
-    channel_end = __get_channel_end(element=element)
-    return predefined_channel or (channel_start + channel_end)
+    return _check_predefined_channel(element=element, interval=interval) or (
+        _get_channel_start(interval=interval) + _get_channel_end(element=element)
+    )
 
 
 def get_location(element: str, data_type: str) -> str:
-    location_start = __get_location_start(data_type=data_type)
-    location_end = __get_location_end(element=element)
-    return location_start + location_end
+    return _get_location_start(data_type=data_type) + _get_location_end(element=element)
 
 
-def __get_channel_start(interval: str) -> str:
+def _check_predefined_element(channel: str) -> Optional[str]:
+    channel_end = channel[1:]
+    if channel_end in CHANNEL_CONVERSIONS:
+        return CHANNEL_CONVERSIONS[channel_end]
+    return None
+
+
+def _get_channel_start(interval: str) -> str:
     if interval == "tenhertz":
         return "B"
     if interval == "second":
@@ -142,9 +115,34 @@ def __get_channel_start(interval: str) -> str:
     raise ValueError(f" Unexcepted interval: {interval}")
 
 
-def __check_predefined_channel(element: str, interval: str) -> Optional[str]:
+def _get_element(channel: str, location: str) -> str:
+    """Translates channel/location to element"""
+    element_start = channel[2]
+    channel = channel
+    channel_middle = channel[1]
+    location_end = location[1]
+    if channel_middle == "E":
+        element_end = "_Volt"
+    elif channel_middle == "Y":
+        element_end = "_Bin"
+    elif channel_middle == "K":
+        element_end = "_Temp"
+    elif location_end == "1":
+        element_end = "_Sat"
+    elif location_end == "D":
+        element_end = "_Dist"
+    elif location_end == "Q":
+        element_end = "_SQ"
+    elif location_end == "V":
+        element_end = "_SV"
+    else:
+        element_end = ""
+    return element_start + element_end
+
+
+def _check_predefined_channel(element: str, interval: str) -> Optional[str]:
     if element in ELEMENT_CONVERSIONS:
-        return __get_channel_start(interval=interval) + ELEMENT_CONVERSIONS[element]
+        return _get_channel_start(interval=interval) + ELEMENT_CONVERSIONS[element]
     elif len(element) == 3:
         return element
     # chan.loc format
@@ -155,7 +153,7 @@ def __check_predefined_channel(element: str, interval: str) -> Optional[str]:
         return None
 
 
-def __get_channel_end(element: str) -> str:
+def _get_channel_end(element: str) -> str:
     channel_middle = "F"
     if "_Volt" in element:
         channel_middle = "E"
@@ -167,7 +165,7 @@ def __get_channel_end(element: str) -> str:
     return channel_middle + channel_end
 
 
-def __get_location_start(data_type: str) -> str:
+def _get_location_start(data_type: str) -> str:
     """Translates data type to beginning of location code"""
     if data_type == "variation":
         return "R"
@@ -180,7 +178,7 @@ def __get_location_start(data_type: str) -> str:
     raise ValueError(f"Unexpected data type: {data_type}")
 
 
-def __get_location_end(element: str) -> str:
+def _get_location_end(element: str) -> str:
     """Translates element suffix to end of location code"""
     if "_Sat" in element:
         return "1"
