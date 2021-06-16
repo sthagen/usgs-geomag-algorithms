@@ -34,18 +34,18 @@ class MetadataDatabaseFactory(object):
         (
             id,
             category,
-            network,
-            station,
-            channel,
-            location,
             starttime,
             endtime,
             created_after,
             created_before,
+            network,
+            station,
+            channel,
+            location,
             data_valid,
             metadata_valid,
             status,
-        ) = params.dict().values()
+        ) = params.datetime_dict().values()
         if id:
             query = query.where(table.c.id == id)
         if category:
