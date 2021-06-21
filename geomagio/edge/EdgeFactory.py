@@ -22,6 +22,7 @@ from ..TimeseriesFactory import TimeseriesFactory
 from ..TimeseriesFactoryException import TimeseriesFactoryException
 from ..ObservatoryMetadata import ObservatoryMetadata
 from .RawInputClient import RawInputClient
+from .LegacySNCL import LegacySNCL
 
 
 class EdgeFactory(TimeseriesFactory):
@@ -277,188 +278,6 @@ class EdgeFactory(TimeseriesFactory):
             trace.data = numpy.ma.masked_invalid(trace.data)
         return stream
 
-    def _get_edge_channel(self, observatory, channel, type, interval):
-        """get edge channel.
-
-        Parameters
-        ----------
-        observatory : str
-            observatory code
-        channel : str
-            single character channel {H, E, D, Z, F, X, Y, G} or
-            any appropriate edge channel, ie MSD, MGD, HGD.
-        type : str
-            data type {definitive, quasi-definitive, variation}
-        interval : str
-            interval length {minute, second}
-
-        Returns
-        -------
-        edge_channel
-            {MVH, MVE, MVD, MGD etc}
-        """
-        edge_interval_code = self._get_interval_code(interval)
-        edge_channel = None
-
-        # If form is chan.loc, return chan (left) portion.
-        # Allows specific chan/loc selection.
-        if channel.find(".") >= 0:
-            tmplist = channel.split(".")
-            return tmplist[0].strip()
-
-        if channel == "D":
-            edge_channel = edge_interval_code + "VD"
-        elif channel == "E":
-            edge_channel = edge_interval_code + "VE"
-        elif channel == "F":
-            edge_channel = edge_interval_code + "SF"
-        elif channel == "H":
-            edge_channel = edge_interval_code + "VH"
-        elif channel == "Z":
-            edge_channel = edge_interval_code + "VZ"
-        elif channel == "G":
-            edge_channel = edge_interval_code + "SG"
-        elif channel == "X":
-            edge_channel = edge_interval_code + "VX"
-        elif channel == "Y":
-            edge_channel = edge_interval_code + "VY"
-        elif channel == "E-E":
-            edge_channel = edge_interval_code + "QE"
-        elif channel == "E-N":
-            edge_channel = edge_interval_code + "QN"
-        elif channel == "DIST":
-            edge_channel = edge_interval_code + "DT"
-        elif channel == "DST":
-            edge_channel = edge_interval_code + "GD"
-        elif channel == "SQ":
-            edge_channel = edge_interval_code + "SQ"
-        elif channel == "SV":
-            edge_channel = edge_interval_code + "SV"
-        else:
-            edge_channel = channel
-        return edge_channel
-
-    def _get_edge_location(self, observatory, channel, type, interval):
-        """get edge location.
-
-        The edge location code is currently determined by the type
-            passed in.
-
-        Parameters
-        ----------
-        observatory : str
-            observatory code
-        channel : str
-            single character channel {H, E, D, Z, F}
-        type : str
-            data type {definitive, quasi-definitive, variation}
-        interval : str
-            interval length {minute, second}
-
-        Returns
-        -------
-        location
-            returns an edge location code
-        """
-        location = None
-
-        # If form is chan.loc, return loc (right) portion
-        # Allows specific chan/loc selection.
-        if channel.find(".") >= 0:
-            tmplist = channel.split(".")
-            return tmplist[1].strip()
-
-        if self.locationCode is not None:
-            location = self.locationCode
-        else:
-            if type == "variation" or type == "reported":
-                location = "R0"
-            elif type == "adjusted" or type == "provisional":
-                location = "A0"
-            elif type == "quasi-definitive":
-                location = "Q0"
-            elif type == "definitive":
-                location = "D0"
-            elif len(type) == 2:
-                location = type
-        return location
-
-    def _get_edge_network(self, observatory, channel, type, interval):
-        """get edge network code.
-
-        Parameters
-        ----------
-        observatory : str
-            observatory code
-        channel : str
-            single character channel {H, E, D, Z, F}
-        type : str
-            data type {definitive, quasi-definitive, variation}
-        interval : str
-            interval length {minute, second}
-
-        Returns
-        -------
-        network
-            always NT
-        """
-        return "NT"
-
-    def _get_edge_station(self, observatory, channel, type, interval):
-        """get edge station.
-
-        Parameters
-        ----------
-        observatory : str
-            observatory code
-        channel : str
-            single character channel {H, E, D, Z, F}
-        type : str
-            data type {definitive, quasi-definitive, variation}
-        interval : str
-            interval length {minute, second}
-
-        Returns
-        -------
-        station
-            the observatory is returned as the station
-        """
-        return observatory
-
-    def _get_interval_code(self, interval):
-        """get edge interval code.
-
-        Converts the metadata interval string, into an edge single character
-            edge code.
-
-        Parameters
-        ----------
-        observatory : str
-            observatory code
-        channel : str
-            single character channel {H, E, D, Z, F}
-        type : str
-            data type {definitive, quasi-definitive, variation}
-        interval : str
-            interval length {minute, second}
-
-        Returns
-        -------
-        interval type
-        """
-        interval_code = None
-        if interval == "day":
-            interval_code = "D"
-        elif interval == "hour":
-            interval_code = "H"
-        elif interval == "minute":
-            interval_code = "M"
-        elif interval == "second":
-            interval_code = "S"
-        else:
-            raise TimeseriesFactoryException('Unexpected interval "%s"' % interval)
-        return interval_code
-
     def _get_timeseries(self, starttime, endtime, observatory, channel, type, interval):
         """get timeseries data for a single channel.
 
@@ -482,13 +301,20 @@ class EdgeFactory(TimeseriesFactory):
         obspy.core.trace
             timeseries trace of the requested channel data
         """
-        station = self._get_edge_station(observatory, channel, type, interval)
-        location = self._get_edge_location(observatory, channel, type, interval)
-        network = self._get_edge_network(observatory, channel, type, interval)
-        edge_channel = self._get_edge_channel(observatory, channel, type, interval)
+        sncl = LegacySNCL.get_sncl(
+            station=observatory,
+            data_type=type,
+            interval=interval,
+            element=channel,
+        )
         try:
             data = self.client.get_waveforms(
-                network, station, location, edge_channel, starttime, endtime
+                sncl.network,
+                sncl.station,
+                sncl.location,
+                sncl.channel,
+                starttime,
+                endtime,
             )
         except TypeError:
             # get_waveforms() fails if no data is returned from Edge
@@ -506,9 +332,9 @@ class EdgeFactory(TimeseriesFactory):
                 channel,
                 type,
                 interval,
-                network,
-                station,
-                location,
+                sncl.network,
+                sncl.station,
+                sncl.location,
             )
         self._set_metadata(data, observatory, channel, type, interval)
         return data
@@ -576,10 +402,12 @@ class EdgeFactory(TimeseriesFactory):
         -----
         RawInputClient seems to only work when sockets are
         """
-        station = self._get_edge_station(observatory, channel, type, interval)
-        location = self._get_edge_location(observatory, channel, type, interval)
-        network = self._get_edge_network(observatory, channel, type, interval)
-        edge_channel = self._get_edge_channel(observatory, channel, type, interval)
+        sncl = LegacySNCL.get_sncl(
+            station=observatory,
+            data_type=type,
+            interval=interval,
+            element=channel,
+        )
 
         now = obspy.core.UTCDateTime(datetime.utcnow())
         if ((now - endtime) > 864000) and (self.cwbport > 0):
@@ -590,7 +418,13 @@ class EdgeFactory(TimeseriesFactory):
             port = self.write_port
 
         ric = RawInputClient(
-            self.tag, host, port, station, edge_channel, location, network
+            self.tag,
+            host,
+            port,
+            sncl.station,
+            sncl.channel,
+            sncl.location,
+            sncl.network,
         )
 
         stream = self._convert_stream_to_masked(timeseries=timeseries, channel=channel)

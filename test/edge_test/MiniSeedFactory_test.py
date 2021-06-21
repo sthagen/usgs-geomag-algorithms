@@ -9,54 +9,6 @@ from geomagio import TimeseriesUtility
 from geomagio.edge import MiniSeedFactory, MiniSeedInputClient
 
 
-def test__get_edge_network():
-    """edge_test.MiniSeedFactory_test.test__get_edge_network()"""
-    # _get_edge_network should always return NT for use by USGS geomag
-    assert_equal(MiniSeedFactory()._get_edge_network(" ", " ", " ", " "), "NT")
-
-
-def test__get_edge_station():
-    """edge_test.MiniSeedFactory_test.test__get_edge_station()"""
-    # _get_edge_station will return the observatory code passed in.
-    assert_equal(MiniSeedFactory()._get_edge_station("BOU", " ", " ", " "), "BOU")
-
-
-def test__get_edge_channel():
-    """edge_test.MiniSeedFactory_test.test__get_edge_channel()"""
-    # Call private function _get_edge_channel, make certain
-    # it gets back the appropriate 2 character code.
-    factory = MiniSeedFactory()
-    assert_equal(factory._get_edge_channel("", "D", "", "minute"), "UFD")
-    assert_equal(factory._get_edge_channel("", "U", "", "minute"), "UFU")
-    assert_equal(factory._get_edge_channel("", "F", "", "minute"), "UFF")
-    assert_equal(factory._get_edge_channel("", "H", "", "minute"), "UFH")
-    assert_equal(factory._get_edge_channel("", "BEU", "", "minute"), "BEU")
-    assert_equal(factory._get_edge_channel("", "Dst4", "", "minute"), "UX4")
-    assert_equal(factory._get_edge_channel("", "Dst3", "", "minute"), "UX3")
-    assert_equal(factory._get_edge_channel("", "E-E", "", "minute"), "UQE")
-    assert_equal(factory._get_edge_channel("", "E-N", "", "minute"), "UQN")
-
-
-def test__get_edge_location():
-    """edge_test.MiniSeedFactory_test.test__get_edge_location()"""
-    # Call _get_edge_location, make certain it returns the correct edge
-    # location code.
-    assert_equal(MiniSeedFactory()._get_edge_location("", "", "variation", ""), "R0")
-    assert_equal(
-        MiniSeedFactory()._get_edge_location("", "", "quasi-definitive", ""), "Q0"
-    )
-    assert_equal(MiniSeedFactory()._get_edge_location("", "", "definitive", ""), "D0")
-
-
-def test__get_interval_code():
-    """edge_test.MiniSeedFactory_test.test__get_interval_code()"""
-    assert_equal(MiniSeedFactory()._get_interval_code("day"), "P")
-    assert_equal(MiniSeedFactory()._get_interval_code("hour"), "R")
-    assert_equal(MiniSeedFactory()._get_interval_code("minute"), "U")
-    assert_equal(MiniSeedFactory()._get_interval_code("second"), "L")
-    assert_equal(MiniSeedFactory()._get_interval_code("tenhertz"), "B")
-
-
 class MockMiniSeedInputClient(object):
     def __init__(self):
         self.close_called = False
@@ -167,7 +119,7 @@ def __create_trace(
     channel="H",
     location="R0",
     data_interval="second",
-    data_type="interval",
+    data_type="variation",
 ):
     """
     Utility to create a trace containing the given numpy array.
