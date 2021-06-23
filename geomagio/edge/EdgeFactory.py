@@ -311,7 +311,7 @@ class EdgeFactory(TimeseriesFactory):
             data = self.client.get_waveforms(
                 sncl.network,
                 sncl.station,
-                sncl.location,
+                self.locationCode or sncl.location,
                 sncl.channel,
                 starttime,
                 endtime,
@@ -334,7 +334,7 @@ class EdgeFactory(TimeseriesFactory):
                 interval,
                 sncl.network,
                 sncl.station,
-                sncl.location,
+                self.locationCode or sncl.location,
             )
         self._set_metadata(data, observatory, channel, type, interval)
         return data
@@ -423,7 +423,7 @@ class EdgeFactory(TimeseriesFactory):
             port,
             sncl.station,
             sncl.channel,
-            sncl.location,
+            self.locationCode or sncl.location,
             sncl.network,
         )
 

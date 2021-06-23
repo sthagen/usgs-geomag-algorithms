@@ -336,7 +336,7 @@ class MiniSeedFactory(TimeseriesFactory):
                 interval,
                 sncl.network,
                 sncl.station,
-                sncl.location,
+                self.locationCode or sncl.location,
             )
         self._set_metadata(data, observatory, channel, type, interval)
         return data
@@ -468,7 +468,7 @@ class MiniSeedFactory(TimeseriesFactory):
         )
         for trace in to_write:
             trace.stats.station = sncl.station
-            trace.stats.location = sncl.location
+            trace.stats.location = self.locationCode or sncl.location
             trace.stats.network = sncl.network
             trace.stats.channel = sncl.channel
         # finally, send to edge
