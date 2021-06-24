@@ -320,7 +320,11 @@ class MiniSeedFactory(TimeseriesFactory):
             timeseries trace of the requested channel data
         """
         sncl = SNCL.get_sncl(
-            station=observatory, data_type=type, interval=interval, element=channel
+            station=observatory,
+            data_type=type,
+            interval=interval,
+            element=channel,
+            location=self.locationCode,
         )
         data = self.client.get_waveforms(
             sncl.network, sncl.station, sncl.location, sncl.channel, starttime, endtime
@@ -465,6 +469,7 @@ class MiniSeedFactory(TimeseriesFactory):
             data_type=type,
             interval=interval,
             element=channel,
+            location=self.locationCode,
         )
         for trace in to_write:
             trace.stats.station = sncl.station

@@ -26,12 +26,13 @@ class LegacySNCL(SNCL):
         interval: str,
         station: str,
         network: str = "NT",
+        location: Optional[str] = None,
     ) -> "LegacySNCL":
         return LegacySNCL(
             station=station,
             network=network,
             channel=get_channel(element=element, interval=interval),
-            location=get_location(element=element, data_type=data_type),
+            location=location or get_location(element=element, data_type=data_type),
         )
 
     @property
