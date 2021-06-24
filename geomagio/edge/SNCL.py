@@ -30,12 +30,13 @@ class SNCL(BaseModel):
         interval: str,
         station: str,
         network: str = "NT",
+        location: Optional[str] = None,
     ) -> "SNCL":
         return SNCL(
             station=station,
             network=network,
             channel=get_channel(element=element, interval=interval),
-            location=get_location(element=element, data_type=data_type),
+            location=location or get_location(element=element, data_type=data_type),
         )
 
     def parse_sncl(self) -> Dict:

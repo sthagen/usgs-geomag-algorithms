@@ -306,12 +306,13 @@ class EdgeFactory(TimeseriesFactory):
             data_type=type,
             interval=interval,
             element=channel,
+            location=self.locationCode,
         )
         try:
             data = self.client.get_waveforms(
                 sncl.network,
                 sncl.station,
-                self.locationCode or sncl.location,
+                sncl.location,
                 sncl.channel,
                 starttime,
                 endtime,
@@ -334,7 +335,7 @@ class EdgeFactory(TimeseriesFactory):
                 interval,
                 sncl.network,
                 sncl.station,
-                self.locationCode or sncl.location,
+                sncl.location,
             )
         self._set_metadata(data, observatory, channel, type, interval)
         return data
@@ -407,6 +408,7 @@ class EdgeFactory(TimeseriesFactory):
             data_type=type,
             interval=interval,
             element=channel,
+            location=self.locationCode,
         )
 
         now = obspy.core.UTCDateTime(datetime.utcnow())
@@ -423,7 +425,7 @@ class EdgeFactory(TimeseriesFactory):
             port,
             sncl.station,
             sncl.channel,
-            self.locationCode or sncl.location,
+            sncl.location,
             sncl.network,
         )
 
