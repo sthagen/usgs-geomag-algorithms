@@ -25,7 +25,7 @@ setuptools.setup(
     use_pipfile=True,
     entry_points={
         "console_scripts": [
-            "generate-matrix=geomagio.processing.adjusted:main",
+            "generate-matrix=geomagio.processing.affine_matrix:main",
             "geomag-metadata=geomagio.metadata.main:main",
             "magproc-prepfiles=geomagio.processing.magproc:main",
             "obsrio-filter=geomagio.processing.obsrio:main",
