@@ -142,7 +142,6 @@ for reading in readings:
             endtime=reading.time,
             station=reading.metadata["station"],
             metadata=reading_dict,
-            metadata_valid=reading.valid,
         )
     )
 
