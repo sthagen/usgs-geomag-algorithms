@@ -59,7 +59,11 @@ def get_metadata_query(
     )
 
 
-@router.post("/metadata", response_model=Metadata)
+@router.post(
+    "/metadata",
+    description="Save metadata in database",
+    response_model=Metadata,
+)
 async def create_metadata(
     request: Request,
     metadata: Metadata,
@@ -71,13 +75,22 @@ async def create_metadata(
     return Response(metadata.json(), status_code=201, media_type="application/json")
 
 
-@router.get("/metadata", response_model=List[Metadata])
+@router.get(
+    "/metadata",
+    description="Search metadata by query parameters",
+    name="Request metadata",
+    response_model=List[Metadata],
+)
 async def get_metadata(query: MetadataQuery = Depends(get_metadata_query)):
     metas = await MetadataDatabaseFactory(database=database).get_metadata(params=query)
     return metas
 
 
-@router.get("/metadata/history", response_model=List[Metadata])
+@router.get(
+    "/metadata/history",
+    description="Search historical metadata by query parameters",
+    response_model=List[Metadata],
+)
 async def get_metadata_history(query: MetadataQuery = Depends(get_metadata_query)):
     metas = await MetadataDatabaseFactory(database=database).get_metadata(
         params=query, history=True
@@ -85,12 +98,20 @@ async def get_metadata_history(query: MetadataQuery = Depends(get_metadata_query
     return metas
 
 
-@router.get("/metadata/{id}", response_model=Metadata)
+@router.get(
+    "/metadata/{id}",
+    description="Search metadata by database id",
+    response_model=Metadata,
+)
 async def get_metadata_by_id(id: int):
     return await MetadataDatabaseFactory(database=database).get_metadata_by_id(id=id)
 
 
-@router.get("/metadata/{metadata_id}/history", response_model=List[Metadata])
+@router.get(
+    "/metadata/{metadata_id}/history",
+    description="Search metadata version history by database id",
+    response_model=List[Metadata],
+)
 async def get_metadata_history_by_metadata_id(
     metadata_id: int,
 ):
@@ -101,7 +122,11 @@ async def get_metadata_history_by_metadata_id(
     )
 
 
-@router.get("/metadata/history/{id}", response_model=Metadata)
+@router.get(
+    "/metadata/history/{id}",
+    description="Search historical metadata by database id",
+    response_model=Metadata,
+)
 async def get_metadata_history_by_id(id: int):
     metadata = await MetadataDatabaseFactory(
         database=database
@@ -111,7 +136,11 @@ async def get_metadata_history_by_id(id: int):
     return metadata
 
 
-@router.put("/metadata/{id}", response_model=Metadata)
+@router.put(
+    "/metadata/{id}",
+    description="Edit metadata from older version",
+    response_model=Metadata,
+)
 async def update_metadata(
     id: int,
     metadata: Metadata = Body(...),
