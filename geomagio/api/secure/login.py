@@ -150,10 +150,11 @@ oauth.register(
 router = APIRouter()
 
 
-@router.get("/authorize")
+@router.get(
+    "/authorize",
+    description="Authorize callback after authenticating using OpenID",
+)
 async def authorize(request: Request):
-    """Authorize callback after authenticating using OpenID"""
-
     # finish login
     token = await oauth.openid.authorize_access_token(request)
 
@@ -171,9 +172,11 @@ async def authorize(request: Request):
     )
 
 
-@router.get("/login")
+@router.get(
+    "/login",
+    description="Redirect to OpenID provider.",
+)
 async def login(request: Request):
-    """Redirect to OpenID provider."""
     redirect_uri = request.url_for("authorize")
     if "127.0.0.1" not in redirect_uri:
         # 127.0.0.1 used for local dev, all others use https
@@ -185,9 +188,11 @@ async def login(request: Request):
     return await oauth.openid.authorize_redirect(request, redirect_uri)
 
 
-@router.get("/logout")
+@router.get(
+    "/logout",
+    description="Clear session and redirect to index page.",
+)
 async def logout(request: Request):
-    """Clear session and redirect to index page."""
     request.session.pop("token", None)
     request.session.pop("user", None)
     return RedirectResponse(
@@ -199,7 +204,9 @@ async def logout(request: Request):
     )
 
 
-@router.get("/user")
+@router.get(
+    "/user",
+    description="Get currently logged in user.",
+)
 async def user(request: Request, user: User = Depends(require_user())) -> User:
-    """Get currently logged in user."""
     return user

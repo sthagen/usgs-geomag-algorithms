@@ -11,7 +11,11 @@ from .metadata import router as metadata_router
 from .SessionMiddleware import SessionMiddleware
 
 
-app = FastAPI(root_path="/ws/secure")
+app = FastAPI(
+    description="Web service for interaction with operational metadata records",
+    root_path="/ws/secure",
+    title="Geomagnetism Metadata Web Service",
+)
 
 # NOTE: database used for sessions is started by ..app.app,
 # which mounts this application at /ws/secure

@@ -8,7 +8,10 @@ from .Observatory import OBSERVATORIES, OBSERVATORY_INDEX
 router = APIRouter()
 
 
-@router.get("/observatories/")
+@router.get(
+    "/observatories/",
+    description="Information regarding available geomagnetic observatories",
+)
 def get_observatories() -> Dict:
     return {
         "type": "FeatureCollection",
@@ -16,7 +19,10 @@ def get_observatories() -> Dict:
     }
 
 
-@router.get("/observatories/{id}")
+@router.get(
+    "/observatories/{id}",
+    description="Search observatories by 3-letter observatory code",
+)
 async def get_observatory_by_id(id: str) -> Dict:
     try:
         return OBSERVATORY_INDEX[id].geojson()

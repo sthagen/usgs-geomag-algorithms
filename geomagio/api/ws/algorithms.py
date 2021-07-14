@@ -1,3 +1,4 @@
+from os import name
 from fastapi import APIRouter, Depends, HTTPException
 from starlette.responses import Response
 
@@ -14,7 +15,11 @@ from .data import format_timeseries, get_data_factory, get_data_query, get_times
 router = APIRouter()
 
 
-@router.get("/algorithms/dbdt/")
+@router.get(
+    "/algorithms/dbdt/",
+    description="First order derivative at requested interval",
+    name="Dbdt Algorithm",
+)
 def get_dbdt(
     query: DataApiQuery = Depends(get_data_query),
     data_factory: TimeseriesFactory = Depends(get_data_factory),
@@ -31,7 +36,12 @@ def get_dbdt(
     )
 
 
-@router.post("/algorithms/residual", response_model=Reading)
+@router.post(
+    "/algorithms/residual",
+    description="Caclulates new absolutes and baselines from reading\n\n"
+    + "Returns posted reading object with updated values",
+    response_model=Reading,
+)
 def calculate_residual(reading: Reading, adjust_reference: bool = True):
     try:
         return calculate(reading=reading, adjust_reference=adjust_reference)

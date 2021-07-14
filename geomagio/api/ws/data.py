@@ -158,7 +158,12 @@ def get_timeseries(data_factory: TimeseriesFactory, query: DataApiQuery) -> Stre
 router = APIRouter()
 
 
-@router.get("/data/")
+@router.get(
+    "/data/",
+    name="Request data",
+    description="Returns timeseries depending on query parameters\n\n"
+    + "Limited to 345600 data points",
+)
 def get_data(
     query: DataApiQuery = Depends(get_data_query),
 ) -> Response:

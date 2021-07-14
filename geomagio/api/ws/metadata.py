@@ -10,7 +10,11 @@ from ..db import MetadataDatabaseFactory
 router = APIRouter()
 
 
-@router.get("/metadata", response_model=List[Metadata])
+@router.get(
+    "/metadata",
+    description="Search metadata records with query parameters(excludes id and metadata id)",
+    response_model=List[Metadata],
+)
 async def get_metadata(
     category: MetadataCategory = None,
     starttime: UTCDateTime = None,
@@ -36,6 +40,6 @@ async def get_metadata(
         status=status,
     )
     metas = await MetadataDatabaseFactory(database=database).get_metadata(
-        **query.datetime_dict(exclude={"id"})
+        **query.datetime_dict(exclude={"id", "metadata_id"})
     )
     return metas

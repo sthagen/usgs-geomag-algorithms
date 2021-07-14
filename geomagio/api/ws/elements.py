@@ -8,7 +8,10 @@ from .Element import ELEMENTS
 router = APIRouter()
 
 
-@router.get("/elements/")
+@router.get(
+    "/elements/",
+    description="Information regarding available geomagnetic elements",
+)
 def get_elements() -> Dict:
     features = []
     for e in ELEMENTS:
