@@ -23,11 +23,11 @@ VERSION = os.getenv("GEOMAG_VERSION", "version")
 
 
 app = FastAPI(
-    title="Geomagnetism Data Web Service",
     description="Web service for data access and observatory/element information\n\n"
     + "Supports realtime processing via algorithms",
     docs_url="/docs",
     root_path="/ws",
+    title="Geomagnetism Data Web Service",
 )
 
 app.include_router(algorithms.router)

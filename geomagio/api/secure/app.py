@@ -12,9 +12,9 @@ from .SessionMiddleware import SessionMiddleware
 
 
 app = FastAPI(
-    title="Geomagnetism Metadata Web Service",
     description="Web service for interaction with operational metadata records",
     root_path="/ws/secure",
+    title="Geomagnetism Metadata Web Service",
 )
 
 # NOTE: database used for sessions is started by ..app.app,
