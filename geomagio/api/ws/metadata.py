@@ -24,7 +24,6 @@ async def get_metadata(
     channel: str = None,
     location: str = None,
     data_valid: bool = None,
-    metadata_valid: bool = True,
     status: List[str] = Query(None),
 ):
     query = MetadataQuery(
@@ -36,7 +35,6 @@ async def get_metadata(
         channel=channel,
         location=location,
         data_valid=data_valid,
-        metadata_valid=metadata_valid,
         status=status,
     )
     metas = await MetadataDatabaseFactory(database=database).get_metadata(

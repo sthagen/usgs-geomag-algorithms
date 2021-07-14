@@ -40,7 +40,6 @@ def get_metadata_query(
     channel: str = None,
     location: str = None,
     data_valid: bool = None,
-    metadata_valid: bool = True,
     status: List[str] = Query(None),
 ) -> MetadataQuery:
     return MetadataQuery(
@@ -54,7 +53,6 @@ def get_metadata_query(
         channel=channel,
         location=location,
         data_valid=data_valid,
-        metadata_valid=metadata_valid,
         status=status,
     )
 

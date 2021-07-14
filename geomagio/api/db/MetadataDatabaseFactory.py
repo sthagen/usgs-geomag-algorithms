@@ -43,7 +43,6 @@ class MetadataDatabaseFactory(object):
             channel,
             location,
             data_valid,
-            metadata_valid,
             status,
         ) = params.datetime_dict().values()
         if id:
@@ -78,8 +77,6 @@ class MetadataDatabaseFactory(object):
             query = query.where(table.c.created_time < created_before)
         if data_valid is not None:
             query = query.where(table.c.data_valid == data_valid)
-        if metadata_valid is not None:
-            query = query.where(table.c.metadata_valid == metadata_valid)
         if status is not None:
             query = query.where(table.c.status.in_(status))
         rows = await self.database.fetch_all(query)
