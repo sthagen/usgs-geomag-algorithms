@@ -49,7 +49,6 @@ def generate_matrix(
                 endtime=readings_endtime,
                 category=MetadataCategory.READING,
                 data_valid=True,
-                metadata_valid=True,
             )
         )
         readings = [Reading(**m.metadata) for m in metadata]

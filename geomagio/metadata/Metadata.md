@@ -22,8 +22,6 @@
   * **reviewed**: after a record is reviewed by an approved user
   * **deleted**: archive a record that is invalid or incomplete
 
-* **metadata_valid**: Whether record is valid and should be used in processing
-
 * **review_comment**: Comments from reviewer about why record is valid/invalid
 
 # Details:

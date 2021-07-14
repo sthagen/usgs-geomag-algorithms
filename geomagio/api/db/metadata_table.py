@@ -38,8 +38,6 @@ metadata = Table(
     Column("priority", Integer, default=1),
     # whether data is valid (primarily for flags)
     Column("data_valid", Boolean, default=True, index=True),
-    # whether metadata is valid (based on review)
-    Column("metadata_valid", Boolean, default=True, index=True),
     # deletion status indicator
     Column("status", String(length=255), nullable=True),
     # metadata json blob
@@ -62,7 +60,6 @@ metadata = Table(
         "starttime",
         "endtime",
         # valid
-        "metadata_valid",
         "data_valid",
         "status",
     ),
