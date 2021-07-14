@@ -20,7 +20,6 @@ class MetadataQuery(BaseModel):
     channel: str = None
     location: str = None
     data_valid: Optional[bool] = None
-    metadata_valid: Optional[bool] = None
     status: Optional[List[str]] = None
 
     def datetime_dict(self, **kwargs):

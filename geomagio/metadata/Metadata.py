@@ -70,8 +70,6 @@ class Metadata(BaseModel):
     priority: int = 1
     # whether data is valid (primarily for flags)
     data_valid: bool = True
-    # whether metadata is valid (based on review)
-    metadata_valid: bool = True
     # metadata json blob
     metadata: Dict = None
     # general comment
