@@ -25,7 +25,11 @@ class MetadataFactory(object):
         self.token = token
 
     def _get_headers(self):
-        return {"Authorization": self.token} if self.token else None
+        return (
+            {"Authorization": self.token, "content-type": "application/json"}
+            if self.token
+            else None
+        )
 
     def get_metadata(self, query: MetadataQuery) -> List[Metadata]:
         if query.id:
