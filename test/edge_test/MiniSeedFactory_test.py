@@ -34,11 +34,11 @@ def test__put_timeseries():
     sent = client.last_sent
     assert_equal(len(sent), 2)
     # first trace includes [0...4]
-    assert_equal(sent[0].stats.channel, "LFH")
+    assert_equal(sent[0].stats.channel, "LFU")
     assert_equal(len(sent[0]), 4)
     assert_equal(sent[0].stats.endtime, trace1.stats.starttime + 3)
     # second trace includes [5...9]
-    assert_equal(sent[1].stats.channel, "LFH")
+    assert_equal(sent[1].stats.channel, "LFU")
     assert_equal(len(sent[1]), 5)
     assert_equal(sent[1].stats.starttime, trace1.stats.starttime + 5)
     assert_equal(sent[1].stats.endtime, trace1.stats.endtime)
