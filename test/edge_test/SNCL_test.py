@@ -122,6 +122,8 @@ def test_get_channel():
     assert get_channel(element="H", interval="hour", data_type="variation") == "RFU"
     assert get_channel(element="E", interval="hour", data_type="variation") == "RFV"
     assert get_channel(element="Z", interval="hour", data_type="variation") == "RFW"
+    # not variation data_type, test that H,Z is not converted to U,V
+    assert get_channel(element="H", interval="hour", data_type="adjusted") == "RFH"
     assert get_channel(element="Z", interval="hour", data_type="adjusted") == "RFZ"
     assert get_channel(element="Dst4", interval="day", data_type="variation") == "PX4"
     assert (
