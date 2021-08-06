@@ -106,20 +106,44 @@ def test_element():
 
 def test_get_channel():
     """edge_test.SNCL_test.test_get_channel()"""
-    assert get_channel(element="U_Volt", interval="tenhertz") == "BEU"
-    assert get_channel(element="U_Bin", interval="tenhertz") == "BYU"
-    assert get_channel(element="D", interval="second") == "LFD"
-    assert get_channel(element="F", interval="minute") == "UFF"
-    assert get_channel(element="H", interval="hour") == "RFH"
-    assert get_channel(element="Dst4", interval="day") == "PX4"
-    assert get_channel(element="Dst3", interval="minute") == "UX3"
-    assert get_channel(element="E-E", interval="minute") == "UQE"
-    assert get_channel(element="E-N", interval="minute") == "UQN"
-    assert get_channel(element="UK1", interval="minute") == "UK1"
-    assert get_channel(element="U_Dist", interval="minute") == "UFU"
-    assert get_channel(element="U_SQ", interval="minute") == "UFU"
-    assert get_channel(element="U_SV", interval="minute") == "UFU"
-    assert get_channel(element="UK1.R0", interval="minute") == "UK1"
+    assert (
+        get_channel(element="U_Volt", interval="tenhertz", data_type="variation")
+        == "BEU"
+    )
+    assert (
+        get_channel(element="U_Bin", interval="tenhertz", data_type="variation")
+        == "BYU"
+    )
+    assert get_channel(element="D", interval="second", data_type="variation") == "LFD"
+    assert get_channel(element="F", interval="minute", data_type="variation") == "UFF"
+    assert get_channel(element="U", interval="hour", data_type="variation") == "RFU"
+    assert get_channel(element="V", interval="hour", data_type="variation") == "RFV"
+    assert get_channel(element="W", interval="hour", data_type="variation") == "RFW"
+    assert get_channel(element="H", interval="hour", data_type="variation") == "RFU"
+    assert get_channel(element="E", interval="hour", data_type="variation") == "RFV"
+    assert get_channel(element="Z", interval="hour", data_type="variation") == "RFW"
+    # not variation data_type, test that H,Z is not converted to U,V
+    assert get_channel(element="H", interval="hour", data_type="adjusted") == "RFH"
+    assert get_channel(element="Z", interval="hour", data_type="adjusted") == "RFZ"
+    assert get_channel(element="Dst4", interval="day", data_type="variation") == "PX4"
+    assert (
+        get_channel(element="Dst3", interval="minute", data_type="variation") == "UX3"
+    )
+    assert get_channel(element="E-E", interval="minute", data_type="variation") == "UQE"
+    assert get_channel(element="E-N", interval="minute", data_type="variation") == "UQN"
+    assert get_channel(element="UK1", interval="minute", data_type="variation") == "UK1"
+    assert (
+        get_channel(element="U_Dist", interval="minute", data_type="variation") == "UFU"
+    )
+    assert (
+        get_channel(element="U_SQ", interval="minute", data_type="variation") == "UFU"
+    )
+    assert (
+        get_channel(element="U_SV", interval="minute", data_type="variation") == "UFU"
+    )
+    assert (
+        get_channel(element="UK1.R0", interval="minute", data_type="variation") == "UK1"
+    )
 
 
 def test_get_location():

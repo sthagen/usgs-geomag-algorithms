@@ -35,7 +35,9 @@ class SNCL(BaseModel):
         return SNCL(
             station=station,
             network=network,
-            channel=get_channel(element=element, interval=interval),
+            channel=get_channel(
+                element=element, interval=interval, data_type=data_type
+            ),
             location=location or get_location(element=element, data_type=data_type),
         )
 
@@ -85,9 +87,10 @@ class SNCL(BaseModel):
         raise ValueError(f"Unexcepted interval code: {channel_start}")
 
 
-def get_channel(element: str, interval: str) -> str:
+def get_channel(element: str, interval: str, data_type: str) -> str:
     return _check_predefined_channel(element=element, interval=interval) or (
-        _get_channel_start(interval=interval) + _get_channel_end(element=element)
+        _get_channel_start(interval=interval)
+        + _get_channel_end(element=element, data_type=data_type)
     )
 
 
@@ -154,7 +157,7 @@ def _check_predefined_channel(element: str, interval: str) -> Optional[str]:
         return None
 
 
-def _get_channel_end(element: str) -> str:
+def _get_channel_end(element: str, data_type: str) -> str:
     channel_middle = "F"
     if "_Volt" in element:
         channel_middle = "E"
@@ -163,6 +166,13 @@ def _get_channel_end(element: str) -> str:
     elif "_Temp" in element:
         channel_middle = "K"
     channel_end = element.split("_")[0]
+    if data_type == "variation":
+        if channel_end == "H":
+            channel_end = "U"
+        elif channel_end == "E":
+            channel_end = "V"
+        elif channel_end == "Z":
+            channel_end = "W"
     return channel_middle + channel_end
 
 
