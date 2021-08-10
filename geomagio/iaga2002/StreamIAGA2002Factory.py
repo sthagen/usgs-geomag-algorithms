@@ -31,6 +31,7 @@ class StreamIAGA2002Factory(IAGA2002Factory):
         channels=None,
         type=None,
         interval=None,
+        add_empty_channels: bool = True,
     ):
         """Implements get_timeseries
 

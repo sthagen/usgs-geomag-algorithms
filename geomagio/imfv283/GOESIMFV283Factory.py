@@ -67,6 +67,7 @@ class GOESIMFV283Factory(IMFV283Factory):
         channels=None,
         type=None,
         interval=None,
+        add_empty_channels: bool = True,
     ):
         """Implements get_timeseries
 

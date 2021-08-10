@@ -67,6 +67,7 @@ class TimeseriesFactory(object):
         channels=None,
         type=None,
         interval=None,
+        add_empty_channels: bool = True,
     ):
         """Get timeseries data.
 
@@ -93,6 +94,8 @@ class TimeseriesFactory(object):
         interval : {'day', 'hour', 'minute', 'month', 'second'}
             data interval, optional.
             uses default if unspecified.
+        add_empty_channels
+            if True, returns channels without data as empty traces
 
         Returns
         -------
