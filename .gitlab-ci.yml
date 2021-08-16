@@ -73,7 +73,9 @@ variables:
       junit: junit.xml
   before_script:
     # install dependencies
-    - pipenv install --dev --pre --system
+    - python -m pip install poetry wheel
+    - poetry config virtualenvs.create false
+    - poetry install
     - which python
   image: ${DEVOPS_REGISTRY}usgs/obspy:latest
   script:
