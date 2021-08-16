@@ -35,7 +35,7 @@ class AdjustedMatrix(BaseModel):
         inchannels=["H", "E", "Z", "F"],
         outchannels=["X", "Y", "Z", "F"],
     ):
-        """ Apply matrix to raw data. Apply pier correction to F when necessary """
+        """Apply matrix to raw data. Apply pier correction to F when necessary"""
         raws = np.vstack(
             [
                 stream.select(channel=channel)[0].data

@@ -5,7 +5,7 @@ from .LeastSq import LeastSq
 
 
 class ZRotationShear(LeastSq):
-    """Calculates affine using least squares, constrained to rotate about the Z axis """
+    """Calculates affine using least squares, constrained to rotate about the Z axis"""
 
     def get_matrix(
         self,

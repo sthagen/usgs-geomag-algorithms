@@ -66,7 +66,7 @@ class LeastSq(Transform):
     def get_stacked_ordinates(
         self, ordinates: Tuple[List[float], List[float], List[float]]
     ) -> List[List[float]]:
-        """ Formats ordinates for least squares method """
+        """Formats ordinates for least squares method"""
         # (reduces degrees of freedom by 4:
         #  - 4 for the last row of zeros and a one)
         ord_stacked = np.zeros((12, len(ordinates[0]) * 3))
@@ -130,7 +130,7 @@ class LeastSq(Transform):
         return values * weights
 
     def valid(self, rank: float) -> bool:
-        """ validates whether or not a matrix can reliably transform the method's number of dimensions """
+        """validates whether or not a matrix can reliably transform the method's number of dimensions"""
         if rank < self.ndims:
             return False
         return True
