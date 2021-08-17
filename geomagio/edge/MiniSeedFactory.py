@@ -68,7 +68,7 @@ class MiniSeedFactory(TimeseriesFactory):
         self,
         host="cwbpub.cr.usgs.gov",
         port=2061,
-        write_port=7981,
+        write_port=7974,
         observatory=None,
         channels=None,
         type=None,
