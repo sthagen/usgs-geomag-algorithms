@@ -61,6 +61,7 @@ types-requests = "^2.25.6"
 [tool.poetry.scripts]
 generate-matrix = "geomagio.processing.affine_matrix:main"
 geomag-metadata = "geomagio.metadata.main:main"
+geomag-monitor = "geomagio.processing.monitor:main"
 geomag-py = "geomagio.Controller:main"
 magproc-prepfiles = "geomagio.processing.magproc:main"
 make-cal = "geomagio.processing.make_cal:main"
