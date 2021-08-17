@@ -3,6 +3,12 @@
 """Monitor """
 from os import path
 import sys
+from typing import List
+import argparse
+import sys
+
+from obspy.core import UTCDateTime
+import typer
 
 # ensure geomag is on the path before importing
 try:
@@ -11,11 +17,12 @@ except ImportError:
     script_dir = path.dirname(path.abspath(__file__))
     sys.path.append(path.normpath(path.join(script_dir, "..")))
 
-import argparse
-import sys
-from obspy.core import UTCDateTime
 import geomagio.TimeseriesUtility as TimeseriesUtility
 import geomagio.edge as edge
+
+
+def _main():
+    typer.run(generate_report)
 
 
 def calculate_warning_threshold(warning_threshold, interval):
@@ -183,28 +190,35 @@ def print_html_header(starttime, endtime, title):
     )
 
 
-def print_observatories(args):
+def print_observatories(
+    starttime: UTCDateTime,
+    endtime: UTCDateTime,
+    observatories: List[str],
+    edge_host: str,
+    channels: List[str],
+    data_type: str,
+    gaps_only: bool,
+    intervals: List[str],
+    location_code: str,
+    warning_threshold: int,
+):
     """Print all the observatories
-    Parameters
-    ---------
-    args: dictionary
-        Holds all the command line arguments. See parse_args
 
     Returns
     -------
     Boolean: if a warning was issued.
 
     """
-    intervals = args.intervals
-    channels = args.channels
-    starttime = args.starttime
-    endtime = args.endtime
-    host = args.edge_host
+    intervals = intervals
+    channels = channels
+    starttime = starttime
+    endtime = endtime
+    host = edge_host
     table_header = get_table_header()
     warning_issued = False
     table_end = "</tbody>\n" + "</table>\n"
 
-    for observatory in args.observatories:
+    for observatory in observatories:
         summary_table = ""
         gap_details = ""
         print_it = False
@@ -215,23 +229,21 @@ def print_observatories(args):
                 host=host,
                 port=2060,
                 observatory=observatory,
-                type=args.type,
+                type=data_type,
                 channels=channels,
-                locationCode=args.locationcode,
+                locationCode=location_code,
                 interval=interval,
             )
 
             timeseries = factory.get_timeseries(starttime=starttime, endtime=endtime)
             gaps = TimeseriesUtility.get_stream_gaps(timeseries)
-            if args.gaps_only and not has_gaps(gaps):
+            if gaps_only and not has_gaps(gaps):
                 continue
             else:
                 print_it = True
 
             warning = ""
-            warning_threshold = calculate_warning_threshold(
-                args.warning_threshold, interval
-            )
+            warning_threshold = calculate_warning_threshold(warning_threshold, interval)
 
             summary_table += "<tr>"
             summary_table += '<td style="text-align:center;">'
@@ -279,6 +291,39 @@ def print_observatories(args):
     return warning_issued
 
 
+def generate_report(
+    starttime: str,
+    endtime: str,
+    observatories: List[str],
+    edge_host: str = "127.0.0.1",
+    channels: List[str] = ["H", "E", "Z", "F"],
+    data_type: str = "variation",
+    gaps_only: bool = True,
+    intervals: List[str] = ("minute",),
+    location_code: str = "R0",
+    title: str = "",
+    warning_threshold: int = 60,
+):
+    starttime = UTCDateTime(starttime)
+    endtime = UTCDateTime(endtime)
+    print_html_header(starttime=starttime, endtime=endtime, title=title)
+    warning_issued = print_observatories(
+        starttime=starttime,
+        endtime=endtime,
+        observatories=observatories,
+        edge_host=edge_host,
+        channels=channels,
+        data_type=data_type,
+        gaps_only=gaps_only,
+        intervals=intervals,
+        location_code=location_code,
+        warning_threshold=warning_threshold,
+    )
+    print("</body>\n" + "</html>\n")
+
+    sys.exit(warning_issued)
+
+
 def main(args):
     """command line tool for building geomag monitoring reports
 
@@ -291,12 +336,19 @@ def main(args):
     parses command line options using argparse
     Output is in HTML.
     """
-    print_html_header(args.starttime, args.endtime, args.title)
-
-    warning_issued = print_observatories(args)
-    print("</body>\n" + "</html>\n")
-
-    sys.exit(warning_issued)
+    generate_report(
+        starttime=args.starttime,
+        endtime=args.endtime,
+        observatories=args.observatories,
+        edge_host=args.edge_host,
+        channels=args.channels,
+        data_type=args.type,
+        gaps_only=args.gaps_only,
+        intervals=args.intervals,
+        location_code=args.locationcode,
+        title=args.title,
+        warning_threshold=args.warning_threshold,
+    )
 
 
 def parse_args(args):
@@ -318,18 +370,23 @@ def parse_args(args):
     parser.add_argument(
         "--starttime",
         required=True,
-        type=UTCDateTime,
+        type=str,
         default=None,
         help="UTC date YYYY-MM-DD HH:MM:SS",
     )
     parser.add_argument(
         "--endtime",
         required=True,
-        type=UTCDateTime,
+        type=str,
         default=None,
         help="UTC date YYYY-MM-DD HH:MM:SS",
     )
-    parser.add_argument("--edge-host", required=True, help="IP/URL for edge connection")
+    parser.add_argument(
+        "--edge-host",
+        required=False,
+        default="127.0.0.1",
+        help="IP/URL for edge connection",
+    )
     parser.add_argument(
         "--observatories",
         required=True,
