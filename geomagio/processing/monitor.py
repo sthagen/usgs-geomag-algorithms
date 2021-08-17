@@ -1,28 +1,14 @@
 #! /usr/bin/env python
 
 """Monitor """
-from os import path
 import sys
 from typing import List
 import argparse
 import sys
 
 from obspy.core import UTCDateTime
-import typer
 
-# ensure geomag is on the path before importing
-try:
-    import geomagio  # noqa (tells linter to ignore this line.)
-except ImportError:
-    script_dir = path.dirname(path.abspath(__file__))
-    sys.path.append(path.normpath(path.join(script_dir, "..")))
-
-import geomagio.TimeseriesUtility as TimeseriesUtility
-import geomagio.edge as edge
-
-
-def _main():
-    typer.run(generate_report)
+from .. import TimeseriesUtility, edge
 
 
 def calculate_warning_threshold(warning_threshold, interval):
@@ -292,8 +278,8 @@ def print_observatories(
 
 
 def generate_report(
-    starttime: str,
-    endtime: str,
+    starttime: UTCDateTime,
+    endtime: UTCDateTime,
     observatories: List[str],
     edge_host: str = "127.0.0.1",
     channels: List[str] = ["H", "E", "Z", "F"],
@@ -304,8 +290,6 @@ def generate_report(
     title: str = "",
     warning_threshold: int = 60,
 ):
-    starttime = UTCDateTime(starttime)
-    endtime = UTCDateTime(endtime)
     print_html_header(starttime=starttime, endtime=endtime, title=title)
     warning_issued = print_observatories(
         starttime=starttime,
@@ -324,7 +308,7 @@ def generate_report(
     sys.exit(warning_issued)
 
 
-def main(args):
+def main(args=None):
     """command line tool for building geomag monitoring reports
 
     Inputs
@@ -336,6 +320,8 @@ def main(args):
     parses command line options using argparse
     Output is in HTML.
     """
+    if args is None:
+        args = parse_args(sys.argv[1:])
     generate_report(
         starttime=args.starttime,
         endtime=args.endtime,
@@ -370,14 +356,14 @@ def parse_args(args):
     parser.add_argument(
         "--starttime",
         required=True,
-        type=str,
+        type=UTCDateTime,
         default=None,
         help="UTC date YYYY-MM-DD HH:MM:SS",
     )
     parser.add_argument(
         "--endtime",
         required=True,
-        type=str,
+        type=UTCDateTime,
         default=None,
         help="UTC date YYYY-MM-DD HH:MM:SS",
     )
@@ -431,5 +417,4 @@ def parse_args(args):
 
 
 if __name__ == "__main__":
-    args = parse_args(sys.argv[1:])
-    main(args)
+    main()
