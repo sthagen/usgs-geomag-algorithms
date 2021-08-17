@@ -173,7 +173,7 @@ variables:
 Check Python 3.8:
   extends:
     - .check_code
-  image: ${DEVOPS_REGISTRY}usgs/obspy:3.8
+  image: ${DEVOPS_REGISTRY}usgs/python:3.8-build
 
 ## --------------------------------------------------
 # Integration Stage
