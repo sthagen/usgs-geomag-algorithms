@@ -1,8 +1,10 @@
 .coverage
 .DS_Store
+.eggs
 .git
+.mypy_cache
 .pytest_cache
 coverage.xml
-node_modules
-test
+build
+dist
 *.pyc

@@ -1,7 +1,7 @@
-ARG FROM_IMAGE=usgs/obspy:3.8
+ARG FROM_IMAGE=usgs/python:3.8-obspy
+
 
 FROM ${FROM_IMAGE}
-LABEL maintainer="Jeremy Fee <jmfee@usgs.gov>"
 
 ARG GIT_BRANCH_NAME=none
 ARG GIT_COMMIT_SHA=none
@@ -12,24 +12,31 @@ ENV GIT_BRANCH_NAME=${GIT_BRANCH_NAME} \
     GIT_COMMIT_SHA=${GIT_COMMIT_SHA} \
     WEBSERVICE=${WEBSERVICE}
 
+# install to system python
+USER root
 
-# install packages into system python, when Pipfile changes
-COPY Pipfile Pipfile.lock /geomag-algorithms/
+# install packages when dependencies change
+COPY pyproject.toml poetry.lock /geomag-algorithms/
 RUN cd /geomag-algorithms \
-    && pipenv install --dev --pre --system
+    # install into system python
+    && poetry config virtualenvs.create false \
+    # only install dependencies, not project
+    && poetry install --no-root
 
-# install rest of library as editable
+# install rest of library separate from dependencies
 COPY . /geomag-algorithms
 RUN cd /geomag-algorithms \
-    && pip install -e . \
+    # now install project to install scripts
+    && poetry install \
     # add data directory owned by usgs-user
     && mkdir -p /data \
     && chown -R usgs-user:usgs-user /data
+# configure python path, so project can be volume mounted
+ENV PYTHONPATH="/geomag-algorithms"
 
+# run as usgs-user
 USER usgs-user
 WORKDIR /data
-
-
 # entrypoint needs double quotes
 ENTRYPOINT [ "/geomag-algorithms/docker-entrypoint.sh" ]
 EXPOSE 8000

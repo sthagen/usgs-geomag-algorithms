@@ -639,7 +639,7 @@ def get_realtime_interval(interval_seconds: int) -> Tuple[UTCDateTime, UTCDateTi
     return starttime, endtime
 
 
-def main(args):
+def main(args: Optional[List[str]] = None):
     """command line factory for geomag algorithms
 
     Inputs
@@ -651,6 +651,9 @@ def main(args):
     parses command line options using argparse, then calls the controller
     with instantiated I/O factories, and algorithm(s)
     """
+    # parse command line arguments by default
+    if args is None:
+        args = parse_args(sys.argv[1:])
 
     # only try to parse deprecated arguments if they've been enabled
     if args.enable_deprecated_arguments:

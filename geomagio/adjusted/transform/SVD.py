@@ -37,7 +37,7 @@ class SVD(Transform):
         ordinates: Tuple[List[float], List[float], List[float]],
         weights: List[float],
     ) -> List[List[float]]:
-        """ calculate covariance matrix with weighted absolutes/ordinates """
+        """calculate covariance matrix with weighted absolutes/ordinates"""
         weighted_ordinates = self.get_weighted_values(values=ordinates, weights=weights)
         weighted_absolutes = self.get_weighted_values(values=absolutes, weights=weights)
         # generate weighted "covariance" matrix
@@ -80,7 +80,7 @@ class SVD(Transform):
     def get_rotation_matrix(
         self, U: List[List[float]], Vh: List[List[float]]
     ) -> List[List[float]]:
-        """ computes rotation matrix from products of singular value decomposition """
+        """computes rotation matrix from products of singular value decomposition"""
         return np.dot(
             Vh.T, np.dot(np.diag([1, 1, np.linalg.det(np.dot(Vh.T, U.T))]), U.T)
         )
@@ -110,7 +110,7 @@ class SVD(Transform):
         weighted_absolutes: Tuple[List[float], List[float], List[float]],
         weighted_ordinates: Tuple[List[float], List[float], List[float]],
     ) -> List[List[float]]:
-        """ computes translation matrix from rotation matrix and weighted absolutes/ordinates """
+        """computes translation matrix from rotation matrix and weighted absolutes/ordinates"""
         return np.array([weighted_absolutes[i] for i in range(self.ndims)]) - np.dot(
             R, [weighted_ordinates[i] for i in range(self.ndims)]
         )
@@ -130,7 +130,7 @@ class SVD(Transform):
         )
 
     def valid(self, singular_values: List[float]) -> bool:
-        """ validates whether or not a matrix can reliably transform the method's number of dimensions """
+        """validates whether or not a matrix can reliably transform the method's number of dimensions"""
         if np.sum(singular_values) < self.ndims:
             return False
         return True

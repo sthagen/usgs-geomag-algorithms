@@ -13,7 +13,6 @@ from .ObservatoryMetadata import ObservatoryMetadata
 from .PlotTimeseriesFactory import PlotTimeseriesFactory
 from .TimeseriesFactory import TimeseriesFactory
 from .TimeseriesFactoryException import TimeseriesFactoryException
-from .WebService import WebService
 
 __all__ = [
     "ChannelConverter",
@@ -26,5 +25,4 @@ __all__ = [
     "TimeseriesFactoryException",
     "TimeseriesUtility",
     "Util",
-    "WebService",
 ]

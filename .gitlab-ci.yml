@@ -18,7 +18,7 @@ variables:
   TRIVY_VERSION: "0.13.0"
   # docker variables
   DOCKER_DRIVER: overlay2
-  FROM_IMAGE: ${CODE_REGISTRY}/devops/images/usgs/obspy:3.8
+  FROM_IMAGE: ${CODE_REGISTRY}/devops/images/usgs/python:3.8-obspy
   # environment variables
   APP_NAME: geomag-algorithms
   DATA_HOST: "cwbpub.cr.usgs.gov"
@@ -73,9 +73,10 @@ variables:
       junit: junit.xml
   before_script:
     # install dependencies
-    - pipenv install --dev --pre --system
+    - poetry config virtualenvs.create false
+    - poetry install
     - which python
-  image: ${DEVOPS_REGISTRY}usgs/obspy:latest
+  image: ${DEVOPS_REGISTRY}usgs/python:3.8-build
   script:
     # run checks
     - black --check .
@@ -172,7 +173,7 @@ variables:
 Check Python 3.8:
   extends:
     - .check_code
-  image: ${DEVOPS_REGISTRY}usgs/obspy:3.8
+  image: ${DEVOPS_REGISTRY}usgs/python:3.8-build
 
 ## --------------------------------------------------
 # Integration Stage

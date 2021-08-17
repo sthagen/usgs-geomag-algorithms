@@ -2,10 +2,10 @@
 cov.xml
 .DS_Store
 .eggs
-node_modules
 *.pyc
 coverage.xml
 .ipynb_checkpoints*
+.mypy_cache
 .pytest_cache
 htmlcov
 .vscode

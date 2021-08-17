@@ -18,7 +18,7 @@ class QRFactorization(LeastSq):
         ordinates: Tuple[List[float], List[float], List[float]],
         weights: List[float],
     ) -> np.array:
-        """ performs QR factorization steps and formats result within the returned matrix """
+        """performs QR factorization steps and formats result within the returned matrix"""
         # QR fatorization
         # NOTE: forcing the diagonal elements of Q to be positive
         #       ensures that the determinant is 1, not -1, and is
@@ -60,7 +60,7 @@ class QRFactorization(LeastSq):
         ordinates: Tuple[List[float], List[float], List[float]],
         weights: Optional[List[float]] = None,
     ) -> Tuple[List[List[float]], List[List[float]]]:
-        """ stacks and weights absolutes/ordinates """
+        """stacks and weights absolutes/ordinates"""
         weighted_absolutes = self.svd.get_weighted_values(
             values=absolutes, weights=weights
         )
@@ -85,7 +85,7 @@ class QRFactorization(LeastSq):
         values: Tuple[List[float], List[float], List[float]],
         weights: Optional[List[float]] = None,
     ) -> List[List[float]]:
-        """ Applies least squares weights in two dimensions(X and Y)"""
+        """Applies least squares weights in two dimensions(X and Y)"""
         if weights is None:
             return values
         weights = np.sqrt(weights)
