@@ -314,7 +314,8 @@ def obsrio_tenhertz(
     """Filter 10Hz miniseed U,V,W to 1Hz legacy H,E,Z."""
     starttime, endtime = get_realtime_interval(realtime_interval)
     controller = Controller(
-        inputFactory=input_factory or get_miniseed_factory(),
+        inputFactory=input_factory
+        or get_miniseed_factory(convert_channels=("U", "V", "W")),
         inputInterval="tenhertz",
         outputFactory=output_factory or get_edge_factory(),
         outputInterval="second",
