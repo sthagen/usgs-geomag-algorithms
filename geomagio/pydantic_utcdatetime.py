@@ -42,7 +42,7 @@ class UTCDateTimeError(PydanticValueError):
 
 
 def format_utcdatetime(o: UTCDateTime) -> str:
-    return o.isoformat()
+    return o.strftime("%Y-%m-%dT%H:%M:%S.%fZ")
 
 
 def parse_utcdatetime(
