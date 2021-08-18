@@ -5,9 +5,7 @@ import numpy
 from ..algorithm import (
     AdjustedAlgorithm,
     AverageAlgorithm,
-    DeltaFAlgorithm,
     SqDistAlgorithm,
-    XYZAlgorithm,
 )
 from ..Controller import Controller, get_realtime_interval
 from ..TimeseriesFactory import TimeseriesFactory
@@ -106,88 +104,6 @@ def average(
         starttime=starttime,
         endtime=endtime,
         output_channels=(output_channel or input_channel,),
-        realtime=realtime_interval,
-        update_limit=10,
-    )
-
-
-def deltaf(
-    observatory: str,
-    input_factory: Optional[TimeseriesFactory] = None,
-    interval: str = "second",
-    output_factory: Optional[TimeseriesFactory] = None,
-    deltaf_from="obs",
-    realtime_interval: int = 600,
-):
-    """Run Delta-F algorithm.
-
-    Parameters
-    ----------
-    observatory: observatory to calculate
-    input_factory: where to read, should be configured with data_type and interval
-    output_factory: where to write, should be configured with data_type and interval
-    deltaf_from: one of {"obs", "mag", "geo"}
-    realtime_interval: window in seconds
-
-    Uses update_limit=10.
-    """
-    starttime, endtime = get_realtime_interval(realtime_interval)
-    controller = Controller(
-        algorithm=DeltaFAlgorithm(informat=deltaf_from),
-        inputFactory=input_factory or get_edge_factory(),
-        inputInterval=interval,
-        outputFactory=output_factory or get_edge_factory(),
-        outputInterval=interval,
-    )
-    controller.run_as_update(
-        observatory=(observatory,),
-        output_observatory=(observatory,),
-        starttime=starttime,
-        endtime=endtime,
-        output_channels=("G",),
-        realtime=realtime_interval,
-        update_limit=10,
-    )
-
-
-def rotate(
-    observatory: str,
-    input_factory: Optional[TimeseriesFactory] = None,
-    interval: str = "second",
-    output_channels=("X", "Y"),
-    output_factory: Optional[TimeseriesFactory] = None,
-    realtime_interval: int = 600,
-    xyz_from="obs",
-    xyz_to="geo",
-):
-    """Run XYZ rotation algorithm.
-
-    Parameters
-    ----------
-    observatory: observatory to calculate
-    input_factory: where to read, should be configured with data_type and interval
-    output_channels: which channels to write
-    output_factory: where to write, should be configured with data_type and interval
-    realtime_interval: window in seconds
-    xyz_from: one of {"obs", "mag", "geo"}
-    xyz_to: one of {"obs", "obsd", "mag", "geo"}
-
-    Uses update_limit=10.
-    """
-    starttime, endtime = get_realtime_interval(realtime_interval)
-    controller = Controller(
-        algorithm=XYZAlgorithm(informat=xyz_from, outformat=xyz_to),
-        inputFactory=input_factory or get_edge_factory(),
-        inputInterval=interval,
-        outputFactory=output_factory or get_edge_factory(),
-        outputInterval=interval,
-    )
-    controller.run_as_update(
-        observatory=(observatory,),
-        output_observatory=(observatory,),
-        starttime=starttime,
-        endtime=endtime,
-        output_channels=output_channels,
         realtime=realtime_interval,
         update_limit=10,
     )
