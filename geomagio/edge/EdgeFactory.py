@@ -91,7 +91,6 @@ class EdgeFactory(TimeseriesFactory):
     ):
         TimeseriesFactory.__init__(self, observatory, channels, type, interval)
         self.client = earthworm.Client(host, port)
-
         self.observatoryMetadata = observatoryMetadata or ObservatoryMetadata()
         self.tag = tag
         self.locationCode = locationCode
@@ -111,6 +110,7 @@ class EdgeFactory(TimeseriesFactory):
         channels=None,
         type=None,
         interval=None,
+        add_empty_channels: bool = True,
     ):
         """Get timeseries data
 
@@ -128,6 +128,8 @@ class EdgeFactory(TimeseriesFactory):
             data type.
         interval: {'day', 'hour', 'minute', 'second', 'tenhertz'}
             data interval.
+        add_empty_channels
+            if True, returns channels without data as empty traces
 
         Returns
         -------
@@ -159,8 +161,16 @@ class EdgeFactory(TimeseriesFactory):
             timeseries = obspy.core.Stream()
             for channel in channels:
                 data = self._get_timeseries(
-                    starttime, endtime, observatory, channel, type, interval
+                    starttime,
+                    endtime,
+                    observatory,
+                    channel,
+                    type,
+                    interval,
+                    add_empty_channels,
                 )
+                if len(data) == 0:
+                    continue
                 timeseries += data
         finally:
             # restore stdout
@@ -278,7 +288,16 @@ class EdgeFactory(TimeseriesFactory):
             trace.data = numpy.ma.masked_invalid(trace.data)
         return stream
 
-    def _get_timeseries(self, starttime, endtime, observatory, channel, type, interval):
+    def _get_timeseries(
+        self,
+        starttime,
+        endtime,
+        observatory,
+        channel,
+        type,
+        interval,
+        add_empty_channels: bool = True,
+    ):
         """get timeseries data for a single channel.
 
         Parameters
@@ -295,6 +314,8 @@ class EdgeFactory(TimeseriesFactory):
             data type {definitive, quasi-definitive, variation}
         interval : str
             interval length {minute, second}
+        add_empty_channels
+            if True, returns channels without data as empty traces
 
         Returns
         -------
@@ -325,7 +346,7 @@ class EdgeFactory(TimeseriesFactory):
         for trace in data:
             trace.data = trace.data.astype("i4")
         data.merge()
-        if data.count() == 0:
+        if data.count() == 0 and add_empty_channels:
             data += TimeseriesUtility.create_empty_trace(
                 starttime,
                 endtime,

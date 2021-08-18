@@ -9,6 +9,7 @@ from . import TimeseriesUtility
 from . import Util
 
 from .Controller import Controller
+from .DerivedTimeseriesFactory import DerivedTimeseriesFactory
 from .ObservatoryMetadata import ObservatoryMetadata
 from .PlotTimeseriesFactory import PlotTimeseriesFactory
 from .TimeseriesFactory import TimeseriesFactory
@@ -18,6 +19,7 @@ __all__ = [
     "ChannelConverter",
     "Controller",
     "DeltaFAlgorithm",
+    "DerivedTimeseriesFactory",
     "ObservatoryMetadata",
     "PlotTimeseriesFactory",
     "StreamConverter",

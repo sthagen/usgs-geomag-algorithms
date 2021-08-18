@@ -97,6 +97,7 @@ class MiniSeedFactory(TimeseriesFactory):
         channels=None,
         type=None,
         interval=None,
+        add_empty_channels: bool = True,
     ):
         """Get timeseries data
 
@@ -114,6 +115,8 @@ class MiniSeedFactory(TimeseriesFactory):
             data type.
         interval: {'day', 'hour', 'minute', 'second', 'tenhertz'}
             data interval.
+        add_empty_channels
+            if True, returns channels without data as empty traces
 
         Returns
         -------
@@ -150,8 +153,16 @@ class MiniSeedFactory(TimeseriesFactory):
                     )
                 else:
                     data = self._get_timeseries(
-                        starttime, endtime, observatory, channel, type, interval
+                        starttime,
+                        endtime,
+                        observatory,
+                        channel,
+                        type,
+                        interval,
+                        add_empty_channels,
                     )
+                    if len(data) == 0:
+                        continue
                 timeseries += data
         finally:
             # restore stdout
@@ -296,7 +307,16 @@ class MiniSeedFactory(TimeseriesFactory):
             trace.data = numpy.ma.masked_invalid(trace.data)
         return stream
 
-    def _get_timeseries(self, starttime, endtime, observatory, channel, type, interval):
+    def _get_timeseries(
+        self,
+        starttime,
+        endtime,
+        observatory,
+        channel,
+        type,
+        interval,
+        add_empty_channels: bool = True,
+    ):
         """get timeseries data for a single channel.
 
         Parameters
@@ -313,6 +333,8 @@ class MiniSeedFactory(TimeseriesFactory):
             data type {definitive, quasi-definitive, variation}
         interval : str
             interval length {'day', 'hour', 'minute', 'second', 'tenhertz'}
+        add_empty_channels
+            if True, returns channels without data as empty traces
 
         Returns
         -------
@@ -330,7 +352,7 @@ class MiniSeedFactory(TimeseriesFactory):
             sncl.network, sncl.station, sncl.location, sncl.channel, starttime, endtime
         )
         data.merge()
-        if data.count() == 0:
+        if data.count() == 0 and add_empty_channels:
             data += TimeseriesUtility.create_empty_trace(
                 starttime,
                 endtime,

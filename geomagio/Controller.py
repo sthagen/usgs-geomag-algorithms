@@ -8,6 +8,7 @@ from typing import List, Optional, Tuple, Union
 from obspy.core import Stream, UTCDateTime
 
 from .algorithm import Algorithm, algorithms, AlgorithmException
+from .DerivedTimeseriesFactory import DerivedTimeseriesFactory
 from .PlotTimeseriesFactory import PlotTimeseriesFactory
 from .StreamTimeseriesFactory import StreamTimeseriesFactory
 from . import TimeseriesUtility, Util
@@ -543,7 +544,7 @@ def get_input_factory(args):
             input_factory = StreamTimeseriesFactory(
                 factory=input_factory, stream=input_stream
             )
-    return input_factory
+    return DerivedTimeseriesFactory(input_factory)
 
 
 def get_output_factory(args):

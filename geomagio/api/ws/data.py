@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, Query
 from obspy import UTCDateTime, Stream
 from starlette.responses import Response
 
-from ... import TimeseriesFactory, TimeseriesUtility
+from ... import DerivedTimeseriesFactory, TimeseriesFactory, TimeseriesUtility
 from ...edge import EdgeFactory, MiniSeedFactory
 from ...iaga2002 import IAGA2002Writer
 from ...imfjson import IMFJSONWriter
@@ -35,15 +35,16 @@ def get_data_factory(
         SamplingPeriod.HOUR,
         SamplingPeriod.DAY,
     ]:
-        return MiniSeedFactory(
+        factory = MiniSeedFactory(
             host=host, port=int(os.getenv("DATA_MINISEED_PORT", "2061"))
         )
     elif sampling_period in [SamplingPeriod.SECOND, SamplingPeriod.MINUTE]:
-        return EdgeFactory(
+        factory = EdgeFactory(
             host=host, port=int(os.getenv("DATA_EARTHWORM_PORT", "2060"))
         )
     else:
         return None
+    return DerivedTimeseriesFactory(factory)
 
 
 def get_data_query(

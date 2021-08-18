@@ -29,3 +29,28 @@ def dont_get_timeseries():
         "H",
         "Expect timeseries stats channel to be equal to H",
     )
+
+
+def test_add_empty_channels():
+    """edge_test.EdgeFactory_test.test_add_empty_channels()"""
+    edge_factory = EdgeFactory(host="TODO", port="TODO")
+    timeseries = edge_factory.get_timeseries(
+        UTCDateTime(2015, 3, 1, 0, 0, 0),
+        UTCDateTime(2015, 3, 1, 1, 0, 0),
+        "BOU",
+        ("H"),
+        "variation",
+        "minute",
+        add_empty_channels=False,
+    )
+    assert len(timeseries) == 0
+    timeseries = edge_factory.get_timeseries(
+        UTCDateTime(2015, 3, 1, 0, 0, 0),
+        UTCDateTime(2015, 3, 1, 1, 0, 0),
+        "BOU",
+        ("H"),
+        "variation",
+        "minute",
+        add_empty_channels=True,  # default
+    )
+    assert len(timeseries) == 1
