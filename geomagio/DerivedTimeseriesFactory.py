@@ -29,15 +29,15 @@ class DerivedTimeseriesFactory(TimeseriesFactory):
         interval: str,
         add_empty_channels: bool = True,
         derive_missing: bool = True,
-        data_type: Optional[str] = None,
+        type: Optional[str] = None,
     ) -> Stream:
-        data_type = data_type or self.type
+        type = type or self.type
         timeseries = self.factory.get_timeseries(
             starttime=starttime,
             endtime=endtime,
             observatory=observatory,
             channels=channels,
-            type=data_type,
+            type=type,
             interval=interval,
             add_empty_channels=False,
         )
@@ -48,7 +48,7 @@ class DerivedTimeseriesFactory(TimeseriesFactory):
                 endtime=endtime,
                 observatory=observatory,
                 channels=channels,
-                data_type=data_type,
+                data_type=type,
                 interval=interval,
                 timeseries=timeseries,
             )
@@ -59,7 +59,7 @@ class DerivedTimeseriesFactory(TimeseriesFactory):
                 endtime=endtime,
                 observatory=observatory,
                 channels=channels,
-                data_type=data_type,
+                data_type=type,
                 interval=interval,
                 location=timeseries[0].stats.location,
             )
