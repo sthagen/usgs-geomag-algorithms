@@ -105,5 +105,5 @@ def get_derived_timeseries(
             interval=interval,
             add_empty_channels=False,
             derive_missing=True,
-            data_type=data_type,
+            type=data_type,
         )
