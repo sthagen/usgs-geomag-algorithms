@@ -1,5 +1,6 @@
 """Abstract Timeseries Factory Interface."""
 from __future__ import absolute_import, print_function
+from typing import List
 
 import numpy
 import obspy.core
@@ -296,6 +297,32 @@ class TimeseriesFactory(object):
             list of channels to store.
         """
         raise NotImplementedError('"write_file" not implemented')
+
+    def _get_empty_channels(
+        self,
+        starttime: obspy.core.UTCDateTime,
+        endtime: obspy.core.UTCDateTime,
+        observatory: str,
+        channels: List[str],
+        data_type: str,
+        interval: str,
+        location: str = "",
+    ) -> obspy.core.Stream:
+        """creates stream with empty channels"""
+        output_stream = obspy.core.Stream()
+        for channel in channels:
+            output_stream += TimeseriesUtility.create_empty_trace(
+                starttime=starttime,
+                endtime=endtime,
+                observatory=observatory,
+                channel=channel,
+                type=data_type,
+                interval=interval,
+                network="NT",
+                station=observatory,
+                location=location,
+            )
+        return output_stream
 
     def _get_file_from_url(self, url):
         """Get a file for writing.

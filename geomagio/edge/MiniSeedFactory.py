@@ -11,6 +11,7 @@ Edge is the USGS earthquake hazard centers replacement for earthworm.
 from __future__ import absolute_import
 
 import sys
+from typing import List, Optional
 import numpy
 import numpy.ma
 
@@ -23,7 +24,7 @@ from ..TimeseriesFactory import TimeseriesFactory
 from ..TimeseriesFactoryException import TimeseriesFactoryException
 from ..ObservatoryMetadata import ObservatoryMetadata
 from .MiniSeedInputClient import MiniSeedInputClient
-from .SNCL import SNCL
+from .SNCL import SNCL, get_location
 
 
 class MiniSeedFactory(TimeseriesFactory):
@@ -307,6 +308,42 @@ class MiniSeedFactory(TimeseriesFactory):
             trace.data = numpy.ma.masked_invalid(trace.data)
         return stream
 
+    def _get_empty_channels(
+        self,
+        starttime: obspy.core.UTCDateTime,
+        endtime: obspy.core.UTCDateTime,
+        observatory: str,
+        channels: List[str],
+        data_type: str,
+        interval: str,
+        location: Optional[str] = None,
+    ) -> obspy.core.Stream:
+        """creates stream with empty channels"""
+        output_stream = obspy.core.Stream()
+        for channel in channels:
+            trace = super()._get_empty_channels(
+                starttime=starttime,
+                endtime=endtime,
+                observatory=observatory,
+                channels=(channel,),
+                data_type=data_type,
+                interval=interval,
+                location=location
+                or get_location(
+                    element=channel,
+                    data_type=data_type,
+                ),
+            )
+            self._set_metadata(
+                stream=trace,
+                observatory=observatory,
+                channel=channel,
+                type=data_type,
+                interval=interval,
+            )
+            output_stream += trace
+        return output_stream
+
     def _get_timeseries(
         self,
         starttime,
@@ -352,19 +389,17 @@ class MiniSeedFactory(TimeseriesFactory):
             sncl.network, sncl.station, sncl.location, sncl.channel, starttime, endtime
         )
         data.merge()
-        if data.count() == 0 and add_empty_channels:
-            data += TimeseriesUtility.create_empty_trace(
-                starttime,
-                endtime,
-                observatory,
-                channel,
-                type,
-                interval,
-                sncl.network,
-                sncl.station,
-                sncl.location,
-            )
         self._set_metadata(data, observatory, channel, type, interval)
+        if data.count() == 0 and add_empty_channels:
+            data += self._get_empty_channels(
+                starttime=starttime,
+                endtime=endtime,
+                observatory=observatory,
+                channels=(channel,),
+                data_type=type,
+                interval=interval,
+                location=sncl.location,
+            )
         return data
 
     def _convert_timeseries(
