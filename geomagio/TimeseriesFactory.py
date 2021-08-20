@@ -1,6 +1,5 @@
 """Abstract Timeseries Factory Interface."""
 from __future__ import absolute_import, print_function
-from typing import List
 
 import numpy
 import obspy.core
@@ -298,31 +297,37 @@ class TimeseriesFactory(object):
         """
         raise NotImplementedError('"write_file" not implemented')
 
-    def _get_empty_channels(
+    def _get_empty_trace(
         self,
         starttime: obspy.core.UTCDateTime,
         endtime: obspy.core.UTCDateTime,
         observatory: str,
-        channels: List[str],
+        channel: str,
         data_type: str,
         interval: str,
+        network: str = "NT",
         location: str = "",
-    ) -> obspy.core.Stream:
-        """creates stream with empty channels"""
-        output_stream = obspy.core.Stream()
-        for channel in channels:
-            output_stream += TimeseriesUtility.create_empty_trace(
-                starttime=starttime,
-                endtime=endtime,
-                observatory=observatory,
-                channel=channel,
-                type=data_type,
-                interval=interval,
-                network="NT",
-                station=observatory,
-                location=location,
-            )
-        return output_stream
+    ) -> obspy.core.Trace:
+        """creates empty trace"""
+        trace = TimeseriesUtility.create_empty_trace(
+            starttime=starttime,
+            endtime=endtime,
+            observatory=observatory,
+            channel=channel,
+            type=data_type,
+            interval=interval,
+            station=observatory,
+            network=network,
+            location=location,
+        )
+        self._set_metadata(
+            stream=[trace],
+            observatory=observatory,
+            channel=channel,
+            type=data_type,
+            interval=interval,
+        )
+        return trace
 
     def _get_file_from_url(self, url):
         """Get a file for writing.
@@ -532,3 +537,28 @@ class TimeseriesFactory(object):
         else:
             raise TimeseriesFactoryException('Unsupported type "%s"' % type)
         return type_name
+
+    def _set_metadata(
+        self,
+        stream: obspy.core.Trace,
+        observatory: str,
+        channel: str,
+        type: str,
+        interval: str,
+    ):
+        """set metadata for a given stream/channel
+        Parameters
+        ----------
+        observatory
+            observatory code
+        channel
+            edge channel code {MVH, MVE, MVD, ...}
+        type
+            data type {definitive, quasi-definitive, variation}
+        interval
+            interval length {minute, second}
+        """
+        for trace in stream:
+            self.observatoryMetadata.set_metadata(
+                trace.stats, observatory, channel, type, interval
+            )

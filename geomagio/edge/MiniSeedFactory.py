@@ -11,7 +11,7 @@ Edge is the USGS earthquake hazard centers replacement for earthworm.
 from __future__ import absolute_import
 
 import sys
-from typing import List, Optional
+from typing import Optional
 import numpy
 import numpy.ma
 
@@ -308,42 +308,6 @@ class MiniSeedFactory(TimeseriesFactory):
             trace.data = numpy.ma.masked_invalid(trace.data)
         return stream
 
-    def _get_empty_channels(
-        self,
-        starttime: obspy.core.UTCDateTime,
-        endtime: obspy.core.UTCDateTime,
-        observatory: str,
-        channels: List[str],
-        data_type: str,
-        interval: str,
-        location: Optional[str] = None,
-    ) -> obspy.core.Stream:
-        """creates stream with empty channels"""
-        output_stream = obspy.core.Stream()
-        for channel in channels:
-            trace = super()._get_empty_channels(
-                starttime=starttime,
-                endtime=endtime,
-                observatory=observatory,
-                channels=(channel,),
-                data_type=data_type,
-                interval=interval,
-                location=location
-                or get_location(
-                    element=channel,
-                    data_type=data_type,
-                ),
-            )
-            self._set_metadata(
-                stream=trace,
-                observatory=observatory,
-                channel=channel,
-                type=data_type,
-                interval=interval,
-            )
-            output_stream += trace
-        return output_stream
-
     def _get_timeseries(
         self,
         starttime,
@@ -391,13 +355,14 @@ class MiniSeedFactory(TimeseriesFactory):
         data.merge()
         self._set_metadata(data, observatory, channel, type, interval)
         if data.count() == 0 and add_empty_channels:
-            data += self._get_empty_channels(
+            data += self._get_empty_trace(
                 starttime=starttime,
                 endtime=endtime,
                 observatory=observatory,
-                channels=(channel,),
+                channel=channel,
                 data_type=type,
                 interval=interval,
+                network=sncl.network,
                 location=sncl.location,
             )
         return data
@@ -535,22 +500,3 @@ class MiniSeedFactory(TimeseriesFactory):
             trace.stats.channel = sncl.channel
         # finally, send to edge
         self.write_client.send(to_write)
-
-    def _set_metadata(self, stream, observatory, channel, type, interval):
-        """set metadata for a given stream/channel
-        Parameters
-        ----------
-        observatory : str
-            observatory code
-        channel : str
-            edge channel code {MVH, MVE, MVD, ...}
-        type : str
-            data type {definitive, quasi-definitive, variation}
-        interval : str
-            interval length {'day', 'hour', 'minute', 'second', 'tenhertz'}
-        """
-
-        for trace in stream:
-            self.observatoryMetadata.set_metadata(
-                trace.stats, observatory, channel, type, interval
-            )

@@ -54,14 +54,15 @@ class DerivedTimeseriesFactory(TimeseriesFactory):
             )
         missing = get_missing(timeseries, channels)
         if missing and add_empty_channels:
-            timeseries += self.factory._get_empty_channels(
-                starttime=starttime,
-                endtime=endtime,
-                observatory=observatory,
-                channels=channels,
-                data_type=type,
-                interval=interval,
-            )
+            for channel in missing:
+                timeseries += self.factory._get_empty_trace(
+                    starttime=starttime,
+                    endtime=endtime,
+                    observatory=observatory,
+                    channel=channel,
+                    data_type=type,
+                    interval=interval,
+                )
         # file-based factories return all channels found in file
         timeseries = Stream([t for t in timeseries if t.stats.channel in channels])
         return timeseries
