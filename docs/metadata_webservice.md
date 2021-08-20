@@ -27,13 +27,13 @@ exit
 ```
 
 ```
-pipenv run alembic upgrade head
+poetry run alembic upgrade head
 ```
 
 ### Add some testing data (depends on DATABASE_URL environment set above).
 
 ```
-pipenv run python test_metadata.py
+poetry run python test_metadata.py
 ```
 
 ## Set up OpenID application in code.usgs.gov.
@@ -68,5 +68,5 @@ export SECRET_SALT=salt
 - Run app
 
 ```
-pipenv run uvicorn geomagio.api:app
+poetry run uvicorn geomagio.api:app
 ```
