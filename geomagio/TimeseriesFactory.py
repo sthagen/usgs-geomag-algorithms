@@ -551,4 +551,4 @@ class TimeseriesFactory(object):
         interval
             interval length {minute, second}
         """
-        return stream
+        pass
