@@ -320,13 +320,6 @@ class TimeseriesFactory(object):
             network=network,
             location=location,
         )
-        self._set_metadata(
-            stream=[trace],
-            observatory=observatory,
-            channel=channel,
-            type=data_type,
-            interval=interval,
-        )
         return trace
 
     def _get_file_from_url(self, url):
@@ -558,7 +551,4 @@ class TimeseriesFactory(object):
         interval
             interval length {minute, second}
         """
-        for trace in stream:
-            self.observatoryMetadata.set_metadata(
-                trace.stats, observatory, channel, type, interval
-            )
+        return stream

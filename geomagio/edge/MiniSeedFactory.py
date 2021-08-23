@@ -11,7 +11,6 @@ Edge is the USGS earthquake hazard centers replacement for earthworm.
 from __future__ import absolute_import
 
 import sys
-from typing import Optional
 import numpy
 import numpy.ma
 
@@ -24,7 +23,7 @@ from ..TimeseriesFactory import TimeseriesFactory
 from ..TimeseriesFactoryException import TimeseriesFactoryException
 from ..ObservatoryMetadata import ObservatoryMetadata
 from .MiniSeedInputClient import MiniSeedInputClient
-from .SNCL import SNCL, get_location
+from .SNCL import SNCL
 
 
 class MiniSeedFactory(TimeseriesFactory):
@@ -353,7 +352,6 @@ class MiniSeedFactory(TimeseriesFactory):
             sncl.network, sncl.station, sncl.location, sncl.channel, starttime, endtime
         )
         data.merge()
-        self._set_metadata(data, observatory, channel, type, interval)
         if data.count() == 0 and add_empty_channels:
             data += self._get_empty_trace(
                 starttime=starttime,
@@ -365,6 +363,7 @@ class MiniSeedFactory(TimeseriesFactory):
                 network=sncl.network,
                 location=sncl.location,
             )
+        self._set_metadata(data, observatory, channel, type, interval)
         return data
 
     def _convert_timeseries(
@@ -500,3 +499,28 @@ class MiniSeedFactory(TimeseriesFactory):
             trace.stats.channel = sncl.channel
         # finally, send to edge
         self.write_client.send(to_write)
+
+    def _set_metadata(
+        self,
+        stream: obspy.core.Trace,
+        observatory: str,
+        channel: str,
+        type: str,
+        interval: str,
+    ):
+        """set metadata for a given stream/channel
+        Parameters
+        ----------
+        observatory
+            observatory code
+        channel
+            edge channel code {MVH, MVE, MVD, ...}
+        type
+            data type {definitive, quasi-definitive, variation}
+        interval
+            interval length {minute, second}
+        """
+        for trace in stream:
+            self.observatoryMetadata.set_metadata(
+                trace.stats, observatory, channel, type, interval
+            )

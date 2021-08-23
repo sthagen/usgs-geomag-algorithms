@@ -9,7 +9,6 @@ to take advantage of it's newer realtime abilities.
 Edge is the USGS earthquake hazard centers replacement for earthworm.
 """
 from __future__ import absolute_import
-from typing import Optional
 
 import sys
 import numpy
@@ -23,7 +22,7 @@ from ..TimeseriesFactory import TimeseriesFactory
 from ..TimeseriesFactoryException import TimeseriesFactoryException
 from ..ObservatoryMetadata import ObservatoryMetadata
 from .RawInputClient import RawInputClient
-from .LegacySNCL import LegacySNCL, get_location
+from .LegacySNCL import LegacySNCL
 
 
 class EdgeFactory(TimeseriesFactory):
@@ -347,7 +346,6 @@ class EdgeFactory(TimeseriesFactory):
         for trace in data:
             trace.data = trace.data.astype("i4")
         data.merge()
-        self._set_metadata(data, observatory, channel, type, interval)
         if data.count() == 0 and add_empty_channels:
             data += self._get_empty_trace(
                 starttime=starttime,
@@ -359,6 +357,7 @@ class EdgeFactory(TimeseriesFactory):
                 network=sncl.network,
                 location=sncl.location,
             )
+        self._set_metadata(data, observatory, channel, type, interval)
         return data
 
     def _post_process(self, timeseries, starttime, endtime, channels):
@@ -468,3 +467,28 @@ class EdgeFactory(TimeseriesFactory):
         if self.forceout:
             ric.forceout()
         ric.close()
+
+    def _set_metadata(
+        self,
+        stream: obspy.core.Trace,
+        observatory: str,
+        channel: str,
+        type: str,
+        interval: str,
+    ):
+        """set metadata for a given stream/channel
+        Parameters
+        ----------
+        observatory
+            observatory code
+        channel
+            edge channel code {MVH, MVE, MVD, ...}
+        type
+            data type {definitive, quasi-definitive, variation}
+        interval
+            interval length {minute, second}
+        """
+        for trace in stream:
+            self.observatoryMetadata.set_metadata(
+                trace.stats, observatory, channel, type, interval
+            )
