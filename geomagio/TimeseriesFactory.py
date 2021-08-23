@@ -533,7 +533,7 @@ class TimeseriesFactory(object):
 
     def _set_metadata(
         self,
-        stream: obspy.core.Trace,
+        stream: obspy.core.Stream,
         observatory: str,
         channel: str,
         type: str,

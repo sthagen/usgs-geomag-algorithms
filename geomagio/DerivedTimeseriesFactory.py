@@ -63,6 +63,8 @@ class DerivedTimeseriesFactory(TimeseriesFactory):
                     data_type=type,
                     interval=interval,
                 )
+        # file-based factories return all channels found in file
+        timeseries = Stream([t for t in timeseries if t.stats.channel in channels])
         for channel in channels:
             self.factory._set_metadata(
                 stream=timeseries.select(channel=channel),
@@ -71,8 +73,6 @@ class DerivedTimeseriesFactory(TimeseriesFactory):
                 type=type,
                 interval=interval,
             )
-        # file-based factories return all channels found in file
-        timeseries = Stream([t for t in timeseries if t.stats.channel in channels])
         return timeseries
 
     def _get_derived_channels(
