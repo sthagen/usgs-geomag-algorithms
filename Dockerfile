@@ -19,7 +19,7 @@ USER root
 COPY pyproject.toml poetry.lock /geomag-algorithms/
 RUN cd /geomag-algorithms \
     # install into system python
-    && poetry export -o requirements.txt --without-hashes \
+    && poetry export -o requirements.txt --dev --without-hashes \
     # only install dependencies, not project
     && pip install -r requirements.txt
 
