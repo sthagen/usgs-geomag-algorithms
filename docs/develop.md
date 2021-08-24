@@ -22,16 +22,16 @@ https://guides.github.com/activities/forking/
 
 ## Install Dependencies
 
-- Using `pipenv`
-  https://pipenv.kennethreitz.org/en/latest/
+- Using `poetry`
+  https://github.com/python-poetry/poetry
 
   > `pyenv` is also useful for installing specific/multiple versions of python
   >
   > - https://github.com/pyenv/pyenv
   > - https://github.com/pyenv-win/pyenv-win
 
-      pipenv install --dev
-      pipenv shell
+      poetry install
+      poetry shell
 
 - Or, using Miniconda/Anaconda
   https://conda.io/miniconda.html
