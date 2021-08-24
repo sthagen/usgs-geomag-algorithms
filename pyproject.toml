@@ -26,6 +26,7 @@ python = "^3.7,<3.10"
 numpy = "^1.21.1"
 obspy = "^1.2.2"
 openpyxl = "^3.0.7"
+pycurl = {version = "^7.44.1", optional = true}
 pydantic = "^1.8.2"
 requests = "^2.26.0"
 scipy = "^1.7.1"
@@ -56,6 +57,10 @@ openpyxl-stubs = "^0.1.19"
 sqlalchemy-stubs = "^0.4"
 types-python-dateutil = "^0.1.6"
 types-requests = "^2.25.6"
+
+
+[tool.poetry.extras]
+pycurl = ["pycurl"]
 
 
 [tool.poetry.scripts]

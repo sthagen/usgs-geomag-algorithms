@@ -19,15 +19,14 @@ USER root
 COPY pyproject.toml poetry.lock /geomag-algorithms/
 RUN cd /geomag-algorithms \
     # install into system python
-    && poetry config virtualenvs.create false \
+    && poetry export -o requirements.txt --without-hashes \
     # only install dependencies, not project
-    && poetry install --no-root
+    && pip install -r requirements.txt
 
 # install rest of library separate from dependencies
 COPY . /geomag-algorithms
 RUN cd /geomag-algorithms \
-    # now install project to install scripts
-    && poetry install \
+    && pip install . \
     # add data directory owned by usgs-user
     && mkdir -p /data \
     && chown -R usgs-user:usgs-user /data
