@@ -353,16 +353,15 @@ class MiniSeedFactory(TimeseriesFactory):
         )
         data.merge()
         if data.count() == 0 and add_empty_channels:
-            data += TimeseriesUtility.create_empty_trace(
-                starttime,
-                endtime,
-                observatory,
-                channel,
-                type,
-                interval,
-                sncl.network,
-                sncl.station,
-                sncl.location,
+            data += self._get_empty_trace(
+                starttime=starttime,
+                endtime=endtime,
+                observatory=observatory,
+                channel=channel,
+                data_type=type,
+                interval=interval,
+                network=sncl.network,
+                location=sncl.location,
             )
         self._set_metadata(data, observatory, channel, type, interval)
         return data
@@ -501,20 +500,26 @@ class MiniSeedFactory(TimeseriesFactory):
         # finally, send to edge
         self.write_client.send(to_write)
 
-    def _set_metadata(self, stream, observatory, channel, type, interval):
+    def _set_metadata(
+        self,
+        stream: obspy.core.Stream,
+        observatory: str,
+        channel: str,
+        type: str,
+        interval: str,
+    ):
         """set metadata for a given stream/channel
         Parameters
         ----------
-        observatory : str
+        observatory
             observatory code
-        channel : str
+        channel
             edge channel code {MVH, MVE, MVD, ...}
-        type : str
+        type
             data type {definitive, quasi-definitive, variation}
-        interval : str
-            interval length {'day', 'hour', 'minute', 'second', 'tenhertz'}
+        interval
+            interval length {minute, second}
         """
-
         for trace in stream:
             self.observatoryMetadata.set_metadata(
                 trace.stats, observatory, channel, type, interval

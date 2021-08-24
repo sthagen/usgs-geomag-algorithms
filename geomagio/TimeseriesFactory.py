@@ -297,6 +297,31 @@ class TimeseriesFactory(object):
         """
         raise NotImplementedError('"write_file" not implemented')
 
+    def _get_empty_trace(
+        self,
+        starttime: obspy.core.UTCDateTime,
+        endtime: obspy.core.UTCDateTime,
+        observatory: str,
+        channel: str,
+        data_type: str,
+        interval: str,
+        network: str = "NT",
+        location: str = "",
+    ) -> obspy.core.Trace:
+        """creates empty trace"""
+        trace = TimeseriesUtility.create_empty_trace(
+            starttime=starttime,
+            endtime=endtime,
+            observatory=observatory,
+            channel=channel,
+            type=data_type,
+            interval=interval,
+            station=observatory,
+            network=network,
+            location=location,
+        )
+        return trace
+
     def _get_file_from_url(self, url):
         """Get a file for writing.
 
@@ -505,3 +530,25 @@ class TimeseriesFactory(object):
         else:
             raise TimeseriesFactoryException('Unsupported type "%s"' % type)
         return type_name
+
+    def _set_metadata(
+        self,
+        stream: obspy.core.Stream,
+        observatory: str,
+        channel: str,
+        type: str,
+        interval: str,
+    ):
+        """set metadata for a given stream/channel
+        Parameters
+        ----------
+        observatory
+            observatory code
+        channel
+            edge channel code {MVH, MVE, MVD, ...}
+        type
+            data type {definitive, quasi-definitive, variation}
+        interval
+            interval length {minute, second}
+        """
+        pass

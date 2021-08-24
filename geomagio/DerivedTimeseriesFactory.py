@@ -1,6 +1,6 @@
 from typing import List, Optional
 
-from obspy import Stream, UTCDateTime
+from obspy import Stream, Trace, UTCDateTime
 
 from .algorithm import Algorithm, DeltaFAlgorithm, XYZAlgorithm
 from .TimeseriesFactory import TimeseriesFactory, TimeseriesUtility
@@ -54,44 +54,26 @@ class DerivedTimeseriesFactory(TimeseriesFactory):
             )
         missing = get_missing(timeseries, channels)
         if missing and add_empty_channels:
-            timeseries += self._get_empty_channels(
-                starttime=starttime,
-                endtime=endtime,
-                observatory=observatory,
-                channels=channels,
-                data_type=type,
-                interval=interval,
-                location=timeseries[0].stats.location,
-            )
+            for channel in missing:
+                timeseries += self._get_empty_trace(
+                    starttime=starttime,
+                    endtime=endtime,
+                    observatory=observatory,
+                    channel=channel,
+                    data_type=type,
+                    interval=interval,
+                )
         # file-based factories return all channels found in file
         timeseries = Stream([t for t in timeseries if t.stats.channel in channels])
-        return timeseries
-
-    def _get_empty_channels(
-        self,
-        starttime: UTCDateTime,
-        endtime: UTCDateTime,
-        observatory: str,
-        channels: List[str],
-        data_type: str,
-        interval: str,
-        location: str,
-    ) -> Stream:
-        """create empty channels"""
-        output_stream = Stream()
         for channel in channels:
-            output_stream += TimeseriesUtility.create_empty_trace(
-                starttime=starttime,
-                endtime=endtime,
+            self._set_metadata(
+                stream=timeseries.select(channel=channel),
                 observatory=observatory,
                 channel=channel,
-                type=data_type,
+                type=type,
                 interval=interval,
-                network="NT",
-                station=observatory,
-                location=location,
             )
-        return output_stream
+        return timeseries
 
     def _get_derived_channels(
         self,
@@ -177,6 +159,46 @@ class DerivedTimeseriesFactory(TimeseriesFactory):
                     timeseries=input_timeseries
                 )
         return Stream()
+
+    def _get_empty_trace(
+        self,
+        starttime: UTCDateTime,
+        endtime: UTCDateTime,
+        observatory: str,
+        channel: str,
+        data_type: str,
+        interval: str,
+        network: str = "NT",
+        location: str = "",
+    ) -> Trace:
+        """creates empty trace"""
+        return self.factory._get_empty_trace(
+            starttime,
+            endtime,
+            observatory,
+            channel,
+            data_type,
+            interval,
+            network=network,
+            location=location,
+        )
+
+    def _set_metadata(
+        self, stream: Stream, observatory: str, channel: str, type: str, interval: str
+    ):
+        """set metadata for a given stream/channel
+        Parameters
+        ----------
+        observatory
+            observatory code
+        channel
+            edge channel code {MVH, MVE, MVD, ...}
+        type
+            data type {definitive, quasi-definitive, variation}
+        interval
+            interval length {minute, second}
+        """
+        return self.factory._set_metadata(stream, observatory, channel, type, interval)
 
 
 def get_missing(input: Stream, desired: List[str]) -> List[str]:
