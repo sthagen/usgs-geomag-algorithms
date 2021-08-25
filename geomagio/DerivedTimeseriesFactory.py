@@ -204,4 +204,6 @@ class DerivedTimeseriesFactory(TimeseriesFactory):
 def get_missing(input: Stream, desired: List[str]) -> List[str]:
     """Return missing channels from input"""
     present = TimeseriesUtility.get_channels(stream=input)
+    if present is None:
+        return desired
     return list(set(desired).difference(set(present)))
