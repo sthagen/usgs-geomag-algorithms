@@ -2,8 +2,9 @@ from typing import List
 
 from obspy import Stream
 
-from geomagio import DerivedTimeseriesFactory, TimeseriesUtility
+from geomagio import TimeseriesUtility
 from geomagio.algorithm import Algorithm, DeltaFAlgorithm, XYZAlgorithm
+from geomagio.DerivedTimeseriesFactory import DerivedTimeseriesFactory, get_missing
 from geomagio.iaga2002 import StreamIAGA2002Factory
 from geomagio.edge import EdgeFactory
 
@@ -89,6 +90,17 @@ def test_get_timeseries():
     assert TimeseriesUtility.get_channels(timeseries) == ["G"]
     timeseries = get_derived_timeseries(adjusted_url, ["H", "D"], "adjusted", "minute")
     assert set(TimeseriesUtility.get_channels(timeseries)) == set(["H", "D"])
+
+
+def test_get_missing():
+    """test.DerivedTimeseriesFactory_test.test_get_missing()"""
+    desired = ["X", "Y", "D", "G"]
+    assert set(get_missing(input=Stream(), desired=desired)) == set(desired)
+    desired = ["H", "E", "Z", "F"]
+    timeseries = get_derived_timeseries(
+        "etc/filter/BOU20200101vsec.sec", desired, "variation", "second"
+    )
+    assert get_missing(input=timeseries, desired=desired) == []
 
 
 def get_derived_timeseries(
