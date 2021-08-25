@@ -99,7 +99,7 @@ class DerivedTimeseriesFactory(TimeseriesFactory):
                 channels=missing_inputs,
                 type=data_type,
                 interval=interval,
-                add_empty_channels=False,
+                add_empty_channels=True,
             )
         output_timeseries = Stream()
         for channel in channels:
