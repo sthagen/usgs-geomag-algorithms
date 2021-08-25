@@ -304,7 +304,7 @@ def get_channels(stream):
         channel = trace.stats.channel
         if channel:
             channels[channel] = True
-    return [ch for ch in channels]
+    return [ch for ch in channels] or []
 
 
 def get_trace_value(traces, time, default=None):
