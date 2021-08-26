@@ -548,7 +548,7 @@ def get_input_factory(args):
             input_factory = StreamTimeseriesFactory(
                 factory=input_factory, stream=input_stream
             )
-    return DerivedTimeseriesFactory(input_factory)
+    return input_factory
 
 
 def get_output_factory(args):
@@ -725,6 +725,8 @@ def _main(args):
     """
     # create controller
     input_factory = get_input_factory(args)
+    if args.input_derived:
+        input_factory = DerivedTimeseriesFactory(input_factory)
     output_factory = get_output_factory(args)
     algorithm = algorithms[args.algorithm]()
     algorithm.configure(args)
@@ -766,6 +768,12 @@ def parse_args(args):
         help='Input format (Default "edge")',
     )
 
+    input_group.add_argument(
+        "--input-derived",
+        action="store_true",
+        default=False,
+        help="Wrap the input factory in a DerivedTimeseriesFactory",
+    )
     input_group.add_argument(
         "--input-file", help="Read from specified file", metavar="FILE"
     )
