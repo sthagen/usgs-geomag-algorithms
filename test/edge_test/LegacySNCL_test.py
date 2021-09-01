@@ -133,12 +133,22 @@ def test_get_location():
     assert get_location(element="D", data_type="quasi-definitive") == "Q0"
     assert get_location(element="D", data_type="definitive") == "D0"
     assert get_location(element="D_Sat", data_type="variation") == "R1"
+    assert get_location(element="D_Sat", data_type="adjusted") == "A1"
+    assert get_location(element="D", data_type="R0") == "R0"
+    assert get_location(element="D", data_type="A0") == "A0"
+    assert get_location(element="D", data_type="Q0") == "Q0"
+    assert get_location(element="D", data_type="D0") == "D0"
+    assert get_location(element="D", data_type="R1") == "R1"
+    assert get_location(element="D", data_type="A1") == "A1"
 
 
 def test_get_sncl():
     """edge_test.LegacySNCL_test.test_get_sncl()"""
     assert LegacySNCL.get_sncl(
         station="BOU", data_type="variation", interval="second", element="H"
+    ) == LegacySNCL(station="BOU", network="NT", channel="SVH", location="R0")
+    assert LegacySNCL.get_sncl(
+        station="BOU", data_type="R0", interval="second", element="H"
     ) == LegacySNCL(station="BOU", network="NT", channel="SVH", location="R0")
 
 
