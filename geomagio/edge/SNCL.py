@@ -168,7 +168,7 @@ def _get_channel_end(element: str, data_type: str) -> str:
     elif "_Temp" in element:
         channel_middle = "K"
     channel_end = element.split("_")[0]
-    if data_type in "variation":
+    if data_type == "variation":
         if channel_end == "H":
             channel_end = "U"
         elif channel_end == "E":
