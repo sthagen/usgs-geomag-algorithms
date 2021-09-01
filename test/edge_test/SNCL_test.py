@@ -121,11 +121,11 @@ def test_get_channel():
     assert get_channel(element="V", interval="hour", data_type="variation") == "RFV"
     assert get_channel(element="W", interval="hour", data_type="variation") == "RFW"
     assert get_channel(element="H", interval="hour", data_type="variation") == "RFU"
-    assert get_channel(element="H", interval="hour", data_type="R0") == "RFU"
+    assert get_channel(element="H", interval="hour", data_type="R0") == "RFH"
     assert get_channel(element="E", interval="hour", data_type="variation") == "RFV"
-    assert get_channel(element="E", interval="hour", data_type="R0") == "RFV"
+    assert get_channel(element="E", interval="hour", data_type="R0") == "RFE"
     assert get_channel(element="Z", interval="hour", data_type="variation") == "RFW"
-    assert get_channel(element="Z", interval="hour", data_type="R0") == "RFW"
+    assert get_channel(element="Z", interval="hour", data_type="R0") == "RFZ"
     # not variation data_type, test that H,Z is not converted to U,V
     assert get_channel(element="H", interval="hour", data_type="adjusted") == "RFH"
     assert get_channel(element="H", interval="hour", data_type="A0") == "RFH"
@@ -193,7 +193,7 @@ def test_get_sncl():
     ) == SNCL(station="BOU", network="NT", channel="LFU", location="R0")
     assert SNCL.get_sncl(
         station="BOU", data_type="R0", interval="second", element="H"
-    ) == SNCL(station="BOU", network="NT", channel="LFU", location="R0")
+    ) == SNCL(station="BOU", network="NT", channel="LFH", location="R0")
     assert SNCL.get_sncl(
         station="BOU", data_type="A0", interval="second", element="H"
     ) == SNCL(station="BOU", network="NT", channel="LFH", location="A0")
