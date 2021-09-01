@@ -1,6 +1,5 @@
 """Tests for MiniSeedFactory.py"""
 import io
-from test.edge_test.conftest import MockMiniSeedClient
 
 import numpy
 from numpy.testing import assert_equal
