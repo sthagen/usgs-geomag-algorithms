@@ -95,6 +95,8 @@ def get_channel(element: str, interval: str, data_type: str) -> str:
 
 
 def get_location(element: str, data_type: str) -> str:
+    if len(data_type) == 2 and data_type[0] in ["R", "A", "Q", "D"]:
+        return data_type
     return _get_location_start(data_type=data_type) + _get_location_end(element=element)
 
 
@@ -166,7 +168,7 @@ def _get_channel_end(element: str, data_type: str) -> str:
     elif "_Temp" in element:
         channel_middle = "K"
     channel_end = element.split("_")[0]
-    if data_type == "variation":
+    if data_type in ["variation", "R0", "R1", "RD", "RQ", "RV"]:
         if channel_end == "H":
             channel_end = "U"
         elif channel_end == "E":
