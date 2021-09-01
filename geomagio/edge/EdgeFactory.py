@@ -346,6 +346,7 @@ class EdgeFactory(TimeseriesFactory):
         for trace in data:
             trace.data = trace.data.astype("i4")
         data.merge()
+        type = sncl.data_type
         if data.count() == 0 and add_empty_channels:
             data += self._get_empty_trace(
                 starttime=starttime,

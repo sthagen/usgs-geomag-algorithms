@@ -352,6 +352,7 @@ class MiniSeedFactory(TimeseriesFactory):
             sncl.network, sncl.station, sncl.location, sncl.channel, starttime, endtime
         )
         data.merge()
+        type = sncl.data_type
         if data.count() == 0 and add_empty_channels:
             data += self._get_empty_trace(
                 starttime=starttime,
