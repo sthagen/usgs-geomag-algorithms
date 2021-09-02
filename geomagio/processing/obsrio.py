@@ -45,8 +45,8 @@ def obsrio_filter(
             update_limit=update_limit,
         )
     elif interval in ["hour", "day"]:
-        input_factory = EdgeFactory(host=host, port=port)
-        output_factory = MiniSeedFactory(
+        input_factory = get_edge_factory(host=host, port=port)
+        output_factory = get_miniseed_factory(
             host=host, port=output_read_port, write_port=output_port
         )
         if interval == "hour":
@@ -173,7 +173,7 @@ def obsrio_hour(
     realtime_interval: int = 600,
     update_limit: int = 10,
 ):
-    """Filter 1 second edge H,E,Z,F to 1 hour miniseed U,V,W,F."""
+    """Filter 1 minute edge H,E,Z,F to 1 hour miniseed U,V,W,F."""
     starttime, endtime = get_realtime_interval(realtime_interval)
     controller = Controller(
         inputFactory=input_factory or get_edge_factory(),
