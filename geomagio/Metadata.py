@@ -108,6 +108,37 @@ _INSTRUMENT_METADATA = [
     },
     {
         "network": "NT",
+        "station": "CMT",
+        "start_time": None,
+        "end_time": None,
+        "instrument": {
+            "type": "FGE",
+            "channels": {
+                # each channel maps to a list of components to calculate nT
+                # TODO: calculate these lists based on "FGE" type
+                "U": [{"channel": "U_Volt", "offset": 0, "scale": 967.7}],
+                "V": [{"channel": "V_Volt", "offset": 0, "scale": 969.7}],
+                "W": [{"channel": "W_Volt", "offset": 0, "scale": 973.4}],
+            },
+            "electronics": {
+                "serial": "E0568",
+                # these scale values are used to convert voltage
+                "x-scale": 967.7,  # V/nT
+                "y-scale": 969.7,  # V/nT
+                "z-scale": 973.4,  # V/nT
+                "temperature-scale": 0.01,  # V/K
+            },
+            "sensor": {
+                "serial": "S0443",
+                # these constants combine with instrument setting for offset
+                "x-constant": 37062,  # nT/mA
+                "y-constant": 37141,  # nT/mA
+                "z-constant": 37281,  # nT/mA
+            },
+        },
+    },
+    {
+        "network": "NT",
         "station": "FDT",
         "start_time": None,
         "end_time": None,
