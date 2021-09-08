@@ -8,6 +8,7 @@ import pytest
 
 from geomagio import TimeseriesUtility
 from geomagio.edge import MiniSeedFactory, MiniSeedInputClient
+from .MockMiniSeedClient import MockMiniSeedClient
 
 
 class MockMiniSeedInputClient(object):
@@ -20,6 +21,14 @@ class MockMiniSeedInputClient(object):
 
     def send(self, stream):
         self.last_sent = stream
+
+
+@pytest.fixture(scope="class")
+def miniseed_factory() -> MiniSeedFactory:
+    """instance of MiniSeedFactory with MockMiniseedClient"""
+    factory = MiniSeedFactory()
+    factory.client = MockMiniSeedClient()
+    yield factory
 
 
 def test__put_timeseries():
@@ -86,13 +95,11 @@ def test__set_metadata():
     assert_equal(stream[1].stats["channel"], "H")
 
 
-def test_get_timeseries(MockMiniSeedClient):
+def test_get_timeseries(miniseed_factory):
     """edge_test.MiniSeedFactory_test.test_get_timeseries()"""
     # Call get_timeseries, and test stats for comfirmation that it came back.
     # TODO, need to pass in host and port from a config file, or manually
     #   change for a single test.
-    miniseed_factory = MiniSeedFactory()
-    miniseed_factory.client = MockMiniSeedClient()
     timeseries = miniseed_factory.get_timeseries(
         UTCDateTime(2015, 3, 1, 0, 0, 0),
         UTCDateTime(2015, 3, 1, 1, 0, 0),
@@ -118,11 +125,8 @@ def test_get_timeseries(MockMiniSeedClient):
     )
 
 
-def test_get_timeseries_by_location(MockMiniSeedClient):
+def test_get_timeseries_by_location(miniseed_factory):
     """test.edge_test.MiniSeedFactory_test.test_get_timeseries_by_location()"""
-    miniseed_factory = MiniSeedFactory()
-    miniseed_factory.client = MockMiniSeedClient()
-
     timeseries = miniseed_factory.get_timeseries(
         UTCDateTime(2015, 3, 1, 0, 0, 0),
         UTCDateTime(2015, 3, 1, 1, 0, 0),
