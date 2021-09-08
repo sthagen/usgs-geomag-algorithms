@@ -4,9 +4,11 @@ import io
 import numpy
 from numpy.testing import assert_equal
 from obspy.core import read, Stats, Stream, Trace, UTCDateTime
+import pytest
 
 from geomagio import TimeseriesUtility
 from geomagio.edge import MiniSeedFactory, MiniSeedInputClient
+from .MockMiniSeedClient import MockMiniSeedClient
 
 
 class MockMiniSeedInputClient(object):
@@ -19,6 +21,14 @@ class MockMiniSeedInputClient(object):
 
     def send(self, stream):
         self.last_sent = stream
+
+
+@pytest.fixture(scope="class")
+def miniseed_factory() -> MiniSeedFactory:
+    """instance of MiniSeedFactory with MockMiniseedClient"""
+    factory = MiniSeedFactory()
+    factory.client = MockMiniSeedClient()
+    yield factory
 
 
 def test__put_timeseries():
@@ -85,14 +95,12 @@ def test__set_metadata():
     assert_equal(stream[1].stats["channel"], "H")
 
 
-# def test_get_timeseries():
-def dont_get_timeseries():
+def test_get_timeseries(miniseed_factory):
     """edge_test.MiniSeedFactory_test.test_get_timeseries()"""
     # Call get_timeseries, and test stats for comfirmation that it came back.
     # TODO, need to pass in host and port from a config file, or manually
     #   change for a single test.
-    edge_factory = MiniSeedFactory(host="TODO", port="TODO")
-    timeseries = edge_factory.get_timeseries(
+    timeseries = miniseed_factory.get_timeseries(
         UTCDateTime(2015, 3, 1, 0, 0, 0),
         UTCDateTime(2015, 3, 1, 1, 0, 0),
         "BOU",
@@ -109,6 +117,67 @@ def dont_get_timeseries():
         timeseries.select(channel="H")[0].stats.channel,
         "H",
         "Expect timeseries stats channel to be equal to H",
+    )
+    assert_equal(
+        timeseries.select(channel="H")[0].stats.data_type,
+        "variation",
+        "Expect timeseries stats data_type to be equal to variation",
+    )
+
+
+def test_get_timeseries_by_location(miniseed_factory):
+    """test.edge_test.MiniSeedFactory_test.test_get_timeseries_by_location()"""
+    timeseries = miniseed_factory.get_timeseries(
+        UTCDateTime(2015, 3, 1, 0, 0, 0),
+        UTCDateTime(2015, 3, 1, 1, 0, 0),
+        "BOU",
+        ("H"),
+        "R0",
+        "minute",
+    )
+    assert_equal(
+        timeseries.select(channel="H")[0].stats.data_type,
+        "R0",
+        "Expect timeseries stats data_type to be equal to R0",
+    )
+    timeseries = miniseed_factory.get_timeseries(
+        UTCDateTime(2015, 3, 1, 0, 0, 0),
+        UTCDateTime(2015, 3, 1, 1, 0, 0),
+        "BOU",
+        ("H"),
+        "A0",
+        "minute",
+    )
+    assert_equal(
+        timeseries.select(channel="H")[0].stats.data_type,
+        "A0",
+        "Expect timeseries stats data_type to be equal to A0",
+    )
+    timeseries = miniseed_factory.get_timeseries(
+        UTCDateTime(2015, 3, 1, 0, 0, 0),
+        UTCDateTime(2015, 3, 1, 1, 0, 0),
+        "BOU",
+        ("X"),
+        "Q0",
+        "minute",
+    )
+    assert_equal(
+        timeseries.select(channel="X")[0].stats.data_type,
+        "Q0",
+        "Expect timeseries stats data_type to be equal to Q0",
+    )
+    timeseries = miniseed_factory.get_timeseries(
+        UTCDateTime(2015, 3, 1, 0, 0, 0),
+        UTCDateTime(2015, 3, 1, 1, 0, 0),
+        "BOU",
+        ("X"),
+        "D0",
+        "minute",
+    )
+    assert_equal(
+        timeseries.select(channel="X")[0].stats.data_type,
+        "D0",
+        "Expect timeseries stats data_type to be equal to D0",
     )
 
 

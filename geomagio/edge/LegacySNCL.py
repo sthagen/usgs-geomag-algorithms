@@ -62,6 +62,8 @@ def get_channel(element: str, interval: str) -> str:
 
 
 def get_location(element: str, data_type: str) -> str:
+    if len(data_type) == 2:
+        return data_type
     return _get_location_start(data_type=data_type) + _get_location_end(element=element)
 
 

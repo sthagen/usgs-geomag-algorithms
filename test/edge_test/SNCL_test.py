@@ -115,16 +115,22 @@ def test_get_channel():
         == "BYU"
     )
     assert get_channel(element="D", interval="second", data_type="variation") == "LFD"
+    assert get_channel(element="D", interval="second", data_type="R0") == "LFD"
     assert get_channel(element="F", interval="minute", data_type="variation") == "UFF"
     assert get_channel(element="U", interval="hour", data_type="variation") == "RFU"
     assert get_channel(element="V", interval="hour", data_type="variation") == "RFV"
     assert get_channel(element="W", interval="hour", data_type="variation") == "RFW"
     assert get_channel(element="H", interval="hour", data_type="variation") == "RFU"
+    assert get_channel(element="H", interval="hour", data_type="R0") == "RFH"
     assert get_channel(element="E", interval="hour", data_type="variation") == "RFV"
+    assert get_channel(element="E", interval="hour", data_type="R0") == "RFE"
     assert get_channel(element="Z", interval="hour", data_type="variation") == "RFW"
+    assert get_channel(element="Z", interval="hour", data_type="R0") == "RFZ"
     # not variation data_type, test that H,Z is not converted to U,V
     assert get_channel(element="H", interval="hour", data_type="adjusted") == "RFH"
+    assert get_channel(element="H", interval="hour", data_type="A0") == "RFH"
     assert get_channel(element="Z", interval="hour", data_type="adjusted") == "RFZ"
+    assert get_channel(element="Z", interval="hour", data_type="A0") == "RFZ"
     assert get_channel(element="Dst4", interval="day", data_type="variation") == "PX4"
     assert (
         get_channel(element="Dst3", interval="minute", data_type="variation") == "UX3"
@@ -135,12 +141,23 @@ def test_get_channel():
     assert (
         get_channel(element="U_Dist", interval="minute", data_type="variation") == "UFU"
     )
+    assert get_channel(element="U", interval="minute", data_type="RD") == "UFU"
     assert (
         get_channel(element="U_SQ", interval="minute", data_type="variation") == "UFU"
     )
+    assert get_channel(element="U", interval="minute", data_type="RQ") == "UFU"
     assert (
         get_channel(element="U_SV", interval="minute", data_type="variation") == "UFU"
     )
+    assert get_channel(element="U", interval="minute", data_type="RV") == "UFU"
+    assert (
+        get_channel(element="U_Dist", interval="minute", data_type="adjusted") == "UFU"
+    )
+    assert get_channel(element="U", interval="minute", data_type="AD") == "UFU"
+    assert get_channel(element="U_SQ", interval="minute", data_type="adjusted") == "UFU"
+    assert get_channel(element="U", interval="minute", data_type="AQ") == "UFU"
+    assert get_channel(element="U_SV", interval="minute", data_type="adjusted") == "UFU"
+    assert get_channel(element="U", interval="minute", data_type="AV") == "UFU"
     assert (
         get_channel(element="UK1.R0", interval="minute", data_type="variation") == "UK1"
     )
@@ -149,13 +166,21 @@ def test_get_channel():
 def test_get_location():
     """edge_test.SNCL_test.test_get_location()"""
     assert get_location(element="D", data_type="variation") == "R0"
+    assert get_location(element="D", data_type="R0") == "R0"
     assert get_location(element="D", data_type="adjusted") == "A0"
+    assert get_location(element="D", data_type="A0") == "A0"
     assert get_location(element="D", data_type="quasi-definitive") == "Q0"
+    assert get_location(element="D", data_type="Q0") == "Q0"
     assert get_location(element="D", data_type="definitive") == "D0"
+    assert get_location(element="D", data_type="D0") == "D0"
     assert get_location(element="D_Sat", data_type="variation") == "R1"
+    assert get_location(element="D", data_type="R1") == "R1"
     assert get_location(element="D_Dist", data_type="variation") == "RD"
+    assert get_location(element="D", data_type="RD") == "RD"
     assert get_location(element="D_SQ", data_type="variation") == "RQ"
+    assert get_location(element="D", data_type="RQ") == "RQ"
     assert get_location(element="D_SV", data_type="variation") == "RV"
+    assert get_location(element="D", data_type="RV") == "RV"
 
 
 def test_get_sncl():
@@ -163,6 +188,15 @@ def test_get_sncl():
     assert SNCL.get_sncl(
         station="BOU", data_type="variation", interval="second", element="U"
     ) == SNCL(station="BOU", network="NT", channel="LFU", location="R0")
+    assert SNCL.get_sncl(
+        station="BOU", data_type="variation", interval="second", element="H"
+    ) == SNCL(station="BOU", network="NT", channel="LFU", location="R0")
+    assert SNCL.get_sncl(
+        station="BOU", data_type="R0", interval="second", element="H"
+    ) == SNCL(station="BOU", network="NT", channel="LFH", location="R0")
+    assert SNCL.get_sncl(
+        station="BOU", data_type="A0", interval="second", element="H"
+    ) == SNCL(station="BOU", network="NT", channel="LFH", location="A0")
 
 
 def test_interval():

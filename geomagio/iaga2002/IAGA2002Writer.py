@@ -117,7 +117,11 @@ class IAGA2002Writer(object):
         if (
             "declination_base" in stats
             and stats.declination_base is not None
-            and (stats.data_type == "variation" or stats.data_type == "reported")
+            and (
+                stats.data_type == "variation"
+                or stats.data_type == "reported"
+                or stats.data_type[0] == "R"
+            )
         ):
             comments.append(
                 "DECBAS               {:<8d}"
