@@ -22,9 +22,9 @@ router = APIRouter()
 )
 def get_dbdt(
     query: DataApiQuery = Depends(get_data_query),
-    data_factory: TimeseriesFactory = Depends(get_data_factory),
 ) -> Response:
     dbdt = DbDtAlgorithm(period=query.sampling_period)
+    data_factory = get_data_factory(query=query)
     # read data
     raw = get_timeseries(data_factory, query)
     # run dbdt
