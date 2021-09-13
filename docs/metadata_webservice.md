@@ -27,7 +27,7 @@ exit
 ```
 
 ```
-poetry run alembic upgrade head
+poetry run python create_db.py
 ```
 
 ### Add some testing data (depends on DATABASE_URL environment set above).
