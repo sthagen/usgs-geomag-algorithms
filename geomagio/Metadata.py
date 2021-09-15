@@ -62,6 +62,29 @@ _INSTRUMENT_METADATA = [
     },
     {
         "network": "NT",
+        "station": "BOU",
+        "start_time": None,
+        "end_time": None,
+        "instrument": {
+            "type": "Narod",
+            "channels": {
+                "U": [
+                    {"channel": "U_Volt", "offset": 0, "scale": 100},
+                    {"channel": "U_Bin", "offset": 0, "scale": 500},
+                ],
+                "V": [
+                    {"channel": "V_Volt", "offset": 0, "scale": 100},
+                    {"channel": "V_Bin", "offset": 0, "scale": 500},
+                ],
+                "W": [
+                    {"channel": "W_Volt", "offset": 0, "scale": 100},
+                    {"channel": "W_Bin", "offset": 0, "scale": 500},
+                ],
+            },
+        },
+    },
+    {
+        "network": "NT",
         "station": "BXX",
         "start_time": None,
         "end_time": None,
@@ -86,6 +109,29 @@ _INSTRUMENT_METADATA = [
     {
         "network": "NT",
         "station": "BRT",
+        "start_time": None,
+        "end_time": None,
+        "instrument": {
+            "type": "Narod",
+            "channels": {
+                "U": [
+                    {"channel": "U_Volt", "offset": 0, "scale": 100},
+                    {"channel": "U_Bin", "offset": 0, "scale": 506},
+                ],
+                "V": [
+                    {"channel": "V_Volt", "offset": 0, "scale": 100},
+                    {"channel": "V_Bin", "offset": 0, "scale": 505.6},
+                ],
+                "W": [
+                    {"channel": "W_Volt", "offset": 0, "scale": 100},
+                    {"channel": "W_Bin", "offset": 0, "scale": 506},
+                ],
+            },
+        },
+    },
+    {
+        "network": "NT",
+        "station": "BRW",
         "start_time": None,
         "end_time": None,
         "instrument": {
@@ -162,7 +208,99 @@ _INSTRUMENT_METADATA = [
     },
     {
         "network": "NT",
+        "station": "DED",
+        "start_time": None,
+        "end_time": None,
+        "instrument": {
+            "type": "Narod",
+            "channels": {
+                "U": [
+                    {"channel": "U_Volt", "offset": 0, "scale": 100},
+                    {"channel": "U_Bin", "offset": 0, "scale": 508.20},
+                ],
+                "V": [
+                    {"channel": "V_Volt", "offset": 0, "scale": 100},
+                    {"channel": "V_Bin", "offset": 0, "scale": 508.40},
+                ],
+                "W": [
+                    {"channel": "W_Volt", "offset": 0, "scale": 100},
+                    {"channel": "W_Bin", "offset": 0, "scale": 508.03},
+                ],
+            },
+        },
+    },
+    {
+        "network": "NT",
         "station": "FDT",
+        "start_time": None,
+        "end_time": None,
+        "instrument": {
+            "type": "Narod",
+            "channels": {
+                "U": [
+                    {"channel": "U_Volt", "offset": 0, "scale": 100},
+                    {"channel": "U_Bin", "offset": 0, "scale": 500},
+                ],
+                "V": [
+                    {"channel": "V_Volt", "offset": 0, "scale": 100},
+                    {"channel": "V_Bin", "offset": 0, "scale": 500},
+                ],
+                "W": [
+                    {"channel": "W_Volt", "offset": 0, "scale": 100},
+                    {"channel": "W_Bin", "offset": 0, "scale": 500},
+                ],
+            },
+        },
+    },
+    {
+        "network": "NT",
+        "station": "FRD",
+        "start_time": None,
+        "end_time": None,
+        "instrument": {
+            "type": "Narod",
+            "channels": {
+                "U": [
+                    {"channel": "U_Volt", "offset": 0, "scale": 100},
+                    {"channel": "U_Bin", "offset": 0, "scale": 500},
+                ],
+                "V": [
+                    {"channel": "V_Volt", "offset": 0, "scale": 100},
+                    {"channel": "V_Bin", "offset": 0, "scale": 500},
+                ],
+                "W": [
+                    {"channel": "W_Volt", "offset": 0, "scale": 100},
+                    {"channel": "W_Bin", "offset": 0, "scale": 500},
+                ],
+            },
+        },
+    },
+    {
+        "network": "NT",
+        "station": "FRN",
+        "start_time": None,
+        "end_time": None,
+        "instrument": {
+            "type": "Narod",
+            "channels": {
+                "U": [
+                    {"channel": "U_Volt", "offset": 0, "scale": 98.48},
+                    {"channel": "U_Bin", "offset": 0, "scale": 497.50},
+                ],
+                "V": [
+                    {"channel": "V_Volt", "offset": 0, "scale": 100.60},
+                    {"channel": "V_Bin", "offset": 0, "scale": 506},
+                ],
+                "W": [
+                    {"channel": "W_Volt", "offset": 0, "scale": 99},
+                    {"channel": "W_Bin", "offset": 0, "scale": 501},
+                ],
+            },
+        },
+    },
+    {
+        "network": "NT",
+        "station": "HON",
         "start_time": None,
         "end_time": None,
         "instrument": {
@@ -254,6 +392,52 @@ _INSTRUMENT_METADATA = [
     },
     {
         "network": "NT",
+        "station": "SIT",
+        "start_time": None,
+        "end_time": None,
+        "instrument": {
+            "type": "Narod",
+            "channels": {
+                "U": [
+                    {"channel": "U_Volt", "offset": 0, "scale": 100},
+                    {"channel": "U_Bin", "offset": 0, "scale": 500},
+                ],
+                "V": [
+                    {"channel": "V_Volt", "offset": 0, "scale": 100},
+                    {"channel": "V_Bin", "offset": 0, "scale": 500},
+                ],
+                "W": [
+                    {"channel": "W_Volt", "offset": 0, "scale": 100},
+                    {"channel": "W_Bin", "offset": 0, "scale": 500},
+                ],
+            },
+        },
+    },
+    {
+        "network": "NT",
+        "station": "SJG",
+        "start_time": None,
+        "end_time": None,
+        "instrument": {
+            "type": "Narod",
+            "channels": {
+                "U": [
+                    {"channel": "U_Volt", "offset": 0, "scale": 100},
+                    {"channel": "U_Bin", "offset": 0, "scale": 500},
+                ],
+                "V": [
+                    {"channel": "V_Volt", "offset": 0, "scale": 100},
+                    {"channel": "V_Bin", "offset": 0, "scale": 500},
+                ],
+                "W": [
+                    {"channel": "W_Volt", "offset": 0, "scale": 100},
+                    {"channel": "W_Bin", "offset": 0, "scale": 500},
+                ],
+            },
+        },
+    },
+    {
+        "network": "NT",
         "station": "SJT",
         "start_time": None,
         "end_time": None,
@@ -282,6 +466,29 @@ _INSTRUMENT_METADATA = [
             #     "y-constant": 36849,  # nT/mA
             #     "z-constant": 36811,  # nT/mA
             # },
+        },
+    },
+    {
+        "network": "NT",
+        "station": "TUC",
+        "start_time": None,
+        "end_time": None,
+        "instrument": {
+            "type": "Narod",
+            "channels": {
+                "U": [
+                    {"channel": "U_Volt", "offset": 0, "scale": 100},
+                    {"channel": "U_Bin", "offset": 0, "scale": 500},
+                ],
+                "V": [
+                    {"channel": "V_Volt", "offset": 0, "scale": 100},
+                    {"channel": "V_Bin", "offset": 0, "scale": 500},
+                ],
+                "W": [
+                    {"channel": "W_Volt", "offset": 0, "scale": 100},
+                    {"channel": "W_Bin", "offset": 0, "scale": 500},
+                ],
+            },
         },
     },
 ]
