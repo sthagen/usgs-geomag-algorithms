@@ -610,9 +610,16 @@ def split_trace(trace: Trace, size: int = 86400) -> Stream:
         size=size,
         trim=True,
     ):
+        interval_start = interval["start"]
+        interval_end = interval["end"]
+        delta = out_trace.stats.delta
+        # accounts for trace containing one sample
+        if interval_end - delta < interval_start:
+            stream += out_trace
+            continue
         stream += out_trace.slice(
-            starttime=interval["start"],
-            endtime=interval["end"] - out_trace.stats.delta,
+            starttime=interval_start,
+            endtime=interval_end - delta,
             nearest_sample=False,
         )
     return stream

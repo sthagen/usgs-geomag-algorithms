@@ -65,6 +65,7 @@ pycurl = ["pycurl"]
 
 [tool.poetry.scripts]
 generate-matrix = "geomagio.processing.affine_matrix:main"
+geomag-efield = "geomagio.processing.efield:main"
 geomag-metadata = "geomagio.metadata.main:main"
 geomag-monitor = "geomagio.processing.monitor:main"
 geomag-py = "geomagio.Controller:main"

@@ -2,6 +2,7 @@ from typing import List, Optional
 
 import numpy
 
+from ..adjusted import AdjustedMatrix
 from ..algorithm import (
     AdjustedAlgorithm,
     AverageAlgorithm,
@@ -9,18 +10,20 @@ from ..algorithm import (
 )
 from ..Controller import Controller, get_realtime_interval
 from ..TimeseriesFactory import TimeseriesFactory
-from .factory import get_edge_factory
+from .factory import get_edge_factory, get_miniseed_factory
 
 
 def adjusted(
     observatory: str,
     input_factory: Optional[TimeseriesFactory] = None,
+    input_channels: List[str] = ["H", "E", "Z", "F"],
     interval: str = "second",
     output_factory: Optional[TimeseriesFactory] = None,
-    matrix: Optional[numpy.ndarray] = None,
-    pier_correction: Optional[float] = None,
+    output_channels: List[str] = ["X", "Y", "Z", "F"],
+    matrix: AdjustedMatrix = None,
     statefile: Optional[str] = None,
     realtime_interval: int = 600,
+    update_limit: int = 10,
 ):
     """Run Adjusted algorithm.
 
@@ -28,25 +31,26 @@ def adjusted(
     ----------
     observatory: observatory to calculate
     input_factory: where to read, should be configured with data_type
+    input_channels: adjusted algorithm input channels
     interval: data interval
     output_factory: where to write, should be configured with data_type
+    output_channels: adjusted algorithm output channels
     matrix: adjusted matrix
-    pier_correction: adjusted pier correction
     statefile: adjusted statefile
     realtime_interval: window in seconds
-
-    Uses update_limit=10.
+    update_limit: maximum number of windows to backfill
     """
-    if not statefile and (not matrix or not pier_correction):
-        raise ValueError("Either statefile or matrix and pier_correction are required.")
+    if not statefile and not matrix:
+        raise ValueError("Either statefile or matrix are required.")
     starttime, endtime = get_realtime_interval(realtime_interval)
     controller = Controller(
         algorithm=AdjustedAlgorithm(
             matrix=matrix,
-            pier_correction=pier_correction,
             statefile=statefile,
             data_type="adjusted",
             location="A0",
+            inchannels=input_channels,
+            outchannels=output_channels,
         ),
         inputFactory=input_factory or get_edge_factory(data_type="variation"),
         inputInterval=interval,
@@ -58,10 +62,10 @@ def adjusted(
         output_observatory=(observatory,),
         starttime=starttime,
         endtime=endtime,
-        input_channels=("H", "E", "Z", "F"),
-        output_channels=("X", "Y", "Z", "F"),
+        input_channels=input_channels,
+        output_channels=output_channels,
         realtime=realtime_interval,
-        update_limit=10,
+        update_limit=update_limit,
     )
 
 

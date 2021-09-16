@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import List, Optional
 
 import typer
 
@@ -204,14 +204,15 @@ def obsrio_hour(
 
 def obsrio_minute(
     observatory: str,
+    channels: List[str] = ["H", "E", "Z", "F"],
     input_factory: Optional[TimeseriesFactory] = None,
     output_factory: Optional[TimeseriesFactory] = None,
     realtime_interval: int = 600,
     update_limit: int = 10,
 ):
-    """Filter 1Hz legacy H,E,Z,F to 1 minute legacy.
+    """Filter 1Hz legacy channels to 1 minute legacy.
 
-    Should be called after obsrio_second() and obsrio_tenhertz(),
+    For H,E,Z,F: should be called after obsrio_second() and obsrio_tenhertz(),
     which populate 1Hz legacy H,E,Z,F.
     """
     starttime, endtime = get_realtime_interval(realtime_interval)
@@ -221,7 +222,7 @@ def obsrio_minute(
         outputFactory=output_factory or get_edge_factory(),
         outputInterval="minute",
     )
-    for channel in ["H", "E", "Z", "F"]:
+    for channel in channels:
         controller.run_as_update(
             algorithm=FilterAlgorithm(
                 input_sample_period=1,
