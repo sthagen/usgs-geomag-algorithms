@@ -161,6 +161,14 @@ class AdjustedAlgorithm(Algorithm):
         ):
             return True
 
+        # if E-E and E-N available
+        if (
+            "E-E" in channels
+            and "E-N" in channels
+            and super().can_produce_data(starttime, endtime, stream)
+        ):
+            return True
+
         # check validity of remaining channels
         for c in channels:
             if c != "F" and not (
