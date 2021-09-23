@@ -39,9 +39,9 @@ _INSTRUMENT_METADATA = [
             "channels": {
                 # each channel maps to a list of components to calculate nT
                 # TODO: calculate these lists based on "FGE" type
-                "U": [{"channel": "U_Volt", "offset": 0, "scale": 313.2}],
+                "U": [{"channel": "U_Volt", "offset": 20613, "scale": 313.2}],
                 "V": [{"channel": "V_Volt", "offset": 0, "scale": 312.3}],
-                "W": [{"channel": "W_Volt", "offset": 0, "scale": 312.0}],
+                "W": [{"channel": "W_Volt", "offset": 47450, "scale": 312.0}],
             },
             "electronics": {
                 "serial": "E0542",
