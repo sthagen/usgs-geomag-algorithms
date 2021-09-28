@@ -1,6 +1,5 @@
 from typing import Optional
 
-from .Measurement import Measurement
 from pydantic import BaseModel
 
 
@@ -14,4 +13,4 @@ class Diagnostics(BaseModel):
     """
 
     inclination: float
-    meridian: float
+    meridian: Optional[float] = None

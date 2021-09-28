@@ -1,8 +1,8 @@
-from os import name
+import json
+
 from fastapi import APIRouter, Depends, HTTPException
 from starlette.responses import Response
 
-from ... import TimeseriesFactory
 from ...algorithm import DbDtAlgorithm
 from ...residual import (
     calculate,
@@ -44,6 +44,9 @@ def get_dbdt(
 )
 def calculate_residual(reading: Reading, adjust_reference: bool = True):
     try:
-        return calculate(reading=reading, adjust_reference=adjust_reference)
+        calculated = calculate(
+            reading=reading, adjust_reference=adjust_reference
+        ).json()
+        return json.loads(calculated.replace("NaN", "null"))
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
