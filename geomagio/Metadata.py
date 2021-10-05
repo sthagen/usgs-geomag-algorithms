@@ -154,6 +154,29 @@ _INSTRUMENT_METADATA = [
     },
     {
         "network": "NT",
+        "station": "BSL",
+        "start_time": None,
+        "end_time": None,
+        "instrument": {
+            "type": "Narod",
+            "channels": {
+                "U": [
+                    {"channel": "U_Volt", "offset": 0, "scale": 100},
+                    {"channel": "U_Bin", "offset": 0, "scale": 500},
+                ],
+                "V": [
+                    {"channel": "V_Volt", "offset": 0, "scale": 100},
+                    {"channel": "V_Bin", "offset": 0, "scale": 500},
+                ],
+                "W": [
+                    {"channel": "W_Volt", "offset": 0, "scale": 100},
+                    {"channel": "W_Bin", "offset": 0, "scale": 500},
+                ],
+            },
+        },
+    },
+    {
+        "network": "NT",
         "station": "CMO",
         "start_time": None,
         "end_time": None,
