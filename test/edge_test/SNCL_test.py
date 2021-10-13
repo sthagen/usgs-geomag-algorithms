@@ -102,6 +102,38 @@ def test_element():
         ).element
         == "U_Sat"
     )
+    assert (
+        SNCL(
+            station="BOU",
+            channel="UK1",
+            location="R0",
+        ).element
+        == "T1"
+    )
+    assert (
+        SNCL(
+            station="BOU",
+            channel="UK2",
+            location="R0",
+        ).element
+        == "T2"
+    )
+    assert (
+        SNCL(
+            station="BOU",
+            channel="UK3",
+            location="R0",
+        ).element
+        == "T3"
+    )
+    assert (
+        SNCL(
+            station="BOU",
+            channel="UK4",
+            location="R0",
+        ).element
+        == "T4"
+    )
 
 
 def test_get_channel():
@@ -161,6 +193,10 @@ def test_get_channel():
     assert (
         get_channel(element="UK1.R0", interval="minute", data_type="variation") == "UK1"
     )
+    assert get_channel(element="T1", interval="minute", data_type="variation") == "UK1"
+    assert get_channel(element="T2", interval="minute", data_type="variation") == "UK2"
+    assert get_channel(element="T3", interval="minute", data_type="variation") == "UK3"
+    assert get_channel(element="T4", interval="minute", data_type="variation") == "UK4"
 
 
 def test_get_location():
@@ -197,6 +233,9 @@ def test_get_sncl():
     assert SNCL.get_sncl(
         station="BOU", data_type="A0", interval="second", element="H"
     ) == SNCL(station="BOU", network="NT", channel="LFH", location="A0")
+    assert SNCL.get_sncl(
+        station="BOU", data_type="variation", interval="second", element="T1"
+    ) == SNCL(station="BOU", network="NT", channel="LK1", location="R0")
 
 
 def test_interval():
@@ -240,6 +279,22 @@ def test_interval():
             location="R0",
         ).interval
         == "day"
+    )
+    assert (
+        SNCL(
+            station="BOU",
+            channel="UK1",
+            location="R0",
+        ).interval
+        == "minute"
+    )
+    assert (
+        SNCL(
+            station="BOU",
+            channel="LK1",
+            location="R0",
+        ).interval
+        == "second"
     )
 
 

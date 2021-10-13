@@ -9,6 +9,11 @@ ELEMENT_CONVERSIONS = {
     # derived indicies
     "Dst3": "X3",
     "Dst4": "X4",
+    # temperatures
+    "T1": "K1",
+    "T2": "K2",
+    "T3": "K3",
+    "T4": "K4",
 }
 
 CHANNEL_CONVERSIONS = {
