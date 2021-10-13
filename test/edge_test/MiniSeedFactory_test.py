@@ -1,14 +1,16 @@
 """Tests for MiniSeedFactory.py"""
 import io
+from typing import List
 
 import numpy
-from numpy.testing import assert_equal
+from numpy.testing import assert_equal, assert_array_equal
 from obspy.core import read, Stats, Stream, Trace, UTCDateTime
 import pytest
 
 from geomagio import TimeseriesUtility
 from geomagio.edge import MiniSeedFactory, MiniSeedInputClient
-from .MockMiniSeedClient import MockMiniSeedClient
+from geomagio.Metadata import get_instrument
+from .mseed_test_clients import MockMiniSeedClient, MisalignedMiniSeedClient
 
 
 class MockMiniSeedInputClient(object):
@@ -29,6 +31,64 @@ def miniseed_factory() -> MiniSeedFactory:
     factory = MiniSeedFactory()
     factory.client = MockMiniSeedClient()
     yield factory
+
+
+@pytest.fixture(scope="class")
+def misaligned_miniseed_factory() -> MiniSeedFactory:
+    """instance of MiniSeedFactory with MisalignedMiniseedClient"""
+    factory = MiniSeedFactory()
+    factory.client = MisalignedMiniSeedClient()
+    yield factory
+
+
+@pytest.fixture()
+def shu_u_metadata():
+    metadata = get_instrument(observatory="SHU")
+    instrument = metadata[0]["instrument"]
+    channels = instrument["channels"]
+    yield channels["U"]
+
+
+def test_get_calculated_timeseries(miniseed_factory, shu_u_metadata):
+    """test.edge_test.MiniSeedFactory_test.test_get_calculated_timeseries()"""
+    result = miniseed_factory.get_calculated_timeseries(
+        starttime=UTCDateTime("2021-09-07"),
+        endtime=UTCDateTime("2021-09-07T00:10:00Z"),
+        observatory="SHU",
+        channel="U",
+        type="variation",
+        interval="tenhertz",
+        components=shu_u_metadata,
+    )
+    expected = _get_expected_calulated(
+        channel_metadata=shu_u_metadata, npts=result.stats.npts
+    )
+    assert_array_equal(result.data, expected)
+
+
+def test__get_timeseries_misaligned(misaligned_miniseed_factory: MiniSeedFactory):
+    """test.edge_test.MiniSeedFactory_test.test__get_timeseries_misaligned()"""
+    u_trace = misaligned_miniseed_factory._get_timeseries(
+        starttime=UTCDateTime("2021-09-07"),
+        endtime=UTCDateTime("2021-09-07T00:10:00Z"),
+        observatory="SHU",
+        channel="U",
+        type="variation",
+        interval="tenhertz",
+    )[0]
+    assert misaligned_miniseed_factory.client.offset == 1
+    v_trace = misaligned_miniseed_factory._get_timeseries(
+        starttime=UTCDateTime("2021-09-07"),
+        endtime=UTCDateTime("2021-09-07T00:10:00Z"),
+        observatory="SHU",
+        channel="U",
+        type="variation",
+        interval="tenhertz",
+    )[0]
+    assert misaligned_miniseed_factory.client.offset == 2
+    assert u_trace.stats.starttime == v_trace.stats.starttime
+    assert u_trace.stats.endtime == v_trace.stats.endtime
+    assert u_trace.stats.npts == v_trace.stats.npts
 
 
 def test__put_timeseries():
@@ -213,3 +273,11 @@ def __create_trace(
     stats.data_type = data_type
     numpy_data = numpy.array(data, dtype=numpy.float64)
     return Trace(numpy_data, stats)
+
+
+def _get_expected_calulated(channel_metadata: List[dict], npts: int) -> numpy.array:
+    volt_metadata = channel_metadata[0]
+    bin_metadata = channel_metadata[1]
+    volts = (numpy.ones(npts) * volt_metadata["scale"]) + volt_metadata["offset"]
+    bins = (numpy.ones(npts) * bin_metadata["scale"]) + bin_metadata["offset"]
+    return volts + bins
