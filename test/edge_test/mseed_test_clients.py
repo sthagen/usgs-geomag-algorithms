@@ -37,3 +37,26 @@ class MockMiniSeedClient(Client):
         )
         trace.data = numpy.ones(trace.stats.npts)
         return Stream([trace])
+
+
+class MisalignedMiniSeedClient(MockMiniSeedClient):
+    """mock client that adds an offset value to endtime"""
+
+    def __init__(self, increment: int = 1):
+        self.increment = increment
+        self.offset = 0
+
+    def get_waveforms(
+        self,
+        network: str,
+        station: str,
+        location: str,
+        channel: str,
+        starttime: UTCDateTime,
+        endtime: UTCDateTime,
+    ):
+        endtime = endtime + self.offset
+        self.offset = self.offset + self.increment
+        return super().get_waveforms(
+            network, station, location, channel, starttime, endtime
+        )
