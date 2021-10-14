@@ -1,7 +1,7 @@
 import os
 from typing import List, Union
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, Request
 from obspy import UTCDateTime, Stream
 from starlette.responses import Response
 
@@ -48,6 +48,7 @@ def get_data_factory(
 
 
 def get_data_query(
+    request: Request,
     id: str = Query(..., title="Observatory code"),
     starttime: UTCDateTime = Query(
         None,
@@ -102,6 +103,22 @@ def get_data_query(
     format
         output format
     """
+    default_params = [
+        "id",
+        "starttime",
+        "endtime",
+        "elements",
+        "sampling_period",
+        "type",
+        "format",
+    ]
+    invalid_params = []
+    for param in request.query_params.keys():
+        if param not in default_params:
+            invalid_params.append(param)
+    if len(invalid_params) > 0:
+        msg = ", ".join(invalid_params)
+        raise ValueError(f"Invalid query parameter(s): {msg}")
     # parse query
     query = DataApiQuery(
         id=id,
