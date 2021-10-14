@@ -66,6 +66,39 @@ def test_get_calculated_timeseries(miniseed_factory, shu_u_metadata):
     assert_array_equal(result.data, expected)
 
 
+def test__get_timeseries_add_empty_channels(miniseed_factory: MiniSeedFactory):
+    """test.edge_test.MiniSeedFactory_test.test__get_timeseries_add_empty_channels()"""
+    miniseed_factory.client.return_empty = True
+    starttime = UTCDateTime("2021-09-07")
+    endtime = UTCDateTime("2021-09-07T00:10:00Z")
+    trace = miniseed_factory._get_timeseries(
+        starttime=starttime,
+        endtime=endtime,
+        observatory="SHU",
+        channel="U",
+        type="variation",
+        interval="tenhertz",
+        add_empty_channels=True,
+    )[0]
+    assert_array_equal(trace.data, numpy.ones(trace.stats.npts) * numpy.nan)
+    assert trace.stats.starttime == starttime
+    assert trace.stats.endtime == endtime
+    assert (
+        trace.stats.npts == ((endtime.timestamp - starttime.timestamp) * 10.0) + 1
+    )  # tenhertz sampling rate
+
+    with pytest.raises(IndexError):
+        trace = miniseed_factory._get_timeseries(
+            starttime=starttime,
+            endtime=endtime,
+            observatory="SHU",
+            channel="U",
+            type="variation",
+            interval="tenhertz",
+            add_empty_channels=False,
+        )[0]
+
+
 def test__get_timeseries_misaligned(misaligned_miniseed_factory: MiniSeedFactory):
     """test.edge_test.MiniSeedFactory_test.test__get_timeseries_misaligned()"""
     u_trace = misaligned_miniseed_factory._get_timeseries(
