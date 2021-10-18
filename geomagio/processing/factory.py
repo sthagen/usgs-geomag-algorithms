@@ -1,6 +1,5 @@
 import os
 
-from ..TimeseriesFactory import TimeseriesFactory
 from ..edge import EdgeFactory, MiniSeedFactory
 
 
@@ -9,7 +8,7 @@ def get_edge_factory(
     host=os.getenv("EDGE_HOST", "127.0.0.1"),
     interval="second",
     **kwargs
-) -> TimeseriesFactory:
+) -> EdgeFactory:
     return EdgeFactory(host=host, interval=interval, type=data_type, **kwargs)
 
 
@@ -18,5 +17,5 @@ def get_miniseed_factory(
     host=os.getenv("EDGE_HOST", "127.0.0.1"),
     interval="second",
     **kwargs
-) -> TimeseriesFactory:
+) -> MiniSeedFactory:
     return MiniSeedFactory(host=host, interval=interval, type=data_type, **kwargs)
