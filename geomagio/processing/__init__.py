@@ -5,7 +5,7 @@ and should be considered less stable than other packages in the library.
 """
 from .factory import get_edge_factory, get_miniseed_factory
 from .derived import adjusted, average, sqdist_minute
-from .obsrio import obsrio_minute, obsrio_second, obsrio_temperatures, obsrio_tenhertz
+from .filters import minute_filter, second_filter
 
 
 __all__ = [
@@ -13,9 +13,7 @@ __all__ = [
     "average",
     "get_edge_factory",
     "get_miniseed_factory",
-    "obsrio_minute",
-    "obsrio_second",
-    "obsrio_temperatures",
-    "obsrio_tenhertz",
+    "minute_filter",
+    "second_filter",
     "sqdist_minute",
 ]
