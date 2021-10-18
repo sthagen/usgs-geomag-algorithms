@@ -3,7 +3,7 @@ import typer
 from ..adjusted import AdjustedMatrix
 from .derived import adjusted
 from .factory import get_edge_factory
-from .obsrio import obsrio_minute
+from .filters import minute_filter
 
 app = typer.Typer()
 
@@ -40,7 +40,7 @@ def efield_realtime(
         realtime_interval=realtime_interval,
         update_limit=update_limit,
     )
-    obsrio_minute(
+    minute_filter(
         observatory=observatory,
         channels=["E-E", "E-N"],
         input_factory=get_edge_factory(host=host, data_type="variation"),
@@ -48,7 +48,7 @@ def efield_realtime(
         realtime_interval=realtime_interval,
         update_limit=update_limit,
     )
-    obsrio_minute(
+    minute_filter(
         observatory=observatory,
         channels=["E-E", "E-N"],
         input_factory=get_edge_factory(host=host, data_type="adjusted"),
