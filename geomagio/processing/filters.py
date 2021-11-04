@@ -67,14 +67,23 @@ def hour_command(
     short_help="Filter 1 second and 1 minute nT/temperature data",
     help="""
     ObsRIO:
+
         Filters 10Hz U,V,W miniseed to 1 second miniseed
+
         Filters 1 second U,V,W,F miniseed to 1 minute miniseed
+
         Filters 1 second T1-4 miniseed to 1 minute miniseed
+
         Copies 1 second and 1 minute U,V,W,F,T1-4 miniseed to H,E,Z,F,UK1-4 earthworm
+
     PCDCP:
+
         Copies 1 second H,E,Z,F earthworm to U,V,W,F miniseed
+
         Copies 1 minute UK1-4 earthworm to T1-4 miniseed
+
         Filters 1 second U,V,W,F miniseed to 1 minute miniseed
+
     """,
 )
 def realtime_command(
