@@ -28,9 +28,9 @@ def main():
 )
 def day_command(
     observatory: str = Argument(None, help="observatory id"),
-    input_host: str = Option("127.0.0.1", help="host to request data"),
-    output_host: str = Option("127.0.0.1", help="host to write data"),
-    realtime_interval: int = Option(86400, help="length of update window"),
+    input_host: str = Option("127.0.0.1", help="host to request data from"),
+    output_host: str = Option("127.0.0.1", help="host to write data to"),
+    realtime_interval: int = Option(86400, help="length of update window (in seconds)"),
     update_limit: int = Option(7, help="number of update windows"),
 ):
     day_filter(
@@ -48,9 +48,9 @@ def day_command(
 )
 def hour_command(
     observatory: str = Argument(None, help="observatory id"),
-    input_host: str = Option("127.0.0.1", help="host to request data"),
-    output_host: str = Option("127.0.0.1", help="host to write data"),
-    realtime_interval: int = Option(3600, help="length of update window"),
+    input_host: str = Option("127.0.0.1", help="host to request data from"),
+    output_host: str = Option("127.0.0.1", help="host to write data to"),
+    realtime_interval: int = Option(3600, help="length of update window (in seconds)"),
     update_limit: int = Option(24, help="number of update windows"),
 ):
     hour_filter(
@@ -88,10 +88,10 @@ def hour_command(
 )
 def realtime_command(
     observatory: str = Argument(None, help="observatory id"),
-    input_host: str = Option("127.0.0.1", help="host to request data"),
-    output_host: str = Option("127.0.0.1", help="host to write data"),
+    input_host: str = Option("127.0.0.1", help="host to request data from"),
+    output_host: str = Option("127.0.0.1", help="host to write data to"),
     data_format: DataFormat = Option(DataFormat.PCDCP, help="Data acquisition system"),
-    realtime_interval: int = Option(600, help="length of update window"),
+    realtime_interval: int = Option(600, help="length of update window (in seconds)"),
     update_limit: int = Option(10, help="number of update windows"),
 ):
     if data_format == DataFormat.OBSRIO:
@@ -209,7 +209,7 @@ def day_filter(
     output_factory: TimeseriesFactory
         factory to write data
     realtime_interval: int
-        length of update window
+        length of update window (in seconds)
     update_limit: int
         number of update windows
     """
@@ -260,7 +260,7 @@ def hour_filter(
     output_factory: TimeseriesFactory
         factory to write data
     realtime_interval: int
-        length of update window
+        length of update window (in seconds)
     update_limit: int
         number of update windows
     """
@@ -311,7 +311,7 @@ def minute_filter(
     output_factory: TimeseriesFactory
         factory to write data
     realtime_interval: int
-        length of update window
+        length of update window (in seconds)
     update_limit: int
         number of update windows
     """
@@ -359,7 +359,7 @@ def second_filter(
     output_factory: TimeseriesFactory
         factory to write data
     realtime_interval: int
-        length of update window
+        length of update window (in seconds)
     update_limit: int
         number of update windows
     """
@@ -415,7 +415,7 @@ def _copy_channels(
     output_factory: TimeseriesFactory
         factory to write data
     realtime_interval: int
-        length of update window
+        length of update window (in seconds)
     update_limit: int
         number of update windows
     """
