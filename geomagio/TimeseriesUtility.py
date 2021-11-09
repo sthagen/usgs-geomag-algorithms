@@ -82,6 +82,8 @@ def encode_stream(stream: Stream, encoding: str) -> Stream:
         trace_out = trace.copy()
         if trace_out.data.dtype != encoding:
             trace_out.data = trace_out.data.astype(encoding)
+            if "mseed" in trace_out.stats:
+                trace_out.stats.mseed.encoding = encoding.upper()
         out_stream += trace_out
     return out_stream
 
