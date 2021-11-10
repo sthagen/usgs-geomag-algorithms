@@ -72,15 +72,13 @@ def hour_command(
 
         Filters 1 second U,V,W,F miniseed to 1 minute miniseed
 
-        Filters 1 second T1-4 miniseed to 1 minute miniseed
+        Filters 1 second T1-4 miniseed to 1 minute UK1-4 legacy
 
-        Copies 1 second and 1 minute U,V,W,F,T1-4 miniseed to H,E,Z,F,UK1-4 earthworm
+        Copies 1 second and 1 minute U,V,W,F miniseed to H,E,Z,F earthworm
 
     PCDCP:
 
         Copies 1 second H,E,Z,F earthworm to U,V,W,F miniseed
-
-        Copies 1 minute UK1-4 earthworm to T1-4 miniseed
 
         Filters 1 second U,V,W,F miniseed to 1 minute miniseed
 
@@ -111,10 +109,6 @@ def realtime_command(
                 ("V", "E"),
                 ("W", "Z"),
                 ("F", "F"),
-                ("T1", "LK1"),
-                ("T2", "LK2"),
-                ("T3", "LK3"),
-                ("T4", "LK4"),
             ),
             interval="second",
             input_factory=get_miniseed_factory(host=input_host),
@@ -122,11 +116,10 @@ def realtime_command(
             realtime_interval=realtime_interval,
             update_limit=update_limit,
         )
-        minute_filter(
+        temperature_filter(
             observatory=observatory,
-            channels=("T1", "T2", "T3", "T4"),
             input_factory=get_miniseed_factory(host=input_host),
-            output_factory=get_miniseed_factory(host=output_host),
+            output_factory=get_edge_factory(host=output_host),
             realtime_interval=realtime_interval,
             update_limit=update_limit,
         )
@@ -140,20 +133,6 @@ def realtime_command(
                 ("F", "F"),
             ),
             interval="second",
-            input_factory=get_edge_factory(host=input_host),
-            output_factory=get_miniseed_factory(host=output_host),
-            realtime_interval=realtime_interval,
-            update_limit=update_limit,
-        )
-        _copy_channels(
-            observatory=observatory,
-            channels=(
-                ("UK1", "T1"),
-                ("UK2", "T2"),
-                ("UK3", "T3"),
-                ("UK4", "T4"),
-            ),
-            interval="minute",
             input_factory=get_edge_factory(host=input_host),
             output_factory=get_miniseed_factory(host=output_host),
             realtime_interval=realtime_interval,
@@ -175,10 +154,6 @@ def realtime_command(
                 ("V", "E"),
                 ("W", "Z"),
                 ("F", "F"),
-                ("T1", "UK1"),
-                ("T2", "UK2"),
-                ("T3", "UK3"),
-                ("T4", "UK4"),
             ),
             interval="minute",
             input_factory=get_miniseed_factory(host=input_host),
@@ -386,6 +361,43 @@ def second_filter(
             input_channels=(channel,),
             output_channels=(channel,),
             realtime=realtime_interval,
+            update_limit=update_limit,
+        )
+
+
+def temperature_filter(
+    observatory: str,
+    input_factory: Optional[TimeseriesFactory] = None,
+    output_factory: Optional[TimeseriesFactory] = None,
+    realtime_interval: int = 600,
+    update_limit: int = 10,
+):
+    """Filter temperatures 1Hz miniseed (LK1-4) to 1 minute legacy (UK1-4)."""
+    starttime, endtime = get_realtime_interval(realtime_interval)
+    controller = Controller(
+        inputFactory=input_factory or get_miniseed_factory(),
+        inputInterval="second",
+        outputFactory=output_factory or get_edge_factory(),
+        outputInterval="minute",
+    )
+    renames = {"LK1": "UK1", "LK2": "UK2", "LK3": "UK3", "LK4": "UK4"}
+    for input_channel in renames.keys():
+        output_channel = renames[input_channel]
+        controller.run_as_update(
+            algorithm=FilterAlgorithm(
+                input_sample_period=1,
+                output_sample_period=60,
+                inchannels=(input_channel,),
+                outchannels=(output_channel,),
+            ),
+            observatory=(observatory,),
+            output_observatory=(observatory,),
+            starttime=starttime,
+            endtime=endtime,
+            input_channels=(input_channel,),
+            output_channels=(output_channel,),
+            realtime=realtime_interval,
+            rename_output_channel=((input_channel, output_channel),),
             update_limit=update_limit,
         )
 
