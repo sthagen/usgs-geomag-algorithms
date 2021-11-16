@@ -30,13 +30,30 @@ def day_command(
     observatory: str = Argument(None, help="observatory id"),
     input_host: str = Option("127.0.0.1", help="host to request data from"),
     output_host: str = Option("127.0.0.1", help="host to write data to"),
-    realtime_interval: int = Option(86400, help="length of update window (in seconds)"),
+    realtime_interval: int = Option(
+        604800, help="length of update window (in seconds)"
+    ),
     update_limit: int = Option(7, help="number of update windows"),
 ):
     day_filter(
         observatory=observatory,
         input_factory=get_miniseed_factory(host=input_host),
         output_factory=get_miniseed_factory(host=output_host),
+        realtime_interval=realtime_interval,
+        update_limit=update_limit,
+    )
+    temperature_filter(
+        observatory=observatory,
+        channels=(
+            ("UK1", "PK1"),
+            ("UK2", "PK2"),
+            ("UK3", "PK3"),
+            ("UK4", "PK4"),
+        ),
+        input_factory=get_edge_factory(host=input_host),
+        input_interval="minute",
+        output_factory=get_miniseed_factory(host=output_host),
+        output_interval="day",
         realtime_interval=realtime_interval,
         update_limit=update_limit,
     )
@@ -50,13 +67,28 @@ def hour_command(
     observatory: str = Argument(None, help="observatory id"),
     input_host: str = Option("127.0.0.1", help="host to request data from"),
     output_host: str = Option("127.0.0.1", help="host to write data to"),
-    realtime_interval: int = Option(3600, help="length of update window (in seconds)"),
+    realtime_interval: int = Option(86400, help="length of update window (in seconds)"),
     update_limit: int = Option(24, help="number of update windows"),
 ):
     hour_filter(
         observatory=observatory,
         input_factory=get_miniseed_factory(host=input_host),
         output_factory=get_miniseed_factory(host=output_host),
+        realtime_interval=realtime_interval,
+        update_limit=update_limit,
+    )
+    temperature_filter(
+        observatory=observatory,
+        channels=(
+            ("UK1", "RK1"),
+            ("UK2", "RK2"),
+            ("UK3", "RK3"),
+            ("UK4", "RK4"),
+        ),
+        input_factory=get_edge_factory(host=input_host),
+        input_interval="minute",
+        output_factory=get_miniseed_factory(host=output_host),
+        output_interval="hour",
         realtime_interval=realtime_interval,
         update_limit=update_limit,
     )
@@ -118,8 +150,16 @@ def realtime_command(
         )
         temperature_filter(
             observatory=observatory,
+            channels=(
+                ("LK1", "UK1"),
+                ("LK2", "UK2"),
+                ("LK3", "UK3"),
+                ("LK4", "UK4"),
+            ),
             input_factory=get_miniseed_factory(host=input_host),
+            input_interval="second",
             output_factory=get_edge_factory(host=output_host),
+            output_interval="minute",
             realtime_interval=realtime_interval,
             update_limit=update_limit,
         )
@@ -165,7 +205,7 @@ def realtime_command(
 
 def day_filter(
     observatory: str,
-    channels: List[str] = ["U", "V", "W", "F", "T1", "T2", "T3", "T4"],
+    channels: List[str] = ["U", "V", "W", "F"],
     input_factory: Optional[TimeseriesFactory] = None,
     output_factory: Optional[TimeseriesFactory] = None,
     realtime_interval: int = 86400,
@@ -216,7 +256,7 @@ def day_filter(
 
 def hour_filter(
     observatory: str,
-    channels: List[str] = ["U", "V", "W", "F", "T1", "T2", "T3", "T4"],
+    channels: List[str] = ["U", "V", "W", "F"],
     input_factory: Optional[TimeseriesFactory] = None,
     output_factory: Optional[TimeseriesFactory] = None,
     realtime_interval: int = 600,
@@ -367,8 +407,11 @@ def second_filter(
 
 def temperature_filter(
     observatory: str,
+    channels: List[List[str]],
     input_factory: Optional[TimeseriesFactory] = None,
+    input_interval: int = "second",
     output_factory: Optional[TimeseriesFactory] = None,
+    output_interval: int = "minute",
     realtime_interval: int = 600,
     update_limit: int = 10,
 ):
@@ -376,13 +419,11 @@ def temperature_filter(
     starttime, endtime = get_realtime_interval(realtime_interval)
     controller = Controller(
         inputFactory=input_factory or get_miniseed_factory(),
-        inputInterval="second",
+        inputInterval=input_interval,
         outputFactory=output_factory or get_edge_factory(),
-        outputInterval="minute",
+        outputInterval=output_interval,
     )
-    renames = {"LK1": "UK1", "LK2": "UK2", "LK3": "UK3", "LK4": "UK4"}
-    for input_channel in renames.keys():
-        output_channel = renames[input_channel]
+    for input_channel, output_channel in channels:
         controller.run_as_update(
             algorithm=FilterAlgorithm(
                 input_sample_period=1,
