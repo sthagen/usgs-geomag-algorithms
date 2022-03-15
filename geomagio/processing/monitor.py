@@ -55,11 +55,25 @@ def get_gaps(gaps):
     """
     gap_string = ""
     if len(gaps):
-        for gap in gaps:
-            gap_string += "&nbsp;&nbsp;&nbsp;&nbsp; %s to %s <br>\n" % (
-                format_time(gap[0]),
-                format_time(gap[1]),
-            )
+        for i in range(len(gaps)):
+            if i < 10:
+                gap_string += "&nbsp;&nbsp;&nbsp;&nbsp; %s to %s <br>\n" % (
+                    format_time(gaps[i][0]),
+                    format_time(gaps[i][1]),
+                )
+            else:
+                if i == 10:
+                    gap_string += "<details>\n"
+                    gap_string += f"<summary>+ {len(gaps) - 10}</summary>\n"
+                    gap_string += "<span>\n"
+                else:
+                    gap_string += "&nbsp;&nbsp;&nbsp;&nbsp; %s to %s <br>\n" % (
+                        format_time(gaps[i][0]),
+                        format_time(gaps[i][1]),
+                    )
+                if i == len(gaps) - 1:
+                    gap_string += "</span>\n"
+                    gap_string += "</details>\n"
     else:
         gap_string = "&nbsp;&nbsp;&nbsp;&nbsp;None<br>"
     return gap_string
