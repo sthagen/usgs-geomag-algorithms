@@ -59,9 +59,24 @@ directory and output **_H_**, **_E_**, **_Z_** and **_F_** data to a group of
       --starttime 2013-03-01T00:00:00Z \
       --endtime 2013-03-31T23:59:00Z \
       --input pcdcp
-      --input-url file://data-pcdcp/./%(OBS)s%(year)s%(julian)s.%(i)s \
-      --output iaga2002
-      --output-url file://data-iaga/./$(obs)s%(Y)s%(j)s.%(i)s \
+      --input-url file://data-pcdcp/./{OBS}/{date:%Y%j}.{i} \
+      --output iaga2002 \
+      --output-url file://data-iaga/./{obs}{date:%Y%m%d}{t}{i}.{i} \
+      --outchannels H E Z F
+
+Here is the same example written for use in the Windows command line.
+
+      geomag.py ^
+      --type variation ^
+      --inchannels H E Z F ^
+      --interval minute ^
+      --observatory TUC ^
+      --starttime 2013-03-01T00:00:00Z ^
+      --endtime 2013-03-31T23:59:00Z ^
+      --input pcdcp
+      --input-url file://data-pcdcp/./{OBS}/{date:%%Y%%j}.{i} ^
+      --output iaga2002 ^
+      --output-url file://data-iaga/./{obs}{date:%%Y%%m%%d}{t}{i}.{i} ^
       --outchannels H E Z F
 
 To retrieve all **_Dst 4 minute_**, and **_Dst 3 minute_** data from **_USGS_**
