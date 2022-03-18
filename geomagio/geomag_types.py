@@ -1,4 +1,4 @@
-from typing_extensions import Literal
+from typing import Literal
 
 DataInterval = Literal["tenhertz", "second", "minute", "hour", "day", "month"]
 DataType = Literal[

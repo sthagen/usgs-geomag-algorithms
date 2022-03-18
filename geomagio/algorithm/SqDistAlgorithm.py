@@ -461,7 +461,7 @@ class SqDistAlgorithm(Algorithm):
         # to White et al. (USGS SIR 2014-5045).
         fom = 10 ** (-3 / 20.0)  # halve power at corner frequency
         omg = np.pi / np.float64(smooth)  # corner angular frequency
-        sig = np.sqrt(-2 * np.log(fom) / omg ** 2) + np.finfo(float).eps  # sig>0
+        sig = np.sqrt(-2 * np.log(fom) / omg**2) + np.finfo(float).eps  # sig>0
         ts = np.linspace(
             np.max((-m, -3 * np.round(sig))),
             np.min((m, 3 * np.round(sig))),
@@ -536,7 +536,7 @@ class SqDistAlgorithm(Algorithm):
                     # when forecasting, grow sigma=sqrt(var) like a prediction
                     # interval; sumc2 and jstep will be reset with the next
                     # valid observation
-                    phiJminus1 = phiJminus1 + phi ** jstep
+                    phiJminus1 = phiJminus1 + phi**jstep
                     jstep = jstep + 1
                     sumc2 = (
                         sumc2
