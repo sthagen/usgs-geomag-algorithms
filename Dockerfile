@@ -1,6 +1,4 @@
 ARG FROM_IMAGE=usgs/python:3.8-obspy
-
-
 FROM ${FROM_IMAGE}
 
 ARG GIT_BRANCH_NAME=none
@@ -21,12 +19,14 @@ RUN cd /geomag-algorithms \
     # install into system python
     && poetry export -o requirements.txt --dev --without-hashes \
     # only install dependencies, not project
-    && pip install -r requirements.txt
+    && pip install -r requirements.txt \
+    && pip cache purge
 
 # install rest of library separate from dependencies
 COPY . /geomag-algorithms
 RUN cd /geomag-algorithms \
     && pip install . \
+    && pip cache purge \
     # add data directory owned by usgs-user
     && mkdir -p /data \
     && chown -R usgs-user:usgs-user /data
