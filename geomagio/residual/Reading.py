@@ -1,5 +1,4 @@
-from typing import Dict, List, Optional, Tuple
-from typing_extensions import Literal
+from typing import Dict, List, Literal, Optional, Tuple
 
 import numpy as np
 from obspy import Stream, UTCDateTime
@@ -187,7 +186,7 @@ def get_ordinates(
     d_ord = d_abs - d_bas
     z_ord = z_abs - z_bas
     e_ord = h_abs * np.radians(d_ord)
-    h_ord = np.sqrt(h_ord ** 2 - e_ord ** 2)
+    h_ord = np.sqrt(h_ord**2 - e_ord**2)
     return (h_ord, e_ord, z_ord)
 
 

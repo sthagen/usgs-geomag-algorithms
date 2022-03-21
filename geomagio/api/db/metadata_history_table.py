@@ -4,7 +4,7 @@ from .common import sqlalchemy_metadata
 from .metadata_table import metadata
 
 # create copy of original metadata table and add to sqlalchemy metadata
-metadata_history = metadata.tometadata(
+metadata_history = metadata.to_metadata(
     metadata=sqlalchemy_metadata, name="metadata_history"
 )
 metadata_history.indexes.clear()

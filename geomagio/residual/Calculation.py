@@ -1,5 +1,4 @@
-from typing import List, Tuple
-from typing_extensions import Literal
+from typing import List, Literal, Tuple
 
 import numpy as np
 
@@ -116,7 +115,7 @@ def calculate_D_absolute(
             m.angle
             + np.degrees(
                 m.measurement_type.meridian
-                * (np.arcsin(m.residual / np.sqrt((m.h + h_baseline) ** 2 + m.e ** 2)))
+                * (np.arcsin(m.residual / np.sqrt((m.h + h_baseline) ** 2 + m.e**2)))
             )
             - np.degrees(np.arctan(m.e / (m.h + h_baseline)))
             for m in declination_measurements
@@ -168,7 +167,7 @@ def calculate_HZ_absolutes(
     inclination_radians = np.radians(inclination)
     h_abs = corrected_f * np.cos(inclination_radians)
     z_abs = corrected_f * np.sin(inclination_radians)
-    h_b = np.sqrt(h_abs ** 2 - mean.e ** 2) - mean.h
+    h_b = np.sqrt(h_abs**2 - mean.e**2) - mean.h
     z_b = z_abs - mean.z
     # adjust absolutes to reference measurement
     if reference:
