@@ -38,25 +38,29 @@ _INSTRUMENT_METADATA = [
             "type": "FGE",
             "channels": {
                 # each channel maps to a list of components to calculate nT
+                # Temporary values until actuals are obtained.
                 # TODO: calculate these lists based on "FGE" type
-                "U": [{"channel": "U_Volt", "offset": 20613, "scale": 313.2}],
-                "V": [{"channel": "V_Volt", "offset": 0, "scale": 312.3}],
-                "W": [{"channel": "W_Volt", "offset": 47450, "scale": 312.0}],
+                # TODO: Adjust offset for new FGE sensor & electronics? (installed 3/20/22)
+                "U": [{"channel": "U_Volt", "offset": 20613, "scale": 980}],
+                "V": [{"channel": "V_Volt", "offset": 0, "scale": 980}],
+                "W": [{"channel": "W_Volt", "offset": 47450, "scale": 980}],
             },
             "electronics": {
-                "serial": "E0542",
+                "serial": "TBD",
                 # these scale values are used to convert voltage
-                "x-scale": 313.2,  # V/nT
-                "y-scale": 312.3,  # V/nT
-                "z-scale": 312.0,  # V/nT
+                # Temporary values until actuals are obtained.
+                "x-scale": 980,  # nT/V
+                "y-scale": 980,  # nT/V
+                "z-scale": 980,  # nT/V
                 "temperature-scale": 0.01,  # V/K
             },
             "sensor": {
-                "serial": "S0419",
+                "serial": "TBD",
                 # these constants combine with instrument setting for offset
-                "x-constant": 36958,  # nT/mA
-                "y-constant": 36849,  # nT/mA
-                "z-constant": 36811,  # nT/mA
+                # Temporary values until actuals are obtained.
+                "x-constant": 1,  # nT/mA
+                "y-constant": 1,  # nT/mA
+                "z-constant": 1,  # nT/mA
             },
         },
     },
@@ -215,9 +219,9 @@ _INSTRUMENT_METADATA = [
             "electronics": {
                 "serial": "E0568",
                 # these scale values are used to convert voltage
-                "x-scale": 967.7,  # V/nT
-                "y-scale": 969.7,  # V/nT
-                "z-scale": 973.4,  # V/nT
+                "x-scale": 967.7,  # nT/V
+                "y-scale": 969.7,  # nT/V
+                "z-scale": 973.4,  # nT/V
                 "temperature-scale": 0.01,  # V/K
             },
             "sensor": {
@@ -477,9 +481,9 @@ _INSTRUMENT_METADATA = [
             # "electronics": {
             #     "serial": "E0542",
             #     # these scale values are used to convert voltage
-            #     "x-scale": 313.2,  # V/nT
-            #     "y-scale": 312.3,  # V/nT
-            #     "z-scale": 312.0,  # V/nT
+            #     "x-scale": 313.2,  # nT/V
+            #     "y-scale": 312.3,  # nT/V
+            #     "z-scale": 312.0,  # nT/V
             #     "temperature-scale": 0.01,  # V/K
             # },
             # "sensor": {
