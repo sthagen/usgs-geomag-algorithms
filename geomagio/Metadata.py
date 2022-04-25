@@ -413,26 +413,27 @@ _INSTRUMENT_METADATA = [
             "channels": {
                 # each channel maps to a list of components to calculate nT
                 # TODO: calculate these lists based on "FGE" type
-                "U": [{"channel": "U_Volt", "offset": 0, "scale": 320.0}],
-                "V": [{"channel": "V_Volt", "offset": 0, "scale": 320.0}],
-                "W": [{"channel": "W_Volt", "offset": 0, "scale": 320.0}],
+                "U": [{"channel": "U_Volt", "offset": 0, "scale": 971.8}],
+                "V": [{"channel": "V_Volt", "offset": 0, "scale": 970.6}],
+                "W": [{"channel": "W_Volt", "offset": 0, "scale": 960.2}],
             },
-            ## this info should get updated when available
-            # "electronics": {
-            #     "serial": "E0542",
-            #     # these scale values are used to convert voltage
-            #     "x-scale": 313.2,  # V/nT
-            #     "y-scale": 312.3,  # V/nT
-            #     "z-scale": 312.0,  # V/nT
-            #     "temperature-scale": 0.01,  # V/K
-            # },
-            # "sensor": {
-            #     "serial": "S0419",
-            #     # these constants combine with instrument setting for offset
-            #     "x-constant": 36958,  # nT/mA
-            #     "y-constant": 36849,  # nT/mA
-            #     "z-constant": 36811,  # nT/mA
-            # },
+            # this info should get updated when available
+            "electronics": {
+                "serial": "E558",
+                # these scale values are used to convert voltage
+                # these are calculated using Ohm's law, given scaling resistor value, and given nT/mA values.
+                "x-scale": 971.8,  # nT/V
+                "y-scale": 970.6,  # nT/V
+                "z-scale": 960.2,  # nT/V
+                "temperature-scale": 0.01,  # V/K
+            },
+            "sensor": {
+                "serial": "S0428",
+                # these constants combine with instrument setting for offset
+                "x-constant": 37220,  # nT/mA
+                "y-constant": 37175,  # nT/mA
+                "z-constant": 36775,  # nT/mA
+            },
         },
     },
     {
