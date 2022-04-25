@@ -418,22 +418,22 @@ _INSTRUMENT_METADATA = [
                 "W": [{"channel": "W_Volt", "offset": 0, "scale": 960.2}],
             },
             # this info should get updated when available
-             "electronics": {
-                 "serial": "E558",
-                 # these scale values are used to convert voltage
-                 # these are calculated using Ohm's law, given scaling resistor value, and given nT/mA values.
-                 "x-scale": 971.8,  # nT/V
-                 "y-scale": 970.6,  # nT/V
-                 "z-scale": 960.2,  # nT/V
-                 "temperature-scale": 0.01,  # V/K
-             },
-             "sensor": {
-                 "serial": "S0428",
-                 # these constants combine with instrument setting for offset
-                 "x-constant": 37220,  # nT/mA
-                 "y-constant": 37175,  # nT/mA
-                 "z-constant": 36775,  # nT/mA
-             },
+            "electronics": {
+                "serial": "E558",
+                # these scale values are used to convert voltage
+                # these are calculated using Ohm's law, given scaling resistor value, and given nT/mA values.
+                "x-scale": 971.8,  # nT/V
+                "y-scale": 970.6,  # nT/V
+                "z-scale": 960.2,  # nT/V
+                "temperature-scale": 0.01,  # V/K
+            },
+            "sensor": {
+                "serial": "S0428",
+                # these constants combine with instrument setting for offset
+                "x-constant": 37220,  # nT/mA
+                "y-constant": 37175,  # nT/mA
+                "z-constant": 36775,  # nT/mA
+            },
         },
     },
     {
