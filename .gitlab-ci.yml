@@ -142,7 +142,7 @@ Poetry:
 Python Build:
   script:
     - poetry build
-  stage: build
+  stage: test
 
 Python Lint:
   script:
