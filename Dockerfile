@@ -1,4 +1,4 @@
-ARG FROM_IMAGE=usgs/python:3.8-obspy
+ARG FROM_IMAGE=usgs/python:3.9-obspy
 FROM ${FROM_IMAGE}
 
 ARG GIT_BRANCH_NAME=none
