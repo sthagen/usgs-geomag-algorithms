@@ -1,20 +1,20 @@
-default:
-  image: ${DEVOPS_REGISTRY}usgs/python:3.9-obspy
-  variables:
-    CI_REGISTRY: ${CODE_REGISTRY}
-    CI_REGISTRY_IMAGE: ${CODE_REGISTRY_IMAGE}
-    # environment variables
-    APP_NAME: geomag-algorithms
-    DATA_HOST: "edgecwb.usgs.gov"
-    DATA_PORT: "2060"
-    DATA_TYPE: "edge"
-    UPSTREAM_PATH: ghsc/geomag/geomag-algorithms
+image: ${DEVOPS_REGISTRY}usgs/python:3.9-obspy
 
 stages:
   - init
   - test
   - integration
   - deploy
+
+variables:
+  CI_REGISTRY: ${CODE_REGISTRY}
+  CI_REGISTRY_IMAGE: ${CODE_REGISTRY_IMAGE}
+  # container environment variables
+  APP_NAME: geomag-algorithms
+  DATA_HOST: "edgecwb.usgs.gov"
+  DATA_PORT: "2060"
+  DATA_TYPE: "edge"
+  UPSTREAM_PATH: ghsc/geomag/geomag-algorithms
 
 # Do not run in upstream for merge requests
 workflow:
