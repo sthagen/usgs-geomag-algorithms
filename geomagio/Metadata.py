@@ -358,26 +358,26 @@ _INSTRUMENT_METADATA = [
             "channels": {
                 # each channel maps to a list of components to calculate nT
                 # TODO: calculate these lists based on "FGE" type
-                "U": [{"channel": "U_Volt", "offset": 0, "scale": 320.0}],
-                "V": [{"channel": "V_Volt", "offset": 0, "scale": 320.0}],
-                "W": [{"channel": "W_Volt", "offset": 0, "scale": 320.0}],
+                "U": [{"channel": "U_Volt", "offset": 0, "scale": 314.28}],
+                "V": [{"channel": "V_Volt", "offset": 0, "scale": 310.48}],
+                "W": [{"channel": "W_Volt", "offset": 0, "scale": 317.5}],
             },
-            ## this info should get updated when available
-            # "electronics": {
-            #     "serial": "E0542",
-            #     # these scale values are used to convert voltage
-            #     "x-scale": 313.2,  # V/nT
-            #     "y-scale": 312.3,  # V/nT
-            #     "z-scale": 312.0,  # V/nT
-            #     "temperature-scale": 0.01,  # V/K
-            # },
-            # "sensor": {
-            #     "serial": "S0419",
-            #     # these constants combine with instrument setting for offset
-            #     "x-constant": 36958,  # nT/mA
-            #     "y-constant": 36849,  # nT/mA
-            #     "z-constant": 36811,  # nT/mA
-            # },
+            # this info should get updated when available
+            "electronics": {
+                "serial": "E0542",
+                # these scale values are used to convert voltage
+                "x-scale": 314.28,  # V/nT
+                "y-scale": 310.48,  # V/nT
+                "z-scale": 317.5,  # V/nT
+                "temperature-scale": 0.01,  # V/K
+            },
+            "sensor": {
+                "serial": "S0420",
+                # these constants combine with instrument setting for offset
+                "x-constant": 37085,  # nT/mA
+                "y-constant": 36637,  # nT/mA
+                "z-constant": 37465,  # nT/mA
+            },
         },
     },
     {
