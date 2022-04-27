@@ -76,9 +76,15 @@ workflow:
       git clone "${CI_REPOSITORY_URL}" "$(basename "${APP_DEPLOY_DIR}")";
       fi
     - cd "${APP_DEPLOY_DIR}";
+    # fetch tags so checkout doesn't create  a branch
     - git fetch --tags;
+    # switch to requested tag/branch
     - git checkout "${CI_COMMIT_REF_NAME}" || git checkout -b "${CI_COMMIT_REF_NAME}";
-    - git pull --ff-only "${CI_REPOSITORY_URL}" "${CI_COMMIT_REF_NAME}";
+    # pull updates if on a branch
+    - |
+      if ! git status | grep -q detached ; then
+        git pull --ff-only "${CI_REPOSITORY_URL}" "${CI_COMMIT_REF_NAME}";
+      fi
   stage: deploy
   tags:
     - deploy
