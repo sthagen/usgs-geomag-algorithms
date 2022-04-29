@@ -206,7 +206,8 @@ Build Docker Image:
       name: ${DEVOPS_REGISTRY}docker:19.03-dind
   stage: integration
   tags:
-    - build
+    - chs-shared
+    - dind
   variables:
     APP_NAME: geomag-algorithms
     DOCKER_DRIVER: overlay2
