@@ -211,8 +211,7 @@ Build Docker Image:
   variables:
     APP_NAME: geomag-algorithms
     DOCKER_DRIVER: overlay2
-    # FROM_IMAGE: ${CI_REGISTRY}/devops/images/usgs/python:3.10-obspy
-    FROM_IMAGE: public.ecr.aws/lts/ubuntu:22.04
+    FROM_IMAGE: ${DEVOPS_REGISTRY}usgs/python:3.9-obspy
     TRIVY_VERSION: "0.27.1"
 
 ## --------------------------------------------------
