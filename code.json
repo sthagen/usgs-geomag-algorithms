@@ -3,7 +3,7 @@
     "name": "geomag-algorithms",
     "organization": "U.S. Geological Survey",
     "description": "Library for processing Geomagnetic timeseries data.",
-    "version": "1.4.4",
+    "version": "1.4.6",
     "status": "Development",
 
     "permissions": {
