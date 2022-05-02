@@ -17,7 +17,7 @@ packages = [
   {include = "geomagio" }
 ]
 repository="https://code.usgs.gov/ghsc/geomag/geomag-algorithms"
-version = "1.4.4"
+version = "1.4.6"
 
 
 [tool.poetry.dependencies]
