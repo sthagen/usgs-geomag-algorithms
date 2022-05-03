@@ -121,7 +121,11 @@ def require_user(
     ) -> User:
         if not user:
             # not logged in
-            raise HTTPException(status_code=401, detail=request.url_for("login"))
+            raise HTTPException(
+                detail=request.url_for("login"),
+                headers={"Cache-Control": "no-cache"},
+                status_code=401,
+            )
         if allowed_groups is not None and not any(
             g in user.groups for g in allowed_groups
         ):
@@ -129,7 +133,11 @@ def require_user(
                 f"user ({user.email}, sub={user.sub})"
                 f" not member of any allowed group ({allowed_groups})"
             )
-            raise HTTPException(403, detail="Forbidden")
+            raise HTTPException(
+                403,
+                detail="Forbidden",
+                headers={"Cache-Control": "no-cache"},
+            )
         return user
 
     return verify_groups
@@ -164,11 +172,12 @@ async def authorize(request: Request):
     request.session["user"] = dict(userinfo)
     # redirect
     return RedirectResponse(
+        headers={"Cache-Control": "no-cache"},
         url=request.session.pop(
             "after_authorize_redirect",
             # fall back to index
             request.url_for("index"),
-        )
+        ),
     )
 
 
@@ -196,11 +205,11 @@ async def logout(request: Request):
     request.session.pop("token", None)
     request.session.pop("user", None)
     return RedirectResponse(
+        headers={"Cache-Control": "no-cache"},
         # referrer when set
-        "Referer" in request.headers
-        and request.headers["Referer"]
+        url="Referer" in request.headers and request.headers["Referer"]
         # otherwise index
-        or request.url_for("index")
+        or request.url_for("index"),
     )
 
 
