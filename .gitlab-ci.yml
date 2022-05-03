@@ -229,7 +229,7 @@ Staging Library:
   tags:
     - deploy
     - swarm
-    - mage02
+    - mage01
 
 Production Library:
   extends:
