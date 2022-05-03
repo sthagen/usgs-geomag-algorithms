@@ -1,29 +1,23 @@
-image: ${DEVOPS_REGISTRY}usgs/centos:latest
-
-cache:
-  paths:
-    # cache pip installed dependencies, see PIP_CACHE_DIR variable below
-    - .cache/pip
+image: ${DEVOPS_REGISTRY}usgs/python:3.9-obspy
 
 stages:
+  - init
   - test
   - integration
-  - scan
   - deploy
 
 variables:
-  CI_REGISTRY: ${CODE_REGISTRY}
-  CI_REGISTRY_IMAGE: ${CODE_REGISTRY_IMAGE}
-  PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
-  TRIVY_VERSION: "0.13.0"
-  # docker variables
-  DOCKER_DRIVER: overlay2
-  FROM_IMAGE: ${CODE_REGISTRY}/devops/images/usgs/python:3.8-obspy
-  # environment variables
   APP_NAME: geomag-algorithms
-  DATA_HOST: "cwbpub.cr.usgs.gov"
+  DATA_HOST: "edgecwb.usgs.gov"
   DATA_PORT: "2060"
   DATA_TYPE: "edge"
+  UPSTREAM_PATH: ghsc/geomag/geomag-algorithms
+
+# Do not run in upstream for merge requests
+workflow:
+  rules:
+    - if: $CI_COMMIT_TAG
+    - if: $CI_COMMIT_BRANCH
 
 ## --------------------------------------------------
 # Templates
@@ -33,76 +27,22 @@ variables:
   before_script:
     - IMAGE_NAME=usgs/${APP_NAME}:${CI_COMMIT_REF_SLUG}
     - IMAGE_NAME=${IMAGE_NAME/:master/:latest}
-    - INTERNAL_IMAGE_NAME=${CI_REGISTRY_IMAGE}/${IMAGE_NAME}
+    - INTERNAL_IMAGE_NAME=${CODE_REGISTRY_IMAGE}/${IMAGE_NAME}
     - STACK_NAME=${APP_NAME}
 
-.build_docker_image:
-  cache: {}
-  extends:
-    - .adjust_image_names
-  image: docker:19.03-git
-  only:
-    - master@ghsc/geomag/geomag-algorithms
-    - production@ghsc/geomag/geomag-algorithms
-    - tags@ghsc/geomag/geomag-algorithms
-  script:
-    - docker build
-      --pull
-      --build-arg FROM_IMAGE=${FROM_IMAGE}
-      --build-arg GIT_BRANCH_NAME=${CI_COMMIT_REF_NAME}
-      --build-arg GIT_COMMIT_SHA=${CI_COMMIT_SHA}
-      --tag local/${IMAGE_NAME} .
-
-    - docker tag local/${IMAGE_NAME} ${IMAGE_NAME}
-    - docker push ${IMAGE_NAME}
-    - docker image rm ${IMAGE_NAME}
-
-    - docker tag local/${IMAGE_NAME} ${INTERNAL_IMAGE_NAME}
-    - docker push ${INTERNAL_IMAGE_NAME}
-    - docker image rm ${INTERNAL_IMAGE_NAME}
-  services:
-    - docker:19.03-dind
-  stage: integration
-  tags:
-    - build
-
-.check_code:
-  artifacts:
-    reports:
-      cobertura: coverage.xml
-      junit: junit.xml
-  before_script:
-    # install dependencies
-    - poetry config virtualenvs.create false
-    - poetry install
-    - which python
-  image: ${DEVOPS_REGISTRY}usgs/python:3.8-build
-  script:
-    # run checks
-    - black --check .
-    - pytest --cov=geomagio --junitxml junit.xml
-    - coverage xml
-    - safety check
-  stage: test
-  tags:
-    - development
-
 .deploy:
-  cache: {}
   extends:
     - .adjust_image_names
-  image: ${CODE_REGISTRY}/ghsc/hazdev/cloud-formation/hazdev-build-runner:latest
+  image: "${CODE_REGISTRY}/ghsc/hazdev/container-deploy:latest"
   script:
-    - git clone ${GENERIC_SWARM_DEPLOY_REPO} generic-deploy
     - cp -v
-      generic-deploy/default.config.sh
-      generic-deploy/default.funcs.sh
-      generic-deploy/deploy.sh
+      /container-deploy/default.config.sh
+      /container-deploy/default.funcs.sh
+      /container-deploy/deploy.sh
       scripts/.
-
     - export APP_NAME=${APP_NAME}
     - export IMAGE_NAME=${IMAGE_NAME}
-    - export REGISTRY=${CI_REGISTRY_IMAGE}
+    - export REGISTRY=${CODE_REGISTRY_IMAGE}
     - export STACK_NAME=${APP_NAME}
     - ./scripts/deploy.sh
   stage: deploy
@@ -121,7 +61,6 @@ variables:
   #   REVIEWER_GROUP
 
 .deploy-library:
-  cache: {}
   image: "docker:stable-git"
   script:
     - PREFIX_LENGTH=${#REQUIRED_PREFIX};
@@ -134,8 +73,15 @@ variables:
       git clone "${CI_REPOSITORY_URL}" "$(basename "${APP_DEPLOY_DIR}")";
       fi
     - cd "${APP_DEPLOY_DIR}";
+    # fetch tags so checkout doesn't create  a branch
+    - git fetch --tags;
+    # switch to requested tag/branch
     - git checkout "${CI_COMMIT_REF_NAME}" || git checkout -b "${CI_COMMIT_REF_NAME}";
-    - git pull --ff-only "${CI_REPOSITORY_URL}" "${CI_COMMIT_REF_NAME}";
+    # pull updates if on a branch
+    - |
+      if ! git status | grep -q detached ; then
+        git pull --ff-only "${CI_REPOSITORY_URL}" "${CI_COMMIT_REF_NAME}";
+      fi
   stage: deploy
   tags:
     - deploy
@@ -144,36 +90,77 @@ variables:
     APP_DEPLOY_DIR: "/geomag/geomag-algorithms"
     REQUIRED_PREFIX: "/geomag"
 
+# rules to define which branches should trigger actions
+.development-env: &development-env
+  if: $CI_PROJECT_PATH != $UPSTREAM_PATH
+  variables:
+    ENVIRONMENT: development
 
+.staging-env: &staging-env
+  if: >
+    $CI_PROJECT_PATH == $UPSTREAM_PATH
+    && $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+  variables:
+    ENVIRONMENT: staging
 
-.staging:
-  only:
-    - master@ghsc/geomag/geomag-algorithms
-    - tags@ghsc/geomag/geomag-algorithms
+.production-env: &production-env
+  if: >
+    $CI_PROJECT_PATH == $UPSTREAM_PATH
+    && ( $CI_COMMIT_BRANCH == 'production' || $CI_COMMIT_TAG != '' )
+  variables:
+    ENVIRONMENT: production
 
-.production:
-  except:
-    - ^.*beta.*$
-    - ^.*-rc.*$
-  only:
-    - tags@ghsc/geomag/geomag-algorithms
-    - production@ghsc/geomag/geomag-algorithms
-  when: manual
+## --------------------------------------------------
+# Init Stage
+## --------------------------------------------------
+
+Poetry:
+  artifacts:
+    paths:
+      - poetry.toml
+      - .venv
+  cache:
+    paths:
+      # cache pip installed dependencies, see PIP_CACHE_DIR variable below
+      - .cache/pip
+  script:
+    # install into .venv for artifact
+    - poetry config virtualenvs.in-project true --local
+    - poetry install
+    - poetry run safety check
+  stage: init
+  variables:
+    PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
 
 ## --------------------------------------------------
 # Test Stage
 ## --------------------------------------------------
 
-# Numpy 1.20 requires python 3.7 or newer
-# Check Python 3.6:
-#   extends:
-#     - .check_code
-#   image: ${DEVOPS_REGISTRY}usgs/obspy:3
+Python Build:
+  needs:
+    - Poetry
+  script:
+    - poetry build
+  stage: test
 
-Check Python 3.8:
-  extends:
-    - .check_code
-  image: ${DEVOPS_REGISTRY}usgs/python:3.8-build
+Python Lint:
+  needs:
+    - Poetry
+  script:
+    - poetry run black --check .
+  stage: test
+
+Python Test:
+  artifacts:
+    reports:
+      cobertura: coverage.xml
+      junit: junit.xml
+  needs:
+    - Poetry
+  script:
+    - poetry run pytest --cov=geomagio --junitxml junit.xml
+    - poetry run coverage xml
+  stage: test
 
 ## --------------------------------------------------
 # Integration Stage
@@ -181,115 +168,111 @@ Check Python 3.8:
 
 Build Docker Image:
   extends:
-    - .build_docker_image
-  variables:
-    APP_NAME: geomag-algorithms
-
-## --------------------------------------------------
-# Scanning Stage (e.g. OWASP ZAP etc...)
-## --------------------------------------------------
-
-Scan Docker Image:
-  cache: {}
-  # temporarily allow while cryptography dependency has CVE
-  # new version no less secure than old
-  allow_failure: true
-  extends:
     - .adjust_image_names
-  image: docker:19.03-git
-  only:
-    - master@ghsc/geomag/geomag-algorithms
-    - production@ghsc/geomag/geomag-algorithms
-    - tags@ghsc/geomag/geomag-algorithms
+  image: ${DEVOPS_REGISTRY}docker:19.03-git
+  needs:
+    - Python Build
   script:
-    # install trivy
+    - LOCAL_IMAGE="local/${IMAGE_NAME}"
+    ## build image
+    - docker build
+      --pull
+      --build-arg FROM_IMAGE=${FROM_IMAGE}
+      --build-arg GIT_BRANCH_NAME=${CI_COMMIT_REF_NAME}
+      --build-arg GIT_COMMIT_SHA=${CI_COMMIT_SHA}
+      --tag "${LOCAL_IMAGE}"
+      "."
+
+    ## trivy scan before push
     - wget https://github.com/aquasecurity/trivy/releases/download/v${TRIVY_VERSION}/trivy_${TRIVY_VERSION}_Linux-64bit.tar.gz
     - tar zxvf trivy_${TRIVY_VERSION}_Linux-64bit.tar.gz
-    # run trivy
-    - ./trivy image --no-progress --exit-code 1 --severity HIGH,CRITICAL ${INTERNAL_IMAGE_NAME}
+    # fail LOW,MEDIUM vulnerabilities that have a fix available
+    - ./trivy image --exit-code 1 --ignore-unfixed --severity LOW,MEDIUM "${LOCAL_IMAGE}";
+    # fail HIGH,CRITICAL vulnerabilities
+    - ./trivy image --exit-code 1 --severity HIGH,CRITICAL "${LOCAL_IMAGE}";
+
+    ## push image
+    - if [ "${CI_PROJECT_PATH}" != "${UPSTREAM_PATH}" ]; then
+      echo "Skipping push on non-upstream (${CI_PROJECT_PATH})";
+      exit 0;
+      fi
+    - |
+      for IMAGE in "${IMAGE_NAME}" "${INTERNAL_IMAGE_NAME}"; do
+        docker tag "${LOCAL_IMAGE}" "${IMAGE}";
+        docker push "${IMAGE}";
+      done
   services:
-    - docker:19.03-dind
-  stage: scan
+    - alias: docker
+      name: ${DEVOPS_REGISTRY}docker:19.03-dind
+  stage: integration
   tags:
-    - build
+    - chs-shared
+    - dind
+  variables:
+    APP_NAME: geomag-algorithms
+    DOCKER_DRIVER: overlay2
+    FROM_IMAGE: ${DEVOPS_REGISTRY}usgs/python:3.9-obspy
+    TRIVY_VERSION: "0.27.1"
 
 ## --------------------------------------------------
 # Deploy Stage
 ## --------------------------------------------------
 
-Mage01 Library:
+Staging Library:
   extends:
     - .deploy-library
-    - .staging
+  rules:
+    - <<: *staging-env
+      when: on_success
+    - <<: *production-env
+      when: manual
   tags:
     - deploy
     - swarm
     - mage01
-  variables:
-    APP_NAME: geomag-algorithms
 
-Mage01 Web Service:
-  extends:
-    - .deploy
-    - .staging
-  tags:
-    - deploy
-    - swarm
-    - mage01
-  variables:
-    APP_NAME: geomag-algorithms
-
-Mage02 Library:
+Production Library:
   extends:
     - .deploy-library
-    - .production
+  rules:
+    - <<: *production-env
+      when: manual
   tags:
     - deploy
     - swarm
     - mage02
-  variables:
-    APP_NAME: geomag-algorithms
 
-Mage02 Web Service:
+Web Service Staging:
   extends:
     - .deploy
-    - .production
+  parallel:
+    matrix:
+      - RUNNER:
+          - mage01
+          - staging01
+  rules:
+    - <<: *staging-env
+      when: on_success
+    - <<: *production-env
+      when: manual
   tags:
     - deploy
     - swarm
-    - mage02
-  variables:
-    APP_NAME: geomag-algorithms
+    - "${RUNNER}"
 
-Production01 Web Service:
+Web Service Production:
   extends:
     - .deploy
-    - .production
+  parallel:
+    matrix:
+      - RUNNER:
+          - mage02
+          - production01
+          - production02
+  rules:
+    - <<: *production-env
+      when: manual
   tags:
     - deploy
     - swarm
-    - production01
-  variables:
-    APP_NAME: geomag-algorithms
-
-Production02 Web Service:
-  extends:
-    - .deploy
-    - .production
-  tags:
-    - deploy
-    - swarm
-    - production02
-  variables:
-    APP_NAME: geomag-algorithms
-
-Staging01 Web Service:
-  extends:
-    - .deploy
-    - .staging
-  tags:
-    - deploy
-    - swarm
-    - staging01
-  variables:
-    APP_NAME: geomag-algorithms
+    - "${RUNNER}"
