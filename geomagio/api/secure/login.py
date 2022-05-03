@@ -134,9 +134,9 @@ def require_user(
                 f" not member of any allowed group ({allowed_groups})"
             )
             raise HTTPException(
-                403,
                 detail="Forbidden",
                 headers={"Cache-Control": "no-cache"},
+                status_code=403,
             )
         return user
 
